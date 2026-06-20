@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Index — Shillim Institute</title>
+    <link rel="stylesheet" href="shilim.css">
+</head>
+<body>
+    <div class="container container--index">
+        <div class="index-header">
+            <h2>Project Index</h2>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search projects..." oninput="filterProjects()">
+                <select id="yearFilter" onchange="filterProjects()">
+                    <option value="">All Years</option>
+                </select>
+                <select id="primaryCategoryFilter" onchange="filterProjects()">
+                    <option value="">All Primary Categories</option>
+                    <option value="ART">ART</option>
+                    <option value="COMMUNITY">COMMUNITY</option>
+                    <option value="ECOLOGY">ECOLOGY</option>
+                    <option value="RESEARCH">RESEARCH</option>
+                    <option value="HEALTH">HEALTH</option>
+                    <option value="EDUCATION">EDUCATION</option>
+                </select>
+                <select id="secondaryCategoryFilter" onchange="filterProjects()">
+                    <option value="">All Secondary Categories</option>
+                    <option value="ART">ART</option>
+                    <option value="COMMUNITY">COMMUNITY</option>
+                    <option value="ECOLOGY">ECOLOGY</option>
+                    <option value="RESEARCH">RESEARCH</option>
+                    <option value="HEALTH">HEALTH</option>
+                    <option value="EDUCATION">EDUCATION</option>
+                </select>
+                <div class="project-count" id="projectCount">
+                    <span id="projectCountText">0 Projects</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="index-content">
+            <div class="index-left full-width">
+                <div class="project-grid" id="projectGrid">
+                    <!-- Projects will be loaded here -->
+                </div>
+            </div>
+
+            <div class="index-right" id="projectDetails">
+                <button class="close-details" onclick="closeDetails()" title="Close details">×</button>
+                <div class="no-selection">
+                    <h3>Select a project to view details</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentProjects = [];
+        let selectedProjectIndex = -1;
+
+        async function loadProjects() {
+            try {
+                const response = await fetch('data/projects.json');
+                const data = await response.json();
+                currentProjects = data.projects || [];
+                populateYearFilter();
+                refreshProjectGrid();
+            } catch (error) {
+                console.error('Error loading projects:', error);
+                alert('Error loading projects. Please check if projects.json exists.');
+            }
+        }
+
+        function populateYearFilter() {
+            const years = new Set();
+            currentProjects.forEach(project => {
+                if (project.startdate) {
+                    const year = new Date(project.startdate).getFullYear();
+                    years.add(year);
+                }
+            });
+            
+            const yearSelect = document.getElementById('yearFilter');
+            const sortedYears = Array.from(years).sort((a, b) => b - a);
+            
+            sortedYears.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            });
+        }
+
+        function filterProjects() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const yearFilter = document.getElementById('yearFilter').value;
+            const primaryCategory = document.getElementById('primaryCategoryFilter').value;
+            const secondaryCategory = document.getElementById('secondaryCategoryFilter').value;
+            refreshProjectGrid(searchTerm, yearFilter, primaryCategory, secondaryCategory);
+        }
+
+        function refreshProjectGrid(searchTerm = '', yearFilter = '', primaryCategory = '', secondaryCategory = '') {
+            const projectGrid = document.getElementById('projectGrid');
+            projectGrid.innerHTML = '';
+            
+            const filteredProjects = currentProjects.filter(project => {
+                // Text search filter
+                const matchesSearch = !searchTerm || 
+                    project.title.toLowerCase().includes(searchTerm) ||
+                    project.author.toLowerCase().includes(searchTerm) ||
+                    project.primarycategory.toLowerCase().includes(searchTerm) ||
+                    project.secondarycategory.toLowerCase().includes(searchTerm) ||
+                    (project.shortdescription && project.shortdescription.toLowerCase().includes(searchTerm)) ||
+                    project.details.toLowerCase().includes(searchTerm);
+                
+                // Year filter
+                const matchesYear = !yearFilter || 
+                    (project.startdate && new Date(project.startdate).getFullYear().toString() === yearFilter);
+                
+                // Primary category filter
+                const matchesPrimary = !primaryCategory || 
+                    project.primarycategory === primaryCategory;
+                
+                // Secondary category filter (check if it's in comma-separated list)
+                const matchesSecondary = !secondaryCategory || 
+                    project.secondarycategory.split(',').map(cat => cat.trim()).includes(secondaryCategory);
+                
+                return matchesSearch && matchesYear && matchesPrimary && matchesSecondary;
+            });
+            
+            // Update project count
+            const projectCountText = document.getElementById('projectCountText');
+            projectCountText.textContent = `${filteredProjects.length}`;
+            
+            if (filteredProjects.length === 0) {
+                const noResults = document.createElement('div');
+                noResults.className = 'no-results';
+                noResults.innerHTML = '<h3>No projects found</h3><p>Try adjusting your search terms</p>';
+                projectGrid.appendChild(noResults);
+                return;
+            }
+
+            filteredProjects.forEach(project => {
+                // Find the actual index in currentProjects
+                const originalIndex = currentProjects.findIndex(p => p.title === project.title);
+                const card = document.createElement('div');
+                card.className = `project-card ${originalIndex === selectedProjectIndex ? 'selected' : ''}`;
+                card.onclick = () => selectProject(originalIndex);
+                
+                // Use short description or truncate details
+                const displayText = project.shortdescription || 
+                    (project.details.length > 100 ? project.details.substring(0, 100) + '...' : project.details);
+                
+                // Format date display
+                const dateDisplay = project.startdate && project.enddate 
+                    ? `${project.startdate} to ${project.enddate}` 
+                    : project.date;
+                
+                // Thumbnail image HTML
+                const thumbnailHtml = project.thumbnail 
+                    ? `<img src="${project.thumbnail}" alt="${project.title}" onerror="this.style.display='none'">` 
+                    : '';
+                
+                card.innerHTML = `
+                    ${thumbnailHtml}
+                    <h3>${project.title}</h3>
+                    <p><strong>Author:</strong> ${project.author}</p>
+                    <p><strong>Date:</strong> ${dateDisplay}</p>
+                    <p>${displayText}</p>
+                `;
+                projectGrid.appendChild(card);
+            });
+        }
+
+        function selectProject(index) {
+            selectedProjectIndex = index;
+            const project = currentProjects[index];
+            
+            // Show right section and adjust left section width
+            const leftSection = document.querySelector('.index-left');
+            const rightSection = document.getElementById('projectDetails');
+            leftSection.classList.remove('full-width');
+            leftSection.classList.add('half-width');
+            rightSection.classList.add('visible');
+            
+            // Update selected state in grid
+            document.querySelectorAll('.project-card').forEach((card, i) => {
+                card.classList.toggle('selected', i === index);
+            });
+            
+            // Format date display
+            const dateDisplay = project.startdate && project.enddate 
+                ? `${project.startdate} to ${project.enddate}` 
+                : project.date;
+            
+            // Thumbnail image HTML
+            const thumbnailHtml = project.thumbnail 
+                ? `<img src="${project.thumbnail}" alt="${project.title}" class="project-thumbnail" onerror="this.style.display='none'">` 
+                : '';
+            
+            // Short description section
+            const shortDescHtml = project.shortdescription 
+                ? `<div class="details-section">
+                    <h3>Summary</h3>
+                    <p>${project.shortdescription}</p>
+                </div>` 
+                : '';
+            
+            // Update details section
+            const detailsSection = document.getElementById('projectDetails');
+            detailsSection.innerHTML = `
+                <button class="close-details" onclick="closeDetails()" title="Close details">×</button>
+                <h2>${project.title}</h2>
+                ${thumbnailHtml}
+                
+                <div class="details-section">
+                    <h3>Author</h3>
+                    <p>${project.author}</p>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Duration</h3>
+                    <p>${dateDisplay}</p>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Categories</h3>
+                    <p>
+                        <span class="tag">${project.primarycategory}</span>
+                        ${project.secondarycategory.split(',').map(cat => 
+                            `<span class="tag">${cat.trim()}</span>`
+                        ).join('')}
+                    </p>
+                </div>
+                
+                ${shortDescHtml}
+                
+                <div class="details-section">
+                    <h3>Description</h3>
+                    <p>${project.details}</p>
+                </div>
+                
+                <div class="details-section">
+                    <h3>Link</h3>
+                    <p><a href="${project.link}" target="_blank">${project.link}</a></p>
+                </div>
+            `;
+            
+            // Scroll the details into view on mobile
+            if (window.innerWidth <= 768) {
+                detailsSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
+        function closeDetails() {
+            const leftSection = document.querySelector('.index-left');
+            const rightSection = document.getElementById('projectDetails');
+            
+            // Hide right section and expand left section
+            rightSection.classList.remove('visible');
+            leftSection.classList.remove('half-width');
+            leftSection.classList.add('full-width');
+            
+            // Clear selection
+            selectedProjectIndex = -1;
+            document.querySelectorAll('.project-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+        }
+
+        // Load projects when page loads
+        document.addEventListener('DOMContentLoaded', loadProjects);
+    </script>
+</body>
+</html>

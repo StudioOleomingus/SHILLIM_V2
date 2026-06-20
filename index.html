@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shillim Institute</title>
+    <link rel="stylesheet" href="shilim.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Madurai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="jszip.min.js"></script>
+    <script src="gsap.min.js"></script>
+    <script src="pixi.min.js"></script>
+</head>
+<body class="page-index">
+    <!-- Mobile redirect overlay -->
+    <div class="mobile-redirect">
+        <h1>Shillim Institute</h1>
+        <p>The interactive archive experience is designed for larger screens. Explore the full project index on your device instead.</p>
+        <a href="projectindex.html">Browse the Archive</a>
+    </div>
+
+    <div id="app-container"></div>
+
+    <script type="module">
+        import { app } from './Config.js';
+        import { initApp } from './App.js';
+        import { initInfoSection } from './InfoSection.js';
+        import { initImageSection } from './ImageSection.js';
+        import { LoadTextures } from './Resources.js';
+        import { initBottomLayout } from './BottomLayout.js';
+
+        // Wait for app to be ready
+        async function init() {
+            await initApp();
+            await LoadTextures();
+        }
+        
+        init().catch(console.error);
+    </script>
+</body>
+</html>

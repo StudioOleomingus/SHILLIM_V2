@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Page — Shillim Institute</title>
+    <link rel="stylesheet" href="shilim.css">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Madurai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="page-projectpage">
+    <div class="container container--projectpage">
+        <div class="side-menu custom-scroll">
+            <div class="artist-name" id="artistName">Artist Name</div>
+            
+            <div class="bio-section">
+                <div class="bio-heading">Author, Artist or Organisation Bio :</div>
+                <div class="bio-text" id="bioText">
+                    <!-- Bio will be loaded here -->
+                </div>
+            </div>
+            
+            <div class="projects-section" id="projectsList">
+                <!-- Projects will be loaded here -->
+            </div>
+        </div>
+
+        <div class="main-content custom-scroll" id="mainContent">
+            <h2 class="project-heading" id="projectHeading">Project Title</h2>
+            <div id="projectContent">
+                <!-- Project content will be loaded here -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Page buttons — outside container so they aren't clipped -->
+    <div class="page-buttons">
+        <button class="page-btn help-btn" onclick="toggleHelp()" title="Help">
+            <span style="font-family: Georgia, serif; font-size: 20px; font-style: italic; color: #888;">?</span>
+        </button>
+        <button class="page-btn home-btn" onclick="window.location.href='index.html'" title="Home">
+            <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
+        </button>
+    </div>
+
+    <!-- Help popup -->
+    <div class="help-popup" id="helpPopup">
+        <h4>Shilim Institute Archive</h4>
+        <p>Click on a project circle to view its content. Use the carousel arrows to browse images, and click any image to view it fullscreen.</p>
+        <p>Press Escape or click outside to close.</p>
+    </div>
+
+    <script>
+        let projectData = null;
+        let currentProjectIndex = 0;
+
+        async function loadProjectData() {
+            try {
+                const response = await fetch('data/sampleprojectpage.json');
+                projectData = await response.json();
+                initializePage();
+            } catch (error) {
+                console.error('Error loading project data:', error);
+                alert('Error loading project data. Please check if sampleprojectpage.json exists.');
+            }
+        }
+
+        function initializePage() {
+            if (!projectData) return;
+
+            // Set artist name and bio
+            document.getElementById('artistName').textContent = projectData.author;
+            document.getElementById('bioText').innerHTML = projectData.artistdescription;
+
+            // Populate projects list
+            const projectsList = document.getElementById('projectsList');
+            projectsList.innerHTML = '';
+            
+            projectData.projects.forEach((project, index) => {
+                const projectItem = document.createElement('div');
+                projectItem.className = 'project-item' + (index === 0 ? ' active' : '');
+                
+                const dateDisplay = project.startdate && project.enddate
+                    ? `${project.startdate} to ${project.enddate}`
+                    : project.date;
+                
+                projectItem.innerHTML = `
+                    <div class="project-title">${project.title}</div>
+                    <div class="project-meta">${projectData.author}</div>
+                    <div class="project-meta">${dateDisplay}</div>
+                    <div class="project-circle"></div>
+                `;
+                
+                // Add click handler only to the circle
+                const circle = projectItem.querySelector('.project-circle');
+                circle.onclick = () => loadProject(index);
+                
+                projectsList.appendChild(projectItem);
+            });
+
+            // Load first project by default
+            if (projectData.projects.length > 0) {
+                loadProject(0);
+            }
+        }
+
+        function loadProject(index) {
+            currentProjectIndex = index;
+            const project = projectData.projects[index];
+
+            // Update active state
+            document.querySelectorAll('.project-item').forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+
+            // Set project heading
+            document.getElementById('projectHeading').textContent = project.title;
+
+            // Clear and populate project content
+            const projectContent = document.getElementById('projectContent');
+            projectContent.innerHTML = '';
+
+            if (!project.sections || project.sections.length === 0) {
+                return;
+            }
+
+            project.sections.forEach((section, sectionIndex) => {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'content-section';
+
+                if (section.sectiontype === 'text' && section.value) {
+                    sectionDiv.innerHTML = `
+                        <div class="text-content">${section.value}</div>
+                    `;
+                    projectContent.appendChild(sectionDiv);
+                }
+
+                if (section.sectiontype === 'image' && section.value && section.value.length > 0) {
+                    createImageCarousel(section.value, sectionDiv, sectionIndex);
+                    projectContent.appendChild(sectionDiv);
+                }
+
+                if (section.sectiontype === 'video' && section.value) {
+                    createVideoPlayer(section.value, sectionDiv);
+                    projectContent.appendChild(sectionDiv);
+                }
+            });
+        }
+
+        function createImageCarousel(images, container, carouselId) {
+            if (images.length === 0) return;
+
+            const carouselHTML = `
+                <div class="carousel-container">
+                    <div class="carousel-wrapper">
+                        <div class="carousel-images" id="carouselImages${carouselId}">
+                            ${images.map(img => `<img src="${img.filename}" alt="Project image" onclick="openLightbox('${img.filename}')">`).join('')}
+                        </div>
+                        ${images.length > 1 ? `
+                            <button class="carousel-button prev" onclick="moveCarousel(${carouselId}, -1)">‹</button>
+                            <button class="carousel-button next" onclick="moveCarousel(${carouselId}, 1)">›</button>
+                        ` : ''}
+                    </div>
+                    ${images.length > 1 ? `
+                        <div class="carousel-dots" id="carouselDots${carouselId}">
+                            ${images.map((_, i) => `<div class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${carouselId}, ${i})"></div>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            container.innerHTML = carouselHTML;
+
+            // Store carousel state
+            if (!window.carousels) window.carousels = {};
+            window.carousels[carouselId] = {
+                currentSlide: 0,
+                totalSlides: images.length
+            };
+        }
+
+        function moveCarousel(carouselId, direction) {
+            const carousel = window.carousels[carouselId];
+            if (!carousel) return;
+
+            carousel.currentSlide += direction;
+
+            if (carousel.currentSlide < 0) {
+                carousel.currentSlide = 0;
+            } else if (carousel.currentSlide >= carousel.totalSlides) {
+                carousel.currentSlide = carousel.totalSlides - 1;
+            }
+
+            updateCarousel(carouselId);
+        }
+
+        function goToSlide(carouselId, slideIndex) {
+            const carousel = window.carousels[carouselId];
+            if (!carousel) return;
+
+            carousel.currentSlide = slideIndex;
+            updateCarousel(carouselId);
+        }
+
+        function updateCarousel(carouselId) {
+            const carousel = window.carousels[carouselId];
+            const imagesContainer = document.getElementById(`carouselImages${carouselId}`);
+            const dots = document.querySelectorAll(`#carouselDots${carouselId} .carousel-dot`);
+
+            if (imagesContainer) {
+                const translateAmount = carousel.currentSlide * 100;
+                imagesContainer.style.transform = `translateX(-${translateAmount}%)`;
+            }
+
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === carousel.currentSlide);
+            });
+        }
+
+        // Lightbox functions
+        function openLightbox(imageSrc) {
+            const overlay = document.createElement('div');
+            overlay.className = 'lightbox-overlay';
+            overlay.innerHTML = `
+                <button class="lightbox-close">&times;</button>
+                <img src="${imageSrc}" alt="Fullscreen image">
+            `;
+            document.body.appendChild(overlay);
+            // Trigger transition
+            requestAnimationFrame(() => overlay.classList.add('active'));
+
+            overlay.querySelector('.lightbox-close').onclick = () => closeLightbox(overlay);
+            overlay.onclick = (e) => { if (e.target === overlay) closeLightbox(overlay); };
+            document.addEventListener('keydown', function handler(e) {
+                if (e.key === 'Escape') { closeLightbox(overlay); document.removeEventListener('keydown', handler); }
+            });
+        }
+
+        function closeLightbox(overlay) {
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.remove(), 300);
+        }
+
+        function createVideoPlayer(videoData, container) {
+            const videoSource = videoData.source || videoData;
+            const description = videoData.description || '';
+
+            let videoHTML = '';
+
+            // Check if it's a YouTube link
+            if (videoSource.includes('youtube.com') || videoSource.includes('youtu.be')) {
+                const videoId = extractYouTubeId(videoSource);
+                videoHTML = `
+                    <div class="video-container">
+                        <iframe class="video-player" height="450" 
+                            src="https://www.youtube.com/embed/${videoId}" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>
+                        ${description ? `<div class="video-description">${description}</div>` : ''}
+                    </div>
+                `;
+            }
+            // Check if it's a Vimeo link
+            else if (videoSource.includes('vimeo.com')) {
+                const videoId = extractVimeoId(videoSource);
+                videoHTML = `
+                    <div class="video-container">
+                        <iframe class="video-player" height="450" 
+                            src="https://player.vimeo.com/video/${videoId}" 
+                            frameborder="0" 
+                            allow="autoplay; fullscreen; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>
+                        ${description ? `<div class="video-description">${description}</div>` : ''}
+                    </div>
+                `;
+            }
+            // Direct video file
+            else {
+                videoHTML = `
+                    <div class="video-container">
+                        <video class="video-player" controls>
+                            <source src="${videoSource}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        ${description ? `<div class="video-description">${description}</div>` : ''}
+                    </div>
+                `;
+            }
+
+            container.innerHTML = videoHTML;
+        }
+
+        function extractYouTubeId(url) {
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : '';
+        }
+
+        function extractVimeoId(url) {
+            const regex = /vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|album\/(\d+)\/video\/|)(\d+)(?:$|\/|\?)/;
+            const match = url.match(regex);
+            return match ? match[3] : '';
+        }
+
+        // Help popup toggle
+        function toggleHelp() {
+            const popup = document.getElementById('helpPopup');
+            popup.classList.toggle('visible');
+        }
+        // Close help popup when clicking outside
+        document.addEventListener('click', function(e) {
+            const popup = document.getElementById('helpPopup');
+            if (popup && popup.classList.contains('visible') &&
+                !e.target.closest('.help-btn') && !e.target.closest('.help-popup')) {
+                popup.classList.remove('visible');
+            }
+        });
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', loadProjectData);
+    </script>
+</body>
+</html>

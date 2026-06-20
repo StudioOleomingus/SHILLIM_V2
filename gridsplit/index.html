@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Splitter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+</head>
+<body>
+    <input type="file" id="upload" accept="image/*">
+    <script>
+        function splitImage(imageSrc, rows = 50, cols = 62) {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.src = imageSrc;
+
+            img.onload = function () {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const tileWidth = img.width / cols;
+                const tileHeight = img.height / rows;
+                canvas.width = tileWidth;
+                canvas.height = tileHeight;
+
+                const zip = new JSZip();
+
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        ctx.clearRect(0, 0, tileWidth, tileHeight);
+                        ctx.drawImage(img, col * tileWidth, row * tileHeight, tileWidth, tileHeight, 0, 0, tileWidth, tileHeight);
+                        canvas.toBlob((blob) => {
+                            zip.file(`tile_${row}_${col}.png`, blob);
+                            if (row === rows - 1 && col === cols - 1) {
+                                zip.generateAsync({ type: 'blob' }).then((blob) => {
+                                    saveAs(blob, 'split_images.zip');
+                                });
+                            }
+                        }, 'image/png');
+                    }
+                }
+            };
+        }
+
+        document.getElementById('upload').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => splitImage(e.target.result);
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>

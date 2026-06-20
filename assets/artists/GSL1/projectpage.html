@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Page</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Madurai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Hind Madurai', 'Lucida Grande', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            display: flex;
+            width: 1550px;
+            height: 1000px;
+            max-width: 95vw;
+            max-height: 95vh;
+            aspect-ratio: 1550/1000;
+            gap: 0;
+            background: transparent;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: visible;
+            position: relative;
+            box-sizing: border-box;
+        }
+        .side-menu {
+            width: 430px;
+            background: white;
+            padding: 40px 40px;
+            padding-right: 140px;
+            overflow-y: scroll;
+            box-sizing: border-box;
+            height: 100%;
+            border-radius: 30px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            z-index: 1;
+        }
+        
+        /* Hide scrollbar but keep scrollable */
+        .side-menu {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .side-menu::-webkit-scrollbar {
+            display: none;
+        }
+        .main-content {
+            flex: 1;
+            padding: 40px 40px;
+            box-sizing: border-box;
+            overflow-y: scroll;
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            margin-left: -120px;
+            z-index: 2;
+        }
+        
+        /* Hide scrollbar but keep scrollable */
+        .main-content {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .main-content::-webkit-scrollbar {
+            display: none;
+        }
+        .header {
+            margin-bottom: 40px;
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                margin: 10px;
+            }
+            .side-menu {
+                display: none;
+            }
+            .main-content {
+                margin-left: 0;
+                max-width: 100%;
+                padding: 20px;
+                border-radius: 24px;
+                height: 100%;
+            }
+            .page-buttons {
+                position: fixed;
+                bottom: 10px;
+            }
+        }
+        .artist-name {
+            font-size: 24px;
+            color: #666;
+            margin-bottom: 10px;
+            font-style: italic;
+            font-family: Georgia, 'Times New Roman', serif;
+        }
+        .project-title {
+            font-size: 18px;
+            margin-bottom: 8px;
+            font-weight: normal;
+            font-style: italic;
+            font-family: Georgia, 'Times New Roman', serif;
+            color: #333;
+        }
+        .bio-section {
+            margin-top: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .bio-heading {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .bio-text {
+            line-height: 1.6;
+            color: #444;
+        }
+        .projects-section {
+            margin-top: 60px;
+        }
+        .project-item {
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            position: relative;
+            background-color: #f8f8f8;
+            border-radius: 15px;
+            border: 1px solid #e5e5e5;
+            transition: background-color 0.2s ease;
+        }
+         .project-circle {
+            position: absolute;
+            right: 15px;
+            bottom: 15px;
+            width: 30px;
+            height: 30px;
+            -webkit-mask-image: url('assets/white_circle_bg.png');
+            -webkit-mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            -webkit-mask-size: contain;
+            mask-image: url('assets/white_circle_bg.png');
+            mask-repeat: no-repeat;
+            mask-position: center;
+            mask-size: contain;
+            background-color: white; /* default fill */
+            cursor: pointer;
+        }
+
+        .project-item:hover {
+            background-color: #efefef;
+        }
+        .project-meta {
+            font-size: 10px;
+            color: #888;
+            margin-top: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+        .icon-button {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+            color: #666;
+        }
+        .icon-button:hover {
+            background: #e0e0e0;
+        }
+        .home-icon {
+            transform: rotate(180deg);
+        }
+        
+        .project-item.active {
+            /* No background highlighting */
+        }
+
+        .project-item.active .project-circle {
+            background-color: #b3d9e8; /* only the circle shape gets tinted */
+            transform: scale(1.1);
+        }
+
+        
+
+        /* Project heading — full width, not split by columns */
+        .project-heading {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-style: italic;
+            font-size: 24px;
+            font-weight: normal;
+            color: #333;
+            margin: 0 0 30px 0;
+            padding: 0;
+        }
+        .content-section {
+            margin-bottom: 40px;
+        }
+        
+        .text-content {
+            line-height: 1.5;
+            color: #444;
+            white-space: pre-wrap;
+            margin-top: 30px;
+            margin-left: 0;
+            margin-right: 0;
+            padding: 0 40px;
+            text-align: justify;
+            column-count: 2;
+            column-gap: 40px;
+            column-rule: 1px solid #eee;
+        }
+        
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        .carousel-wrapper {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+        
+        .carousel-images {
+            display: flex;
+            gap: 0;
+            transition: transform 0.3s ease;
+            padding: 0;
+        }
+        
+        .carousel-images img {
+            width: 100%;
+            cursor: pointer;
+            flex-shrink: 0;
+            border-radius: 8px;
+            object-fit: cover;
+            height: auto;
+        }
+        
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        
+        .carousel-button:hover {
+            background: white;
+        }
+        
+        .carousel-button.prev {
+            left: 10px;
+        }
+        
+        .carousel-button.next {
+            right: 10px;
+        }
+        
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ddd;
+            cursor: pointer;
+        }
+        
+        .carousel-dot.active {
+            background: #2196F3;
+        }
+        
+        /* Fullscreen Lightbox */
+        .lightbox-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .lightbox-overlay.active {
+            opacity: 1;
+        }
+        .lightbox-overlay img {
+            max-width: 90vw;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 8px;
+            cursor: default;
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 20px; right: 30px;
+            color: white;
+            font-size: 36px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            line-height: 1;
+            z-index: 10001;
+        }
+        .lightbox-close:hover {
+            color: #ccc;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        
+        .video-player {
+            width: 100%;
+            border-radius: 8px;
+            background: #000;
+        }
+        
+        .video-description {
+            margin-top: 10px;
+            color: #666;
+            font-style: italic;
+            column-count: 2;
+            column-gap: 40px;
+            column-rule: 1px solid #eee;
+            padding: 0 40px;
+            text-align: justify;
+        }
+        
+        .section-heading {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        /* Page action buttons */
+        .page-buttons {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1550px;
+            max-width: 95vw;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            pointer-events: none;
+            z-index: 100;
+            box-sizing: border-box;
+        }
+        .page-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: white;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            transition: background 0.2s ease, transform 0.2s ease;
+            color: #888;
+            font-size: 18px;
+        }
+        .page-btn:hover {
+            background: #f5f5f5;
+            transform: scale(1.08);
+        }
+        .page-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: #888;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .help-popup {
+            position: fixed;
+            bottom: 80px;
+            left: calc(50% - 1550px / 2 + 20px);
+            background: white;
+            border-radius: 16px;
+            padding: 24px 28px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            width: 300px;
+            z-index: 200;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            pointer-events: none;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #555;
+        }
+        .help-popup.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .help-popup h4 {
+            margin: 0 0 10px;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-style: italic;
+            font-size: 16px;
+            color: #333;
+            font-weight: normal;
+        }
+        .help-popup p {
+            margin: 0 0 8px;
+        }
+        .help-popup p:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="side-menu">
+            <div class="artist-name" id="artistName">Artist Name</div>
+            
+            <div class="bio-section">
+                <div class="bio-heading">Author, Artist or Organisation Bio :</div>
+                <div class="bio-text" id="bioText">
+                    <!-- Bio will be loaded here -->
+                </div>
+            </div>
+            
+            <div class="projects-section" id="projectsList">
+                <!-- Projects will be loaded here -->
+            </div>
+        </div>
+
+        <div class="main-content" id="mainContent">
+            <h2 class="project-heading" id="projectHeading">Project Title</h2>
+            <div id="projectContent">
+                <!-- Project content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Page buttons -->
+    <div class="page-buttons">
+        <button class="page-btn help-btn" onclick="toggleHelp()" title="Help">
+            <span style="font-family: Georgia, serif; font-size: 20px; font-style: italic; color: #888;">?</span>
+        </button>
+        <button class="page-btn home-btn" onclick="window.location.href='../../index.html'" title="Home">
+            <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
+        </button>
+    </div>
+
+    <!-- Help popup -->
+    <div class="help-popup" id="helpPopup">
+        <h4>Shilim Institute Archive</h4>
+        <p>Click on a project circle to view its content. Use the carousel arrows to browse images, and click any image to view it fullscreen.</p>
+        <p>Press Escape or click outside to close.</p>
+    </div>
+
+    <script>
+        let projectData = null;
+        let currentProjectIndex = 0;
+
+        async function loadProjectData() {
+            try {
+                const response = await fetch('projectpage.json');
+                projectData = await response.json();
+                initializePage();
+            } catch (error) {
+                console.error('Error loading project data:', error);
+                alert('Error loading project data. Please check if sampleprojectpage.json exists.');
+            }
+        }
+
+        function initializePage() {
+            if (!projectData) return;
+
+            // Set artist name and bio
+            document.getElementById('artistName').textContent = projectData.author;
+            document.getElementById('bioText').innerHTML = projectData.artistdescription;
+
+            // Populate projects list
+            const projectsList = document.getElementById('projectsList');
+            projectsList.innerHTML = '';
+            
+            projectData.projects.forEach((project, index) => {
+                const projectItem = document.createElement('div');
+                projectItem.className = 'project-item' + (index === 0 ? ' active' : '');
+                
+                const dateDisplay = project.startdate && project.enddate
+                    ? `${project.startdate} to ${project.enddate}`
+                    : project.date;
+                
+                projectItem.innerHTML = `
+                    <div class="project-title">${project.title}</div>
+                    <div class="project-meta">${projectData.author}</div>
+                    <div class="project-meta">${dateDisplay}</div>
+                    <div class="project-circle"></div>
+                `;
+                
+                // Add click handler only to the circle
+                const circle = projectItem.querySelector('.project-circle');
+                circle.onclick = () => loadProject(index);
+                
+                projectsList.appendChild(projectItem);
+            });
+
+            // Load first project by default
+            if (projectData.projects.length > 0) {
+                loadProject(0);
+            }
+        }
+
+        function loadProject(index) {
+            currentProjectIndex = index;
+            const project = projectData.projects[index];
+
+            // Update active state
+            document.querySelectorAll('.project-item').forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+
+            // Set project heading
+            document.getElementById('projectHeading').textContent = project.title;
+
+            // Clear and populate project content
+            const projectContent = document.getElementById('projectContent');
+            projectContent.innerHTML = '';
+
+            if (!project.sections || project.sections.length === 0) {
+                return;
+            }
+
+            project.sections.forEach((section, sectionIndex) => {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'content-section';
+
+                if (section.sectiontype === 'text' && section.value) {
+                    sectionDiv.innerHTML = `
+                        <div class="text-content">${section.value}</div>
+                    `;
+                    projectContent.appendChild(sectionDiv);
+                }
+
+                if (section.sectiontype === 'image' && section.value && section.value.length > 0) {
+                    createImageCarousel(section.value, sectionDiv, sectionIndex);
+                    projectContent.appendChild(sectionDiv);
+                }
+
+                if (section.sectiontype === 'video' && section.value) {
+                    createVideoPlayer(section.value, sectionDiv);
+                    projectContent.appendChild(sectionDiv);
+                }
+            });
+        }
+
+        function createImageCarousel(images, container, carouselId) {
+            if (images.length === 0) return;
+
+            const carouselHTML = `
+                <div class="carousel-container">
+                    <div class="carousel-wrapper">
+                        <div class="carousel-images" id="carouselImages${carouselId}">
+                            ${images.map(img => `<img src="${img.filename}" alt="Project image" onclick="openLightbox('${img.filename}')">`).join('')}
+                        </div>
+                        ${images.length > 1 ? `
+                            <button class="carousel-button prev" onclick="moveCarousel(${carouselId}, -1)">‹</button>
+                            <button class="carousel-button next" onclick="moveCarousel(${carouselId}, 1)">›</button>
+                        ` : ''}
+                    </div>
+                    ${images.length > 1 ? `
+                        <div class="carousel-dots" id="carouselDots${carouselId}">
+                            ${images.map((_, i) => `<div class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${carouselId}, ${i})"></div>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            container.innerHTML = carouselHTML;
+            
+            // Store carousel state
+            if (!window.carousels) window.carousels = {};
+            window.carousels[carouselId] = {
+                currentSlide: 0,
+                totalSlides: images.length
+            };
+        }
+
+        function moveCarousel(carouselId, direction) {
+            const carousel = window.carousels[carouselId];
+            if (!carousel) return;
+
+            // Move by 2 images (to show next pair)
+            carousel.currentSlide += direction;
+            
+            
+            if (carousel.currentSlide < 0) {
+                carousel.currentSlide = 0;
+            } else if (carousel.currentSlide >= carousel.totalSlides) {
+                carousel.currentSlide = carousel.totalSlides - 1;
+            }
+
+            updateCarousel(carouselId);
+        }
+
+        function goToSlide(carouselId, slideIndex) {
+            const carousel = window.carousels[carouselId];
+            if (!carousel) return;
+
+            carousel.currentSlide = slideIndex;
+            updateCarousel(carouselId);
+        }
+
+        function updateCarousel(carouselId) {
+            const carousel = window.carousels[carouselId];
+            const imagesContainer = document.getElementById(`carouselImages${carouselId}`);
+            const dots = document.querySelectorAll(`#carouselDots${carouselId} .carousel-dot`);
+
+            if (imagesContainer) {
+                // Account for gap (16px) when calculating translation
+                // Each image + gap takes up ~(50% + 8px) per image
+                const translateAmount = carousel.currentSlide * 100;
+                imagesContainer.style.transform = `translateX(-${translateAmount}%)`;
+            }
+
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === Math.floor(carousel.currentSlide / 2));
+            });
+        }
+
+        function createVideoPlayer(videoData, container) {
+            const videoSource = videoData.source || videoData;
+            const description = videoData.description || '';
+
+            let videoHTML = '';
+
+            // Check if it's a YouTube link
+            if (videoSource.includes('youtube.com') || videoSource.includes('youtu.be')) {
+                const videoId = extractYouTubeId(videoSource);
+                videoHTML = `
+                    <div class="video-container">
+                        <iframe class="video-player" height="450" 
+                            src="https://www.youtube.com/embed/${videoId}" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>
+                        ${description ? `<div class="video-description">${description}</div>` : ''}
+                    </div>
+                `;
+            }
+            // Check if it's a Vimeo link
+            else if (videoSource.includes('vimeo.com')) {
+                const videoId = extractVimeoId(videoSource);
+                videoHTML = `
+                    <div class="video-container">
+                        <iframe class="video-player" height="450" 
+                            src="https://player.vimeo.com/video/${videoId}" 
+                            frameborder="0" 
+                            allow="autoplay; fullscreen; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>
+                        ${description ? `<div class="video-description">${description}</div>` : ''}
+                    </div>
+                `;
+            }
+            // Direct video file
+            else {
+                videoHTML = `
+                    <div class="video-container">
+                        <video class="video-player" controls>
+                            <source src="${videoSource}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        ${description ? `<div class="video-description">${description}</div>` : ''}
+                    </div>
+                `;
+            }
+
+            container.innerHTML = videoHTML;
+        }
+
+        function extractYouTubeId(url) {
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : '';
+        }
+
+        function extractVimeoId(url) {
+            const regex = /vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|album\/(\d+)\/video\/|)(\d+)(?:$|\/|\?)/;
+            const match = url.match(regex);
+            return match ? match[3] : '';
+        }
+
+        
+        // Help popup toggle
+        function toggleHelp() {
+            const popup = document.getElementById('helpPopup');
+            popup.classList.toggle('visible');
+        }
+        document.addEventListener('click', function(e) {
+            const popup = document.getElementById('helpPopup');
+            if (popup && popup.classList.contains('visible') &&
+                !e.target.closest('.help-btn') && !e.target.closest('.help-popup')) {
+                popup.classList.remove('visible');
+            }
+        });
+
+        // Lightbox functions
+        function openLightbox(imageSrc) {
+            const overlay = document.createElement('div');
+            overlay.className = 'lightbox-overlay';
+            overlay.innerHTML = `
+                <button class="lightbox-close">&times;</button>
+                <img src="${imageSrc}" alt="Fullscreen image">
+            `;
+            document.body.appendChild(overlay);
+            requestAnimationFrame(() => overlay.classList.add('active'));
+
+            overlay.querySelector('.lightbox-close').onclick = () => closeLightbox(overlay);
+            overlay.onclick = (e) => { if (e.target === overlay) closeLightbox(overlay); };
+            document.addEventListener('keydown', function handler(e) {
+                if (e.key === 'Escape') { closeLightbox(overlay); document.removeEventListener('keydown', handler); }
+            });
+        }
+
+        function closeLightbox(overlay) {
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.remove(), 300);
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', loadProjectData);
+    </script>
+</body>
+</html>

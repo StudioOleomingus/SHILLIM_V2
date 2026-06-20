@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Admin — Shillim Institute</title>
+    <link rel="stylesheet" href="shilim.css">
+</head>
+<body class="page-admin">
+    <div class="container container--admin">
+        <div class="admin-header">
+            <h2>Project Management</h2>
+            <div class="header-actions">
+                <button type="button" onclick="showAddNewForm()" class="secondary">Add New Project</button>
+            </div>
+        </div>
+
+        <div class="admin-content">
+            <div class="admin-left">
+                <div id="projectList" class="project-list">
+                    <h3>All Projects</h3>
+                </div>
+            </div>
+
+            <div class="admin-right">
+                <form id="projectForm" method="POST" class="project-form" style="display: none;">
+                    <h3 id="formTitle">Edit Project</h3>
+                    <input type="hidden" id="projectIndex" name="projectIndex" value="-1">
+                    <div class="form-group">
+                        <label for="title">Title:</label>
+                        <input type="text" id="title" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="author">Author:</label>
+                        <input type="text" id="author" name="author" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Project Duration:</label>
+                        <div class="date-inputs">
+                            <div>
+                                <label for="startdate">Start Date:</label>
+                                <input type="date" id="startdate" name="startdate" required onchange="calculateDuration()">
+                            </div>
+                            <div>
+                                <label for="enddate">End Date:</label>
+                                <input type="date" id="enddate" name="enddate" required onchange="calculateDuration()">
+                            </div>
+                        </div>
+                        <div id="durationDisplay" class="duration-display" style="display: none;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="primarycategory">Primary Category:</label>
+                        <select id="primarycategory" name="primarycategory" required>
+                            <option value="">-- Select category --</option>
+                            <option value="ART">ART</option>
+                            <option value="COMMUNITY">COMMUNITY</option>
+                            <option value="ECOLOGY">ECOLOGY</option>
+                            <option value="RESEARCH">RESEARCH</option>
+                            <option value="HEALTH">HEALTH</option>
+                            <option value="EDUCATION">EDUCATION</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Secondary Categories:</label>
+                        <div class="checkbox-group" style="margin-top: 8px;">
+                            <div class="checkbox-item" style="margin-bottom: 8px;">
+                                <input type="checkbox" id="secondary-art" name="secondarycategory" value="ART">
+                                <label for="secondary-art">ART</label>
+                            </div>
+                            <div class="checkbox-item" style="margin-bottom: 8px;">
+                                <input type="checkbox" id="secondary-community" name="secondarycategory" value="COMMUNITY">
+                                <label for="secondary-community">COMMUNITY</label>
+                            </div>
+                            <div class="checkbox-item" style="margin-bottom: 8px;">
+                                <input type="checkbox" id="secondary-ecology" name="secondarycategory" value="ECOLOGY">
+                                <label for="secondary-ecology">ECOLOGY</label>
+                            </div>
+                            <div class="checkbox-item" style="margin-bottom: 8px;">
+                                <input type="checkbox" id="secondary-research" name="secondarycategory" value="RESEARCH">
+                                <label for="secondary-research">RESEARCH</label>
+                            </div>
+                            <div class="checkbox-item" style="margin-bottom: 8px;">
+                                <input type="checkbox" id="secondary-health" name="secondarycategory" value="HEALTH">
+                                <label for="secondary-health">HEALTH</label>
+                            </div>
+                            <div class="checkbox-item" style="margin-bottom: 8px;">
+                                <input type="checkbox" id="secondary-education" name="secondarycategory" value="EDUCATION">
+                                <label for="secondary-education">EDUCATION</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="link">Link:</label>
+                        <input type="text" id="link" name="link" required placeholder="e.g., projectpage.html">
+                    </div>
+                    <div class="form-group">
+                        <label for="shortdescription">Short Description:</label>
+                        <textarea id="shortdescription" name="shortdescription" rows="2" required placeholder="Brief one-line description (max 150 characters)"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="details">Long Description:</label>
+                        <textarea id="details" name="details" rows="6" required placeholder="Detailed project description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="thumbnail">Thumbnail Image:</label>
+                        <input type="file" id="thumbnail" name="thumbnail" accept="image/*" onchange="previewThumbnail(event)">
+                        <div id="thumbnailPreview" class="thumbnail-preview" style="display: none;">
+                            <img id="thumbnailImg" src="" alt="Thumbnail preview">
+                        </div>
+                        <input type="hidden" id="thumbnailPath" name="thumbnailPath" value="">
+                    </div>
+                    <div class="actions">
+                        <button type="submit" id="saveButton">Save Changes</button>
+                        <button type="button" onclick="cancelEdit()" class="secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentProjects = [];
+        const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const API_BASE = isDevelopment ? 'http://localhost:3001/api' : '/.netlify/functions';
+
+        // Calculate project duration
+        function calculateDuration() {
+            const startDate = document.getElementById('startdate').value;
+            const endDate = document.getElementById('enddate').value;
+            
+            if (startDate && endDate) {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                
+                if (end < start) {
+                    document.getElementById('durationDisplay').style.display = 'none';
+                    alert('End date must be after start date');
+                    return;
+                }
+                
+                // Calculate difference in days
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                // Calculate years, months, days
+                const years = Math.floor(diffDays / 365);
+                const months = Math.floor((diffDays % 365) / 30);
+                const days = Math.floor((diffDays % 365) % 30);
+                
+                let durationText = 'Duration: ';
+                if (years > 0) durationText += `${years} yr `;
+                if (months > 0) durationText += `${months} mo `;
+                if (days > 0 && years === 0) durationText += `${days} days`;
+                
+                document.getElementById('durationDisplay').textContent = durationText.trim();
+                document.getElementById('durationDisplay').style.display = 'block';
+            }
+        }
+
+        // Preview thumbnail image
+        function previewThumbnail(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('thumbnailImg').src = e.target.result;
+                    document.getElementById('thumbnailPreview').style.display = 'block';
+                    
+                    // Generate thumbnail filename based on project title or timestamp
+                    const timestamp = new Date().getTime();
+                    const extension = file.name.split('.').pop();
+                    const thumbnailFileName = `thumbnail_${timestamp}.${extension}`;
+                    document.getElementById('thumbnailPath').value = `assets/thumbnail/${thumbnailFileName}`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function loadProjects() {
+            fetch(`${API_BASE}/projects`)
+                .then(response => response.json())
+                .then(projects => {
+                    // Ensure projects is always an array
+                    projects = Array.isArray(projects) ? projects : [];
+                    currentProjects = projects;
+                    
+                    // Update project list
+                    const projectList = document.getElementById('projectList');
+                    projectList.innerHTML = '<h3>All Projects</h3>';
+                    projects.forEach((project, index) => {
+                        const div = document.createElement('div');
+                        div.className = 'project-item';
+                        const thumbnailHtml = project.thumbnail 
+                            ? `<img src="${project.thumbnail}" alt="Thumbnail" style="max-width: 100px; border-radius: 4px; margin-bottom: 10px;">` 
+                            : '';
+                        const dateDisplay = project.startdate && project.enddate 
+                            ? `${project.startdate} to ${project.enddate}` 
+                            : project.date;
+                        const shortDesc = project.shortdescription 
+                            ? `<p><strong>Short Description:</strong> ${project.shortdescription}</p>` 
+                            : '';
+                        div.innerHTML = `
+                            ${thumbnailHtml}
+                            <h3>${project.title}</h3>
+                            <p><strong>Author:</strong> ${project.author}</p>
+                            <p><strong>Date:</strong> ${dateDisplay}</p>
+                            <p><strong>Categories:</strong> ${project.primarycategory} (${project.secondarycategory})</p>
+                            ${shortDesc}
+                            <div class="actions">
+                                <button onclick="selectProject(${index})">Edit</button>
+                                <button onclick="deleteProject(${index})" class="secondary">Delete</button>
+                            </div>
+                        `;
+                        projectList.appendChild(div);
+                    });
+                });
+        }
+
+        function selectProject(index) {
+            const project = currentProjects[index];
+            document.getElementById('projectIndex').value = index;
+            document.getElementById('title').value = project.title;
+            document.getElementById('author').value = project.author;
+            
+            // Handle date fields
+            if (project.startdate && project.enddate) {
+                document.getElementById('startdate').value = project.startdate;
+                document.getElementById('enddate').value = project.enddate;
+                calculateDuration();
+            } else if (project.date) {
+                // Legacy format - try to parse it
+                const dateParts = project.date.split(',')[0].trim();
+                document.getElementById('startdate').value = dateParts;
+                document.getElementById('enddate').value = dateParts;
+            }
+            
+            document.getElementById('primarycategory').value = project.primarycategory;
+            // Handle secondary category checkboxes
+            const secondaryCats = project.secondarycategory.split(',').map(cat => cat.trim());
+            document.querySelectorAll('input[name="secondarycategory"]').forEach(checkbox => {
+                checkbox.checked = secondaryCats.includes(checkbox.value);
+            });
+            document.getElementById('link').value = project.link;
+            document.getElementById('shortdescription').value = project.shortdescription || '';
+            document.getElementById('details').value = project.details;
+            
+            // Handle thumbnail
+            if (project.thumbnail) {
+                document.getElementById('thumbnailPath').value = project.thumbnail;
+                document.getElementById('thumbnailImg').src = project.thumbnail;
+                document.getElementById('thumbnailPreview').style.display = 'block';
+            } else {
+                document.getElementById('thumbnailPreview').style.display = 'none';
+            }
+            
+            // Show form and update UI
+            document.getElementById('formTitle').textContent = 'Edit Project';
+            document.getElementById('saveButton').textContent = 'Save Changes';
+            document.getElementById('projectForm').style.display = 'block';
+            document.getElementById('projectForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deleteProject(index) {
+            if (confirm('Are you sure you want to delete this project?')) {
+                fetch(`${API_BASE}/projects/${index}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        loadProjects();
+                        resetForm();
+                        alert('Project deleted successfully!');
+                    } else {
+                        alert('Error deleting project: ' + (result.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error deleting project. Please try again.');
+                });
+            }
+        }
+
+        function showAddNewForm() {
+            resetForm();
+            document.getElementById('formTitle').textContent = 'Add New Project';
+            document.getElementById('saveButton').textContent = 'Create Project';
+            document.getElementById('projectForm').style.display = 'block';
+            document.getElementById('projectForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById('projectForm').reset();
+            document.getElementById('projectIndex').value = -1;
+            document.getElementById('projectSelect').value = -1;
+            document.getElementById('durationDisplay').style.display = 'none';
+            document.getElementById('thumbnailPreview').style.display = 'none';
+            document.getElementById('thumbnailPath').value = '';
+        }
+
+        function hideForm() {
+            document.getElementById('projectForm').style.display = 'none';
+            resetForm();
+        }
+
+        function cancelEdit() {
+            hideForm();
+            document.getElementById('projectSelect').value = -1;
+        }
+
+        // Handle form submission
+        document.getElementById('projectForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = {};
+            formData.forEach((value, key) => data[key] = value);
+            
+            // Calculate duration string
+            const startDate = data.startdate;
+            const endDate = data.enddate;
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const years = Math.floor(diffDays / 365);
+            const months = Math.floor((diffDays % 365) / 30);
+            let duration = '';
+            if (years > 0) duration = `${years} yr`;
+            else if (months > 0) duration = `${months} mo`;
+            else duration = `${diffDays} days`;
+            
+            let thumbnailPath = data.thumbnailPath || '';
+            
+            // Handle thumbnail file upload if new file selected
+            const thumbnailFile = document.getElementById('thumbnail').files[0];
+            if (thumbnailFile) {
+                try {
+                    const uploadFormData = new FormData();
+                    uploadFormData.append('thumbnail', thumbnailFile);
+                    
+                    const uploadResponse = await fetch(`${API_BASE}/upload-thumbnail`, {
+                        method: 'POST',
+                        body: uploadFormData
+                    });
+                    
+                    const uploadResult = await uploadResponse.json();
+                    if (uploadResult.success) {
+                        thumbnailPath = uploadResult.path;
+                        console.log('Thumbnail uploaded successfully:', thumbnailPath);
+                    } else {
+                        alert('Error uploading thumbnail: ' + (uploadResult.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Error uploading thumbnail:', error);
+                    alert('Error uploading thumbnail. Make sure the server is running.');
+                }
+            }
+            
+            fetch(`${API_BASE}/projects`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    index: parseInt(data.projectIndex),
+                    project: {
+                        title: data.title,
+                        author: data.author,
+                        startdate: startDate,
+                        enddate: endDate,
+                        date: `${startDate}, ${duration}`,
+                        primarycategory: data.primarycategory,
+                        secondarycategory: Array.from(document.querySelectorAll('input[name="secondarycategory"]:checked'))
+                            .map(checkbox => checkbox.value)
+                            .join(', '),
+                        link: data.link,
+                        shortdescription: data.shortdescription,
+                        details: data.details,
+                        thumbnail: thumbnailPath
+                    }
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    loadProjects();
+                    resetForm();
+                    alert('Project saved successfully!');
+                }
+            });
+        });
+
+        // Load projects when page loads
+        document.addEventListener('DOMContentLoaded', loadProjects);
+    </script>
+</body>
+</html>
