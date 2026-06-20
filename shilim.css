@@ -1114,6 +1114,311 @@ body.page-admin-projectpage {
     margin-top: 30px;
 }
 
+/* ==========================================================================
+   ARCHIVE INDEX SLIDE-IN PANEL (in-page, over the PixiJS canvas)
+   Cascades out from the right of #app-container, ~3/4 width.
+   ========================================================================== */
+.archive-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 20, 20, 0);
+    opacity: 0;
+    pointer-events: none;
+    transition: background 0.45s ease, opacity 0.45s ease;
+    z-index: 500;
+    border-radius: 40px;
+}
+.archive-backdrop.open {
+    background: rgba(20, 20, 20, 0.28);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.archive-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 75%;
+    height: 100%;
+    background: #ffffff;
+    box-shadow: -12px 0 40px rgba(0, 0, 0, 0.22);
+    border-top-left-radius: 28px;
+    border-bottom-left-radius: 28px;
+    /* match container's right rounded corners */
+    border-top-right-radius: 40px;
+    border-bottom-right-radius: 40px;
+    z-index: 501;
+    display: flex;
+    flex-direction: column;
+    padding: 28px 32px;
+    transform: translateX(102%);
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    overflow: hidden;
+}
+.archive-panel.open {
+    transform: translateX(0);
+}
+
+/* Header */
+.archive-header {
+    flex-shrink: 0;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #eee;
+}
+.archive-titlerow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.archive-titlerow h2 {
+    margin: 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: normal;
+    font-size: 26px;
+    color: #333;
+}
+.archive-count {
+    background-image: url('assets/white_circle_bg.png');
+    background-size: cover;
+    background-position: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.archive-count span {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+.archive-close {
+    margin-left: auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f2f2f2;
+    border: 1px solid #e2e2e2;
+    color: #666;
+    font-size: 22px;
+    line-height: 1;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.archive-close:hover {
+    background: #2196F3;
+    color: #fff;
+    border-color: #2196F3;
+}
+
+.archive-search {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 16px;
+}
+.archive-search input {
+    flex: 1;
+    padding: 9px 14px;
+    border: 1px solid #ddd;
+    border-radius: 40px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.25s ease;
+}
+.archive-search select {
+    padding: 9px 14px;
+    border: 1px solid #ddd;
+    border-radius: 40px;
+    font-size: 13px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.25s ease;
+}
+.archive-search input:focus,
+.archive-search select:focus {
+    outline: none;
+    border-color: #2196F3;
+}
+.archive-search select:hover {
+    border-color: #2196F3;
+}
+
+/* Content: grid + detail */
+.archive-content {
+    display: flex;
+    gap: 20px;
+    flex: 1;
+    min-height: 0;
+    margin-top: 18px;
+}
+.archive-left {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    padding-right: 8px;
+    transition: flex 0.3s ease;
+}
+.archive-left.full-width {
+    flex: 1;
+    border-right: none;
+}
+.archive-left.half-width {
+    flex: 0.55;
+    border-right: 1px solid #eee;
+    padding-right: 18px;
+}
+
+.archive-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+    padding: 4px;
+}
+.archive-left.full-width .archive-grid {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.archive-card {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    height: fit-content;
+}
+.archive-card img {
+    width: 100%;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+.archive-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+    border-color: #2196F3;
+}
+.archive-card.selected {
+    border-color: #2196F3;
+    background: #e3f2fd;
+}
+.archive-card h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    color: #333;
+}
+.archive-card p {
+    margin: 4px 0;
+    font-size: 13px;
+    color: #666;
+    line-height: 1.4;
+}
+
+.archive-right {
+    flex: 0.45;
+    min-width: 0;
+    background: #f9f9f9;
+    border-radius: 12px;
+    padding: 22px;
+    overflow-y: auto;
+    position: relative;
+    display: none;
+}
+.archive-right.visible {
+    display: block;
+}
+.archive-right h2 {
+    margin: 0 30px 18px 0;
+    color: #2196F3;
+    font-size: 22px;
+}
+.archive-detail-thumb {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+.archive-detail-section {
+    margin-bottom: 18px;
+}
+.archive-detail-section h3 {
+    margin: 0 0 6px;
+    font-size: 14px;
+    color: #333;
+}
+.archive-detail-section p {
+    margin: 0;
+    line-height: 1.45;
+    color: #888;
+    font-size: 14px;
+}
+.archive-detail-section a {
+    color: #2196F3;
+    text-decoration: none;
+}
+.archive-detail-section a:hover {
+    text-decoration: underline;
+}
+.archive-detail-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid #ddd;
+    color: #666;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 5;
+}
+.archive-detail-close:hover {
+    background: #2196F3;
+    color: #fff;
+    border-color: #2196F3;
+}
+
+.archive-no-selection {
+    text-align: center;
+    color: #888;
+    padding: 40px 20px;
+}
+.archive-no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    background: #f9f9f9;
+    border-radius: 8px;
+}
+.archive-no-results h3 { margin: 0 0 8px; color: #333; }
+.archive-no-results p  { margin: 0; }
+
+/* Hide scrollbars on the panel's scroll areas for a cleaner look */
+.archive-left::-webkit-scrollbar,
+.archive-right::-webkit-scrollbar {
+    width: 8px;
+}
+.archive-left::-webkit-scrollbar-thumb,
+.archive-right::-webkit-scrollbar-thumb {
+    background: #d8d8d8;
+    border-radius: 4px;
+}
+
 /* --------------------------------------------------------------------------
    TUTORIAL OVERLAY
    -------------------------------------------------------------------------- */

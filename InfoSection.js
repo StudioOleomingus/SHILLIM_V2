@@ -1,6 +1,7 @@
 import { app, projects, PLAIN_COLORS } from './Config.js';
 import { createProjectCard } from './ProjectCard.js';
 import { indexBg, whiteCircleBg } from './Resources.js';
+import { openArchivePanel } from './ArchivePanel.js';
 
 const container = document.getElementById('app-container');
 
@@ -47,7 +48,9 @@ async function initInfoSection() {
         archiveIndexImage.eventMode = 'static';
         archiveIndexImage.cursor = 'pointer';
         archiveIndexImage.on('pointerdown', () => {
-            window.open('projectindex.html', '_blank');
+            // Cascade the project index out from the right as an in-page panel
+            // instead of opening projectindex.html in a new tab.
+            openArchivePanel();
         });
 
         // Add text element with padding
