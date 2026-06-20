@@ -3,6 +3,7 @@ import { initInfoSection } from './InfoSection.js';
 import { initImageSection } from './ImageSection.js';
 import { initBottomLayout } from './BottomLayout.js';
 import { startTutorial } from './Tutorial.js';
+import { slidePageInFromRight } from './Transitions.js';
 
 let loadingContainer;
 let continueText;
@@ -305,13 +306,21 @@ async function LoadTextures() {
             loadingContainer.visible = false;
             isLoading = false;
 
+            // Push the whole stage off to the right BEFORE building the
+            // interactive sections, so they're created off-screen and can
+            // cascade in cleanly (same motion as the Archive Index panel).
+            app.stage.x = app.screen.width;
+
             // Initialize sections
             await initInfoSection();
             await initImageSection();
             await initBottomLayout();
 
-            // Start the tutorial overlay
-            startTutorial();
+            // Cascade the interactive page in from the right, then start the tutorial.
+            slidePageInFromRight(app.stage, app.screen.width, {
+                duration: 0.75,
+                onComplete: () => startTutorial()
+            });
         });
 
         return {

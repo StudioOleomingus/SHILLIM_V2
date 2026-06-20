@@ -1,5 +1,9 @@
 import { app } from './Config.js';
 import { whiteCircleBg } from './Resources.js';
+import { slideInFromRight, slideOutToRight } from './Transitions.js';
+
+// Offset used for the detail-window cascade (matches the panel feel)
+const DETAIL_SLIDE_OFFSET = 180;
 
 // Track currently open detail window
 let currentOpenDetailWindow = null;
@@ -227,8 +231,11 @@ function createDetailWindow(artistDetails, details, link, cardBackground, x, y) 
 
     urlButton.on('pointertap', () => {
         if (link) {
-            detailContainer.visible = false;
-        cardBackground.tint = 0xFFFFFF; // White
+            slideOutToRight(detailContainer, { offset: DETAIL_SLIDE_OFFSET });
+            cardBackground.tint = 0xFFFFFF; // White
+            if (currentOpenDetailWindow === detailContainer) {
+                currentOpenDetailWindow = null;
+            }
             window.open(link, '_blank');
         }
     });
@@ -272,8 +279,11 @@ function createDetailWindow(artistDetails, details, link, cardBackground, x, y) 
             currentOpenDetailWindow = null;
         }
     closeButton.on('pointertap', () => {
-        detailContainer.visible = false;
+        slideOutToRight(detailContainer, { offset: DETAIL_SLIDE_OFFSET });
         cardBackground.tint = 0xFFFFFF; // White
+        if (currentOpenDetailWindow === detailContainer) {
+            currentOpenDetailWindow = null;
+        }
     });
 
     detailContainer.addChild(closeButton);
@@ -400,19 +410,20 @@ export function createProjectCard(title, author, date, link, details, artistDeta
 
     // Click handler to toggle detail window
     buttonContainer.on('pointertap', () => {
-        // Close any previously open detail window
+        // Close any previously open detail window (cascade it back out)
         if (currentOpenDetailWindow && currentOpenDetailWindow !== detailWindow) {
-            currentOpenDetailWindow.visible = false;
+            slideOutToRight(currentOpenDetailWindow, { offset: DETAIL_SLIDE_OFFSET });
             // Reset the previous card background
             if (currentOpenDetailWindow.cardBackground) {
                 currentOpenDetailWindow.cardBackground.tint = 0xFFFFFF;
             }
         }
 
-        detailWindow.visible = !detailWindow.visible;
-        
-        // Reset scroll position when opening
-        if (detailWindow.visible) {
+        // Treat as "open" if it's not currently the active/visible window
+        const isOpening = !detailWindow.visible;
+
+        if (isOpening) {
+            // Reset scroll position when opening
             detailWindow.scrollContainer.y = detailWindow.topPadding;
             if (detailWindow.scrollbarThumb) {
                 detailWindow.scrollbarThumb.y = detailWindow.topPadding;
@@ -420,7 +431,10 @@ export function createProjectCard(title, author, date, link, details, artistDeta
             currentOpenDetailWindow = detailWindow;
             detailWindow.cardBackground = background;
             background.tint = 0xE6F3FF; // Light blue
+            // Cascade the detail window in from the right
+            slideInFromRight(detailWindow, { offset: DETAIL_SLIDE_OFFSET });
         } else {
+            slideOutToRight(detailWindow, { offset: DETAIL_SLIDE_OFFSET });
             if (currentOpenDetailWindow === detailWindow) {
                 currentOpenDetailWindow = null;
             }
