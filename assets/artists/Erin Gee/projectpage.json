@@ -1,0 +1,32 @@
+{
+  "author": "Erin Gee",
+  "artistdescription": "<p>Erin Gee is a pioneering American composer and vocalist renowned for her \"Mouthpiece\" series, where she treats the voice as a precision instrument of non-semantic sound. A Professor at Brandeis University, her accolades include the 2023 Herb Alpert Award, a Guggenheim Fellowship, and the Rome Prize. Notably, she was named one of the 21st century's most influential composer-vocalists by The New Yorker and has received the Picasso-Miró Medal and a Koussevitzky Foundation commission for her groundbreaking contributions to contemporary music.</p>",
+  "projects": [
+    {
+      "title": "Art Residency",
+      "startdate": "2024-01-01",
+      "enddate": "2024-12-31",
+      "sections": [
+        {
+          "sectiontype": "text",
+          "value": "<p>Erin Gee brought her skills as an acute listener to Shillim, where she spent long stretches of time in stillness—often at night or in early morning—attuning to the sonic rhythms of the forest without interference. From her courtyard, positioned near a ravine, she listened to how birds occupied auditory space: how they called, paused, and responded within shared sonic “niches.” &nbsp; Intervals of silence became as meaningful as sound, revealing a complex ecology of timing and relation. Rather than collecting material for direct use, she allowed these experiences to transform her perceptual and bodily awareness. Shillim thus functioned not as a source to be represented, but as a catalyst for her own imagined sounds. Her process privileged observation before analysis; only later did research and reflection layer onto these embodied encounters, allowing composition to emerge from memory, sensation, and transformed listening.</p>"
+        },
+        {
+          "sectiontype": "image",
+          "value": [
+            {
+              "filename": "1.JPG"
+            },
+            {
+              "filename": "2.JPG"
+            }
+          ]
+        },
+        {
+          "sectiontype": "text",
+          "value": "<p>Erin’s residency at Shillim marked a profound reorientation of her compositional practice towards collaborating with the soundscape of the more than human. From her residence at Shillim, she observed how birds structured their sonic environments—how pauses, silences, and auditory niches shaped communication and how they often produced shared rhythms and marked interspecies listening.&nbsp;<br>This deep listening provided the inspiration for a new series of ‘mouthpieces’, as she calls many of her compositions. Importantly, the birds were not treated as sound sources to be imitated or quoted, but as agents of influence that reshaped her understanding of sound and presence. In this way, landscape was not directly illustrated—rather it supported a transformation of perception.<br>Out of this transformation arose a system of imaginary species: 29 distinct bird entities, each defined by specific sonic boundaries and behaviors. These species became the foundation for a new compositional ecology. Each sound carried a kind of biodynamic energy, interacting with others as if within a living habitat. Composition became less about linear development and more about sustaining a dynamic, interdependent environment.&nbsp;<br>Central to this shift was a practice of corporeal empathy and decentering the human. Erin explored what it might mean to “become” the bird—not through mimicry, but through accessing unfamiliar vocal registers and abandoning conventional emotional coding. Influenced by philosophies that dissolve the primacy of the ego, she approached performance as a form of vesselhood rather than expression. Narrative, character, and persona receded, replaced by a fluid identity that blurred the boundary between human and non-human. The voice became a site of metamorphosis, probing the paradox of inhabiting both personhood and its absence.<br>Erin created three compositions from her time at Shillim. She has performed them internationally, including at the Pompidou Center in Paris, Boston University, and UC Davis.&nbsp;<br>&nbsp;</p>"
+        }
+      ]
+    }
+  ]
+}

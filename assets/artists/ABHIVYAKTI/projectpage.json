@@ -1,0 +1,25 @@
+{
+  "author": "Shillim Institute in collaboration with ATREE",
+  "artistdescription": "<p>A skill development program by Shillim Institute for rural kids through performing arts to promote conservation, Livelihood and sustainable cultural practices in the Maval region.&nbsp;</p>",
+  "projects": [
+    {
+      "title": "\"ABHIVYAKTI \" A Skill Development Program for Rural Kids",
+      "startdate": "2025-05-14",
+      "enddate": "2025-06-04",
+      "sections": [
+        {
+          "sectiontype": "text",
+          "value": "<p>Abhivyakti was launched as a pilot project to revive and restore theregion’s fading art and cultural heritage. This performing arts-based skill development initiative aims to enrich rural lives by nurturing creativity, preserving cultural traditions, and empowering &nbsp;aims to enrich rural lives by nurturing creativity, preserving cultural traditions, and empowering youth with artistic and entrepreneurial skills. Through inclusive training in dance, music, theatre,and instrumental arts, Abhivyakti fosters self-expression and community engagement, making art a powerful tool for social and economic transformation.</p>"
+        },
+        {
+          "sectiontype": "image",
+          "value": [
+            {
+              "filename": "Abhivyakti.jpg"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

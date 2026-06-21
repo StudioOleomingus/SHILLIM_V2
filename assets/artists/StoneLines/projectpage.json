@@ -1,0 +1,21 @@
+{
+  "author": "Shillim Institute in collaboration with ATREE",
+  "artistdescription": "<p>Located in the Western Ghats, The Shillim Institute safeguards approximately 2000 acres of land in the Northern region of this mountain range, which has been declared a UNESCO World Heritage Site and a biodiversity conservation hotspot. The Institute has enlisted local communities as forest guards, and introduced thousands of native plant species, resulting in the flourishing of over a million trees comprising 64 diverse species. The Pavna Collective is a consortium of conservation, ecology, and arts organizations, convened by the Shillim Institute. Among its initiatives, the Pavna Collective sponsors 3-6 art residencies a year, fellowships,Mapping Workshop, Cultural documentation and Skill development programs in the Sayadri ranges.</p>",
+  "projects": [
+    {
+      "title": "Gully Plugs & Stone Lines ",
+      "startdate": "2025-03-01",
+      "enddate": "2025-05-30",
+      "sections": [
+        {
+          "sectiontype": "text",
+          "value": "<p>The Gully Plugs and Stone Lines Project was initiated to address soil erosion, water runoff, and land degradation observed within the project area. Field assessments identified critical gaps, including the formation of gullies, loss of topsoil, and reduced water retention capacity due to uncontrolled surface flow. The primary objective of the project was to slow down runoff, promote groundwater recharge, and stabilize the soil using low-cost, nature-based solutions. Background research focused on watershed management practices and traditional soil conservation techniques suitable for the local terrain. Based on these findings, a systematic plan was developed involving site identification, contour mapping, and the strategic placement of gully plugs and stone lines. The approach emphasized minimal environmental disturbance while enhancing natural processes. This project integrates ecological restoration with sustainable land management practices, providing an effective solution for improving soil health and water conservation in degraded landscapes.</p>"
+        },
+        {
+          "sectiontype": "text",
+          "value": "<p>The Gully Plugs and Stone Lines Project has significant implications for soil conservation, water management, and ecosystem restoration. By constructing gully plugs and aligning stone lines along natural contours, the project effectively reduces the speed of surface runoff, preventing further soil erosion and stabilizing vulnerable land areas. This intervention helps retain nutrient-rich topsoil, which is essential for supporting vegetation growth and maintaining land productivity.</p><p>One of the major impacts of the project is the improvement in water retention and groundwater recharge. Slowing down runoff allows water to percolate into the soil, increasing moisture availability and supporting the regeneration of native vegetation. Over time, this contributes to improved vegetation cover, which further enhances soil stability and reduces the risk of land degradation.</p><p>The project also plays a crucial role in restoring ecological balance. As vegetation begins to recover, it creates favorable conditions for local biodiversity, including insects, birds, and small wildlife. Improved soil moisture and reduced erosion support healthier ecosystems and strengthen the resilience of the landscape against climatic variations such as droughts and heavy rainfall.</p><p>Additionally, the use of locally available materials like stones makes the intervention cost-effective and sustainable. It encourages the adoption of simple, replicable techniques for land restoration in similar regions. The project also supports long-term watershed management goals by improving hydrological balance and reducing sedimentation in downstream areas.</p><p>Overall, the initiative not only addresses immediate environmental challenges but also contributes to long-term sustainability, making it an effective model for soil and water conservation practices in degraded and erosion-prone landscapes.</p>"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "author": "Dr. Sangavi Dhanapal",
+  "artistdescription": "<p>Dr. Sangavi Dhanapal is a biodiversity researcher specializing in spider ecology, taxonomy, and conservation biology. Her studies have documented over 180 spider species from Salem District, Tamil Nadu, the first comprehensive record for the region, and continue to advance knowledge of arthropod diversity in the Western Ghats. At Shillim Institute, she investigates the biodiversity and ecology of spiders in the Sahyadri Hills, integrating molecular and field approaches to inform conservation. She previously worked at the National Institute of Advanced Studies under Prof. Anindya Sinha, studying spider diversity in Assam, and gained international experience through research internships at the National Pingtung University of Science and Technology, Taiwan. Alongside her biodiversity work, she has researched carbon nanodots for biomedical applications. Dr. Sangavi has authored four peer-reviewed papers, two book chapters, and received awards for her research presentations.</p>",
+  "projects": [
+    {
+      "title": "Diversity and Distribution of Spiders in Sahyadri hills: A Natural and Altered habitat in Shillim Institute, Pune, Western Ghats",
+      "startdate": "2025-04-15",
+      "enddate": "2025-09-09",
+      "sections": [
+        {
+          "sectiontype": "text",
+          "value": "<p>A detailed study of spider diversity was carried out across six different habitats of the Shillim landscape in the northern Western Ghats. Over the course of the study, nearly 500 individuals were recorded, representing 200 species across 25 families- an impressive 10% of India’s known spider diversity. The findings highlight Shillim’s ecological richness, with natural habitats like shrublands, forests, and grasslands supporting the highest variety of species. Among these, the jumping spiders (Salticidae) emerged as the most dominant family, followed by orb weavers (Araneidae) and lynx spiders (Oxyopidae). Several species were documented for the first time in Maharashtra, and 26 species recorded are endemic to India. Spiders play an important ecological role as natural pest controllers and as indicators of habitat health. The study’s results suggest that healthy, undisturbed ecosystems at Shillim provide essential niches for these invertebrates, further reinforcing the success of ongoing habitat restoration work. This fellowship builds a strong foundation for tracking invertebrate diversity and deepening our understanding of how restored ecosystems sustain complex web-of-life interactions.</p>"
+        },
+        {
+          "sectiontype": "image",
+          "value": [
+            {
+              "filename": "Sanghavi.jpg"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

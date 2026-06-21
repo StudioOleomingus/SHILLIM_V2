@@ -1,0 +1,21 @@
+{
+  "author": "Green Squad",
+  "artistdescription": "<p>Green Squad is an environmental education program by the Shillim Institute (SI), designed to teach students about the environment and biodiversity through a series of 10 curated modules. The program is tailored for students from Standards 5th to 7th and is implemented across Zilla Parishad (ZP) schools in rural Pune. Each module is conducted over the span of one month, focusing on a specific environmental theme to foster awareness, curiosity, and action among young learners.</p>",
+  "projects": [
+    {
+      "title": "Green Squad : Donation Drive",
+      "startdate": "2024-03-01",
+      "enddate": "2024-03-31",
+      "sections": [
+        {
+          "sectiontype": "text",
+          "value": "<p>The Shillim Institute donated school stationery materials and essential equipment to support local schools. The donation included CCTV cameras, cupboards, shoe racks, and plate-holder shelves for school use.</p>"
+        },
+        {
+          "sectiontype": "text",
+          "value": "<p>The aim was to provide infrastructure and material support to schools that lacked basic facilities. The CCTV cameras will help schools monitor and prevent any mishappenings, cupboards will be used for storing stationery materials, shoe racks will help keep shoes organized, and plate holders will allow students to keep their plates neatly. These improvements will help schools manage their equipment better and create a more organized and positive learning environment for students.</p>"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "author": "Adhith M K",
+  "artistdescription": "<p>Adhith is a post graduate in Ecological Informatics from Kerala University of Digital Science, Innovation and Technology. His research integrates wildlife ecology with advanced computational approaches, focusing on acoustic monitoring, species behaviour, and conservation technology. He has conducted extensive fieldwork across diverse ecosystems and has experience in biodiversity assessment, remote sensing, GIS, Python, R, and deep learning. At Shillim Institute, he has led research on avian acoustic ecology in the Northern Western Ghats, developing data-driven tools to evaluate habitat restoration. He has a broader interests in wildlife conservation, ecosystem restoration, and sustainable development, with a commitment to advancing science-based conservation solutions</p>",
+  "projects": [
+    {
+      "title": "Conservation Fellowship",
+      "startdate": "2025-01-15",
+      "enddate": "2025-07-15",
+      "sections": [
+        {
+          "sectiontype": "text",
+          "value": "<p>As part of the Conservation Fellowship, a study was undertaken to develop an innovative sound-based monitoring system to understand how restoration efforts at Shillim are supporting the return of birdlife. Using a custom-built computer model, the project was able to identify 14 key bird species by their calls with over 90% accuracy, showing how technology can support nature-based monitoring in the Western Ghats. The results clearly showed that restored habitats within Shillim support a greater diversity of birds compared to degraded areas. Forest cover in these restored zones also increased significantly, while agricultural land reduced, marking a successful shift toward natural regeneration. However, the study also drew attention to ongoing challenges such as noise pollution, which continues to affect bird communication even in recovering habitats. By combining sound recordings, habitat data, and species observations, the research created a clear picture of how ecological restoration is supporting biodiversity revival across the landscape. The findings highlight the importance of continued restoration efforts and the potential of acoustic monitoring as a long-term, low-impact way to track ecosystem health. Looking ahead, the fellowship opens the door for wider, year-round monitoring and the use of advanced technological tools to deepen understanding of how Shillim’s living landscape continues to recover and thrive.</p>"
+        },
+        {
+          "sectiontype": "image",
+          "value": [
+            {
+              "filename": "Adhith.jpg"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

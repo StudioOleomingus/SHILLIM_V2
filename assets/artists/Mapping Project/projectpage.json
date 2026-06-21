@@ -1,0 +1,25 @@
+{
+  "author": "Margie Ruddick, Vritti and Hibah",
+  "artistdescription": "",
+  "projects": [
+    {
+      "title": "Mapping Workshop",
+      "startdate": "2025-01-05",
+      "enddate": "2025-01-16",
+      "sections": [
+        {
+          "sectiontype": "text",
+          "value": "<p>The Shillim Institute Mapping Workshop engaged participants in exploring the Shillim landscape through artistic, ecological, and cultural lenses. It fostered collective observation, documentation, and interpretation of natural and human ecosystems, creating visual and experiential maps that deepen understanding of place, memory, and sustainable coexistence within the Sahyadri environment.<br>&nbsp;</p>"
+        },
+        {
+          "sectiontype": "image",
+          "value": [
+            {
+              "filename": "MAPPING WORKSHOP.jpg"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

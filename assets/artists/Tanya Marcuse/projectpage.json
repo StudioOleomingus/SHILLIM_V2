@@ -1,0 +1,44 @@
+{
+  "author": "Tanya Marcuse",
+  "artistdescription": "<p>American photographer Tanya Marcuse is renowned for large-scale, meticulously staged images exploring the cycles of growth, decay, and the natural world. Based in the Hudson Valley and a faculty member at Bard College, her work is held in prestigious collections including the Met and SFMOMA. Marcuse’s fantastical compositions elegantly capture the tension between time’s passage and the photographic medium.</p>",
+  "projects": [
+    {
+      "title": "Art Residency",
+      "startdate": "2024-01-01",
+      "enddate": "2024-12-31",
+      "sections": [
+        {
+          "sectiontype": "text",
+          "value": "<p>Working within a ten-day timeframe at Shillim —far shorter than her typical multi-year projects—Tanya developed an immediate, highly empirical response to place. She engaged with the landscape through concentrated observation and nightly excursions, working from dusk into darkness. The nocturnal setting allowed her to see beyond the dramatic vistas and instead cultivate intimacy, ambiguity, and perceptual instability. Collaborating closely with the Shillim forest guards, Tanya walked the landscape, looking for surprising moments. Ultimately, Shillim became a site where immediacy, theatricality, and contradiction converged, producing work that reflects both enchantment and a critical perspective.<br>&nbsp;</p>"
+        },
+        {
+          "sectiontype": "image",
+          "value": [
+            {
+              "filename": "1.jpg"
+            },
+            {
+              "filename": "3.jpg"
+            },
+            {
+              "filename": "5.jpg"
+            },
+            {
+              "filename": "6.jpg"
+            },
+            {
+              "filename": "8.jpg"
+            },
+            {
+              "filename": "9.jpg"
+            }
+          ]
+        },
+        {
+          "sectiontype": "text",
+          "value": "<p>Tanya’s artistic practice is deeply rooted in a sustained engagement with place, typically unfolding over long project cycles that allow for repeated return, seasonal observation, and the accumulation of intimate knowledge. Her work challenges conventional definitions of landscape, rejecting the distant, horizon-driven compositions associated with historical traditions in favor of immersive, ground-level perspectives. Central to her practice is the use of light as a material. At Shillim, she employed portable colored lights and flashlights as tools for “drawing” into space, creating orbs, halos, and gestural traces that oscillate between presence and absence. These interventions collapse distinctions between sculpture, painting, and photography, producing images that feel simultaneously constructed and discovered. The resulting photographs often destabilize depth, scale, and orientation, especially in the nighttime settings where darkness erases visual anchors and heightens intimacy. Tanya embraces artifice as a generative force rather than something to conceal. Her work foregrounds the constructed nature of both the image and the environment itself, probing the tensions between natural and mediated experience. This is evident not only in her lighting strategies but also in subtle physical interventions, such as the use of beetroot powder to suggest wounds in the landscape or the placement of organic materials to disrupt architectural spaces. Across her practice, contradiction operates as a key conceptual driver: between wilderness and control, immediacy and duration, enchantment and unease. Photography, for Tanya, isa tool for exploring the unknown—an iterative, intuitive process in which meaning emerges through surprise, transformation, and sustained attention.<br>&nbsp;</p>"
+        }
+      ]
+    }
+  ]
+}

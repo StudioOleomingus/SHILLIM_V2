@@ -1,0 +1,28 @@
+{
+  "author": "Ann De Forest",
+  "artistdescription": "<p>Ann De Forest is a writer whose work, fiction, non-fiction, and poetry, centers on themes of place. She is a contributing writer for Hidden City Philadelphia, co-editor of Extant Magazine, and author of Healing on the Homefront, profiles and portraits of home health care patients and their caregivers. Most recently, she is editor of Ways of Walking, an anthology of essays published by New Door Books in 2022. Her short stories, essays, and poetry have appeared in Noctua Review, Cleaver Magazine, Found Poetry Review, The Journal, Hotel Amerika, Timber Creek Review, Open City, and PIF. She has taught poetry to the elderly at Mercy-LIFE West Philadelphia for more than a decade. A Swim Pony Cross Pollination artist-in-residence in 2016, Ann walked the entire perimeter of Philadelphia with three other artists, initiating an ongoing collaboration to open up new conversations about civic space</p>",
+  "projects": [
+    {
+      "title": "Art Residency",
+      "startdate": "2024-01-01",
+      "enddate": "2024-12-31",
+      "sections": [
+        {
+          "sectiontype": "text",
+          "value": "<p>Ann’s artwork centers on the translation of embodied experience into language, using walking as both generative practice and conceptual framework. Her process begins with direct engagement: she enters a landscape without prior research, allowing sensory perception—movement, texture, rhythm—to guide her understanding. The body operates as an instrument, responding to terrain through pacing, direction, and attention. From this experiential foundation, her work shifts into language, which she treats as a flexible, exploratory medium rather than a fixed narrative tool.</p><p><br>Her writing resists linear storytelling. Instead of recounting events in sequence, she constructs hybrid forms that include fragments, vignettes, essays, and poetic passages. These pieces function as accumulations—textual equivalents of her walks—where meaning emerges gradually through layering rather than resolution. She often describes this as a process of “accretion,” echoing geological formations that build over time. This metaphor extends further: just as landscapes are shaped by forces of accumulation and erosion, her writing evolves through addition, revision, and openness to incompletion.<br>A key aim of Anne’s work is to foreground place rather than the individual observer. While her presence is implicit, she avoids centering herself, instead creating a field in which the environment—its textures, histories, and interconnections—can emerge. Her ongoing project reflects this ethos, functioning as an archive, sketchbook, and evolving manuscript. It brings together discrete pieces that can stand alone yet also contribute to a larger, interconnected whole.<br>Collaboration and encounter also shape her work. Walking with others introduces alternative perceptions, vocabularies, and emotional registers, which enter her writing as shifts in perspective or tone. Similarly, research—geological, historical, linguistic—enters after the fact, enriching rather than directing the initial experience.<br>Ultimately, Anne’s artwork remains intentionally unfinished. It is a living process that mirrors the landscapes she engages: dynamic, layered, and resistant to closure.<br>&nbsp;</p>"
+        },
+        {
+          "sectiontype": "image",
+          "value": [
+            {
+              "filename": "1.jpg"
+            },
+            {
+              "filename": "2.jpg"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

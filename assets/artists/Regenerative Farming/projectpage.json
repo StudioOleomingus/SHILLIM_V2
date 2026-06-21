@@ -1,0 +1,21 @@
+{
+  "author": "Shillim Institute",
+  "artistdescription": "<p>Located in the Western Ghats, The Shillim Institute safeguards approximately 2000 acres of land in the Northern region of this mountain range, which has been declared a UNESCO World Heritage Site and a biodiversity conservation hotspot. The Institute has enlisted local communities as forest guards, and introduced thousands of native plant species, resulting in the flourishing of over a million trees comprising 64 diverse species.</p>",
+  "projects": [
+    {
+      "title": "Regenerative Farming Initiative",
+      "startdate": "2025-06-01",
+      "enddate": "2025-08-31",
+      "sections": [
+        {
+          "sectiontype": "text",
+          "value": "<p>Farmers in the Shillimb region traditionally relied on conventional farming practices that depended heavily on chemical fertilisers and pesticides. Over time, this approach led to declining soil fertility, increased pest incidences, and rising input costs, which affected crop productivity and farmer incomes. Many farmers found it increasingly difficult to maintain soil health while managing the costs of cultivation.<br>&nbsp;</p>"
+        },
+        {
+          "sectiontype": "text",
+          "value": "<p>To address these challenges, the Shillim Institute introduced a Regenerative Farming initiative aimed at promoting sustainable agricultural practices that restore soil health, reduce chemical dependency, and strengthen farm resilience. The initiative focuses on equipping farmers with practical knowledge and skills to transition towards environmentally sustainable and economically viable farming systems.<br>&nbsp;</p><p>&nbsp;</p>"
+        }
+      ]
+    }
+  ]
+}
