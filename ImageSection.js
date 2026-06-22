@@ -4,6 +4,7 @@ import { archiveIndexValueLabelText } from './InfoSection.js';
 import { updateSectionSizes, updateTextBox } from './BottomLayout.js';
 import { interactiveBgTexture, restartButtonTexture, whitebgTexture, leavesTexture, dragonflyTexture, frogTexture } from './Resources.js';
 import { tutorialDragDone, tutorialSurroundDone } from './Tutorial.js';
+import { initLizardAnimator, spawnLizard, setSpawnPoint } from './LizardAnimator.js';
 
 let previousSurroundedGroupsLength = 0;
 let tempGridCells = [];
@@ -78,6 +79,9 @@ async function initImageSection() {
         imageContainer.width = interactiveRect.width;
         imageContainer.height = interactiveRect.height;
         imageContainer.eventMode = 'static';
+
+        // Initialise the lizard animator — must be called after imageContainer is created
+        initLizardAnimator(imageContainer);
         
         // Class to track texture statistics
         class TextureStats {
@@ -858,8 +862,6 @@ async function initImageSection() {
             let endCol = Math.floor(x2 / cellSize);
             let endRow = Math.floor(y2 / cellSize);
 
-            
-
             currentDragDirection = selectedCategory;
 
             tempGridCells.length = 0;
@@ -1000,8 +1002,6 @@ async function initImageSection() {
             // Notify tutorial that a drag was completed
             tutorialDragDone();
 
-            
-            
             // If we found a new surrounded group
             if (textureStats.surroundedGroups.length > previousSurroundedGroupsLength) {
 
@@ -1011,17 +1011,14 @@ async function initImageSection() {
                     gridContainer.removeChild(gridContainer.surroundedGroupsContainer);
                 }
 
-                
                 gridContainer.surroundedGroupsContainer = surroundedGroupsContainer;
-                
-                
 
                 // Color all surrounded groups
                 textureStats.surroundedGroups.forEach(group => {
                     // Get a random color from PLAIN_COLORS
-                const colors = Object.values(PLAIN_COLORS);
-                const randomColor = colors[Math.floor(Math.random() * colors.length)];
-                const plainColor = parseInt(randomColor.replace('#', '0x'));
+                    const colors = Object.values(PLAIN_COLORS);
+                    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                    const plainColor = parseInt(randomColor.replace('#', '0x'));
                     // Color all cells in the group
                     group.forEach(cell => {
                         const newSprite = new PIXI.Sprite(whitebgTexture);
@@ -1042,13 +1039,39 @@ async function initImageSection() {
                 // Add a project card based on percentages
                 if (typeof window.addRandomProject === 'function') {
                     window.addRandomProject(
-                        textureStats.topPercentage,           // ART
-                        textureStats.topRightPercentage,      // COMMUNITY
-                        textureStats.bottomRightPercentage,   // ECOLOGY
-                        textureStats.bottomPercentage,        // RESEARCH
-                        textureStats.bottomLeftPercentage,    // HEALTH
-                        textureStats.topLeftPercentage         // EDUCATION
+                        textureStats.topPercentage,
+                        textureStats.topRightPercentage,
+                        textureStats.bottomRightPercentage,
+                        textureStats.bottomPercentage,
+                        textureStats.bottomLeftPercentage,
+                        textureStats.topLeftPercentage
                     );
+                }
+
+                // Spawn a lizard from the enclosure nearest to what was just painted.
+                // surroundedGroups is rebuilt from scratch each frame in scan order,
+                // so we can't rely on array index — find the group closest to the drag.
+                const dragCenterX = (startX + endX) / 2;
+                const dragCenterY = (startY + endY) / 2;
+
+                let nearestGroup = null;
+                let nearestDist = Infinity;
+                textureStats.surroundedGroups.forEach(group => {
+                    // Group centroid in pixel space
+                    let cx = 0, cy = 0;
+                    group.forEach(c => { cx += c.col; cy += c.row; });
+                    cx = (cx / group.length) * cellSize + cellSize / 2;
+                    cy = (cy / group.length) * cellSize + cellSize / 2;
+                    const dist = (cx - dragCenterX) ** 2 + (cy - dragCenterY) ** 2;
+                    if (dist < nearestDist) { nearestDist = dist; nearestGroup = group; }
+                });
+
+                if (nearestGroup) {
+                    const cell = nearestGroup[Math.floor(Math.random() * nearestGroup.length)];
+                    const spawnX = cell.col * cellSize + cellSize / 2;
+                    const spawnY = cell.row * cellSize + cellSize / 2;
+                    setSpawnPoint(spawnX, spawnY);
+                    spawnLizard(spawnX, spawnY);
                 }
 
                 // Notify tutorial that an enclosed space was created
@@ -1066,7 +1089,6 @@ async function initImageSection() {
                 }, 5000);
             }
 
-            
         });
 
         // Mouse out event
