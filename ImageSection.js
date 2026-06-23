@@ -1071,7 +1071,7 @@ async function initImageSection() {
                     const spawnX = cell.col * cellSize + cellSize / 2;
                     const spawnY = cell.row * cellSize + cellSize / 2;
                     setSpawnPoint(spawnX, spawnY);
-                    spawnLizard(spawnX, spawnY);
+                    spawnLizard(spawnX, spawnY, nearestGroup.length);
                 }
 
                 // Notify tutorial that an enclosed space was created
