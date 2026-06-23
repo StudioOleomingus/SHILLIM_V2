@@ -15,7 +15,37 @@
           "sectiontype": "image",
           "value": [
             {
-              "filename": "MAPPING WORKSHOP.jpg"
+              "filename": "HL01.png"
+            },
+            {
+              "filename": "HL02.png"
+            },
+            {
+              "filename": "HL03.png"
+            },
+            {
+              "filename": "HL04.png"
+            }
+          ]
+        },
+        {
+          "sectiontype": "text",
+          "value": "<p>Description Text to be added</p>"
+        },
+        {
+          "sectiontype": "image",
+          "value": [
+            {
+              "filename": "VT01.png"
+            },
+            {
+              "filename": "VT02.png"
+            },
+            {
+              "filename": "VT03.png"
+            },
+            {
+              "filename": "VT04.png"
             }
           ]
         }
