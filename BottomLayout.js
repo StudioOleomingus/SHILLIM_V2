@@ -1,4 +1,4 @@
-import { app, stageWidth, projectDescriptionTexts } from './Config.js';
+import { app, stageWidth, projectDescriptionTexts, interactiveRect } from './Config.js';
 
 const container = document.getElementById('app-container');
 
@@ -78,7 +78,7 @@ function updateSectionSizes(p1 = 16.67, p2 = 16.67, p3 = 16.67, p4 = 16.67, p5 =
             align: 'right'
         });
         textLabel.anchor.set(1, 0.5);
-        textLabel.y = 25; // Vertically centered
+        textLabel.y = 38; // Lowered so it stays visible below the overlapping play card
         textLabel.interactive = false;
         sectionContainer.addChild(textLabel);
 
@@ -254,15 +254,17 @@ async function initBottomLayout() {
         // Add text box container to stage
         app.stage.addChild(textBoxContainer);
 
-        // Create a container for the bottom layout
+        // Create a container for the bottom layout (percentage / category bar)
         layoutContainer = new PIXI.Container();
-        layoutContainer.x = 390;  // Position from left
-        layoutContainer.y = app.screen.height - 60;  // Position at bottom
+        // Align with the play card (interactiveRect.x + PLAY_GAP), same width.
+        layoutContainer.x = interactiveRect.x + 14;
+        layoutContainer.y = interactiveRect.height - 62;  // top half overlapped by the card
+        layoutContainer.zIndex = -1;                      // render behind the play card
         //layoutContainer.eventMode = 'static';
         // Make the container non-interactable
         layoutContainer.interactive = false;
 
-        totalWidth = (container.clientWidth - 390) - 10; // 10 is padding, // 440 is left margin
+        totalWidth = interactiveRect.width - 28; // match the play card width
 
         // Initial layout with equal sizes - 6 categories
         updateSectionSizes(0,0,0,0,0,0);
@@ -271,11 +273,12 @@ async function initBottomLayout() {
 
         // Handle window resizing
         function resize() {
-            totalWidth = (container.clientWidth - 390) - 10; // 10 is padding
+            totalWidth = interactiveRect.width - 28; // match the play card width
 
             // Update layout container position
-            layoutContainer.y = container.clientHeight - 60;
-            
+            layoutContainer.x = interactiveRect.x + 14;
+            layoutContainer.y = interactiveRect.height - 62;
+
             // Update text box container position and size
             textBoxContainer.y = container.clientHeight - 145;
             

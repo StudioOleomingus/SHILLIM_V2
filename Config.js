@@ -5,7 +5,7 @@ const stageHeight = 1000;
 const app = new PIXI.Application({
     width: stageWidth,
     height: stageHeight,
-    backgroundColor: 0xFFFFFF,
+    backgroundColor: 0xECECEC,
     antialias: true,
     resolution: window.devicePixelRatio || 1,
     powerPreference: 'high-performance',

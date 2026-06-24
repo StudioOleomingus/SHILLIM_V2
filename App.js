@@ -6,7 +6,7 @@ async function initApp() {
         await app.init({
             width: 1550,
             height: 1000,
-            backgroundColor: 0xFFFFFF,
+            backgroundColor: 0xECECEC,
             antialias: true,
             resolution: window.devicePixelRatio || 1,
             canvas: document.createElement('canvas')
@@ -15,10 +15,10 @@ async function initApp() {
         // Add rounded corners and stroke to the canvas
         app.view.style.borderRadius = '40px';
        // app.view.style.border = '1px solid rgb(213, 213, 213)';
-        app.view.style.backgroundColor = '#FFFFFF';
+        app.view.style.backgroundColor = '#ECECEC';
         app.view.style.width = '1550px';
         app.view.style.height = '1000px';
-        app.view.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.2)';
+        app.view.style.boxShadow = 'none';
 
         // Add the Pixi canvas to our container
         document.getElementById('app-container').appendChild(app.view);

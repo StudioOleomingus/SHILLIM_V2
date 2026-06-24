@@ -346,9 +346,8 @@ export function createProjectCard(title, author, date, link, details, artistDeta
     const contentHeight = dateText.y + dateText.height + buttonSize + buttonPadding + 10;
     cardHeight = Math.max(cardHeight, contentHeight);
 
-    // Create background with rounded corners
+    // Create background with rounded corners (no outline)
     const background = new PIXI.Graphics();
-    background.lineStyle(1, 0xd2d2d2, 1);
     background.beginFill(0xFFFFFF);
     background.drawRoundedRect(0, 0, cardWidth, cardHeight, 26);
     background.endFill();

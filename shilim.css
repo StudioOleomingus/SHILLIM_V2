@@ -13,7 +13,7 @@ body {
     margin: 0;
     padding: 0;
     font-family: 'Hind Madurai', 'Lucida Grande',sans-serif;
-    background-color: #f5f5f5;
+    background-color: #e0e0e0;
     color: #333;
     min-height: 100vh;
     display: flex;
@@ -31,9 +31,8 @@ body {
     max-width: 95vw;
     max-height: 95vh;
     aspect-ratio: 1550 / 1000;
-    background-color: white;
+    background-color: #ececec;
     border-radius: 40px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     overflow: hidden;
 }
 
@@ -197,7 +196,7 @@ button.export {
    PAGE-SPECIFIC: index.html  (PixiJS canvas landing page)
    ========================================================================== */
 body.page-index {
-    background-color: #ffffff;
+    background-color: #e0e0e0;
     overflow: hidden;
 }
 
@@ -208,7 +207,6 @@ body.page-index {
     max-width: 95vw;
     max-height: 95vh;
     aspect-ratio: 1550 / 1000;
-    box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
 }
 
 #app-container canvas {
@@ -542,7 +540,7 @@ body.page-index {
    ========================================================================== */
 body.page-projectpage {
     font-family: 'Hind Madurai', 'Lucida Grande', sans-serif;
-    background-color: #f0f2f5;
+    background-color: #e0e0e0;
 }
 
 .container--projectpage {
@@ -563,7 +561,6 @@ body.page-projectpage {
     overflow-y: scroll;
     height: 100%;
     border-radius: 30px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     z-index: 1;
 }
 
@@ -573,7 +570,6 @@ body.page-projectpage {
     overflow-y: scroll;
     background: white;
     border-radius: 30px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     margin-left: -120px;
     z-index: 2;
 }

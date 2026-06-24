@@ -606,17 +606,46 @@ async function initImageSection() {
         };
 
         
-        const backgroundImage = new PIXI.Sprite(interactiveBgTexture);
-        backgroundImage.x = -15;
-        backgroundImage.y = -10;
-        backgroundImage.width = interactiveRect.width + 30;
-        backgroundImage.height = interactiveRect.height + 20;
+        // ---- Play-area layout ----
+        // The white play card extends down to overlap the top half of the
+        // percentage bar (drawn by BottomLayout) at the very bottom. The
+        // category SELECTOR bar sits *inside* the card, near its bottom edge.
+        const PLAY_GAP = 14;            // margin around the white play card
+        const SELECTOR_H = 52;          // height of the in-card selector bar
+        const PERCENT_BAR_H = 50;       // must match BottomLayout's percentage bar
+        const PERCENT_BAR_MARGIN = 12;  // gap from the very bottom
+        const playX = PLAY_GAP;
+        const playY = PLAY_GAP;
+        const playW = interactiveRect.width - PLAY_GAP * 2;
+        const playRadius = 28;
+        // Card overlaps down to the vertical middle of the percentage bar.
+        const percentBarTop = interactiveRect.height - PERCENT_BAR_MARGIN - PERCENT_BAR_H;
+        const cardBottom = percentBarTop + PERCENT_BAR_H / 2;
+        const playH = cardBottom - playY;
+        // Selector bar: same width as the card, sitting inside near its bottom.
+        const BAR_H = SELECTOR_H;
+        const barW = playW;
+        const barX = playX;
+        const barY = cardBottom - 18 - SELECTOR_H;
+
+        // Flat white play area as a rounded card
+        const backgroundImage = new PIXI.Graphics();
+        backgroundImage.beginFill(0xFFFFFF);
+        backgroundImage.drawRoundedRect(playX, playY, playW, playH, playRadius);
+        backgroundImage.endFill();
+
+        // Mask that clips the interactive grid to the rounded card
+        const playMask = new PIXI.Graphics();
+        playMask.beginFill(0xFFFFFF);
+        playMask.drawRoundedRect(playX, playY, playW, playH, playRadius);
+        playMask.endFill();
 
         // Create a container for the background with effects
         const bgContainer = new PIXI.Container();
 
         // Add everything to the container
         bgContainer.addChild(backgroundImage);
+        bgContainer.addChild(playMask);
 
         // Add decorative elements at bottom center
         const leaves = new PIXI.Sprite(leavesTexture);
@@ -663,9 +692,10 @@ async function initImageSection() {
         let endX = 0;
         let endY = 0;
 
-        // Make grid container interactive
+        // Make grid container interactive (limited to the visible rounded play card)
         gridContainer.eventMode = 'static';
-        gridContainer.hitArea = new PIXI.Rectangle(0, 0, numberOfColumns * cellSize, numberOfRows * cellSize);
+        gridContainer.hitArea = new PIXI.Rectangle(playX, playY, playW, playH);
+        gridContainer.mask = playMask;
 
         // Mouse down event
         gridContainer.on('pointerdown', (event) => {
@@ -764,12 +794,12 @@ async function initImageSection() {
             }
         });
 
-        // Create restart button
+        // Create restart button (placed inside the bottom control bar)
         const restartButton = new PIXI.Sprite(restartButtonTexture);
-        restartButton.x = 10;
-        restartButton.y = interactiveRect.height - 60;
-        restartButton.width = 50;
-        restartButton.height = 50;
+        restartButton.width = 44;
+        restartButton.height = 44;
+        restartButton.x = 8;
+        restartButton.y = (BAR_H - 44) / 2;
         restartButton.eventMode = 'static';
         restartButton.cursor = 'pointer';
         
@@ -1098,7 +1128,6 @@ async function initImageSection() {
 
         // Add grid container to image container
         imageContainer.addChild(gridContainer);
-        imageContainer.addChild(restartButton);
 
         // ===== Category Picker =====
         // A row of small circular buttons that select which category you are
@@ -1124,24 +1153,9 @@ async function initImageSection() {
         const pickerBgHeight = pickerRadius * 2 + pickerPadY * 2;
 
         const categoryPicker = new PIXI.Container();
-        categoryPicker.zIndex = 1000;
-        // Centre horizontally over the grid panel, sit just above the bottom bar.
-        categoryPicker.x = interactiveRect.x + interactiveRect.width / 2;
-        categoryPicker.y = app.screen.height - 112;
-
-        // Drop shadow + rounded pill background.
-        const pickerShadow = new PIXI.Graphics();
-        pickerShadow.beginFill(0x000000, 0.12);
-        pickerShadow.drawRoundedRect(-pickerBgWidth / 2 + 3, -pickerBgHeight / 2 + 4, pickerBgWidth, pickerBgHeight, pickerBgHeight / 2);
-        pickerShadow.endFill();
-        categoryPicker.addChild(pickerShadow);
-
-        const pickerBg = new PIXI.Graphics();
-        pickerBg.lineStyle(1, 0xe2e2e2, 1);
-        pickerBg.beginFill(0xffffff, 0.96);
-        pickerBg.drawRoundedRect(-pickerBgWidth / 2, -pickerBgHeight / 2, pickerBgWidth, pickerBgHeight, pickerBgHeight / 2);
-        pickerBg.endFill();
-        categoryPicker.addChild(pickerBg);
+        // Centred within the bottom control bar (the bar provides the pill background).
+        categoryPicker.x = barW / 2;
+        categoryPicker.y = BAR_H / 2;
 
         // Tooltip label shown above the row on hover / for the active category.
         const pickerTooltip = new PIXI.Text('', {
@@ -1198,7 +1212,41 @@ async function initImageSection() {
             pickerButtons.push(btn);
         });
 
-        // Ensure the picker renders on top of the bottom layout bar / text box.
+        // ===== Bottom control bar (revealed on hover) =====
+        const controlBar = new PIXI.Container();
+        controlBar.x = barX;
+        controlBar.y = barY;
+        controlBar.visible = false;
+        controlBar.alpha = 0;
+
+        const controlBarBg = new PIXI.Graphics();
+        controlBarBg.beginFill(0xf2f2f2);
+        controlBarBg.drawRoundedRect(0, 0, barW, BAR_H, BAR_H / 2);
+        controlBarBg.endFill();
+        controlBar.addChild(controlBarBg);
+        controlBar.addChild(restartButton);
+        controlBar.addChild(categoryPicker);
+
+        imageContainer.addChild(controlBar);
+
+        // Reveal the bar only while the pointer is over the play area, auto-hide otherwise.
+        imageContainer.hitArea = new PIXI.Rectangle(0, 0, interactiveRect.width, interactiveRect.height);
+        const showControlBar = () => {
+            gsap.killTweensOf(controlBar);
+            controlBar.visible = true;
+            gsap.to(controlBar, { alpha: 1, duration: 0.2, ease: 'power2.out' });
+        };
+        const hideControlBar = () => {
+            gsap.killTweensOf(controlBar);
+            gsap.to(controlBar, {
+                alpha: 0, duration: 0.35, ease: 'power2.out',
+                onComplete: () => { controlBar.visible = false; }
+            });
+        };
+        imageContainer.on('pointerenter', showControlBar);
+        imageContainer.on('pointerleave', hideControlBar);
+
+        // Ensure layering is predictable across the bottom layout bar / text box.
         app.stage.sortableChildren = true;
 
         // Default to the first category.
@@ -1206,7 +1254,6 @@ async function initImageSection() {
 
         // Add the container to the stage
         app.stage.addChild(imageContainer);
-        app.stage.addChild(categoryPicker);
 
     } catch (error) {
         console.error('Error initializing image section:', error);
