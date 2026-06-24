@@ -11,10 +11,14 @@ let viewportHeight = 900;
 async function initInfoSection() {
     try {
 
+        // The card list is clipped: it starts below the archive button and
+        // ends the same distance from the bottom of the panel.
+        const LIST_TOP = 100;
+        const LIST_BOTTOM_MARGIN = 100;
+
          // Handle window resizing
          function resize() {
-
-            viewportHeight = container.clientHeight - 60;
+            viewportHeight = container.clientHeight - LIST_TOP - LIST_BOTTOM_MARGIN;
         }
 
         // Initial resize
@@ -65,13 +69,13 @@ async function initInfoSection() {
         // Create scrollable container
         const scrollContainer = new PIXI.Container();
         scrollContainer.x = 0;
-        scrollContainer.y = 60;
+        scrollContainer.y = LIST_TOP;
         scrollContainer.width = 300;
         scrollContainer.height = 900;
         scrollContainer.eventMode = 'static';
 
         // (No filled background here — the #ececec frame shows behind the white cards.)
-        let currentY = 60;
+        let currentY = 0;
         const cardSpacing = 10;
         let usedProjectIndices = new Set();
 
@@ -85,7 +89,8 @@ async function initInfoSection() {
             });
             scrollContainer.removeChildren();
             usedProjectIndices.clear();
-            currentY = 60;
+            currentY = 0;
+            scrollContainer.y = LIST_TOP;
         }
         window.clearAllProjects = clearAllProjects;
 
@@ -178,14 +183,10 @@ async function initInfoSection() {
             scrollContainer.addChild(card);
             currentY += card.height + cardSpacing;
 
-            // Automatically scroll to show new card if needed
-            if (currentY > viewportHeight) {
-                gsap.to(scrollContainer, {
-                    y: Math.min(60, -(currentY - viewportHeight)),
-                    duration: 0.5,
-                    ease: 'power2.out'
-                });
-            }
+            // Auto-scroll to reveal the newest card if the list overflows.
+            const autoTargetY = LIST_TOP - Math.max(0, currentY - viewportHeight);
+            gsap.killTweensOf(scrollContainer);
+            gsap.to(scrollContainer, { y: autoTargetY, duration: 0.3, ease: 'power2.out' });
 
             return card;
         }
@@ -196,7 +197,7 @@ async function initInfoSection() {
         // Create and apply mask for scrolling
         const scrollMask = new PIXI.Graphics();
         scrollMask.beginFill(0xFFFFFF);
-        scrollMask.drawRect(0, 60, 300, 900); // Height adjusted to leave space for archive index
+        scrollMask.drawRect(0, LIST_TOP, 300, viewportHeight);
         scrollMask.endFill();
         scrollContainer.mask = scrollMask;
 
@@ -212,17 +213,17 @@ async function initInfoSection() {
             return Math.max(0, currentY - viewportHeight);
         }
         function clampScrollY(y) {
-            const minY = 60 - getMaxScroll();
-            return Math.max(minY, Math.min(60, y));
+            const minY = LIST_TOP - getMaxScroll();
+            return Math.max(minY, Math.min(LIST_TOP, y));
         }
 
-        // Mouse wheel
+        // Mouse wheel (faster response)
         scrollContainer.on('wheel', (event) => {
             event.preventDefault();
             event.stopPropagation();
-            const target = clampScrollY(scrollContainer.y - event.deltaY * 0.5);
+            const target = clampScrollY(scrollContainer.y - event.deltaY * 1.3);
             gsap.killTweensOf(scrollContainer);
-            gsap.to(scrollContainer, { y: target, duration: 0.3, ease: 'power2.out' });
+            gsap.to(scrollContainer, { y: target, duration: 0.18, ease: 'power2.out' });
         }, { passive: false });
 
         // Drag scrolling with momentum

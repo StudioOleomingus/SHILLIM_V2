@@ -8,290 +8,169 @@ const DETAIL_SLIDE_OFFSET = 180;
 // Track currently open detail window
 let currentOpenDetailWindow = null;
 
+// Circular icon button matching the project-card buttons outside:
+// grey circle, white icon, darker-grey on hover.
+function makeCircleButton(kind) {
+    const btn = new PIXI.Container();
+    const r = 18;
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0xd2d2d2);
+    bg.drawCircle(0, 0, r);
+    bg.endFill();
+    btn.addChild(bg);
+
+    if (kind === 'arrow') {
+        const arrow = new PIXI.Graphics();
+        arrow.beginFill(0xFFFFFF);
+        const s = 16;
+        arrow.moveTo(-s * 0.35 + 2, -s * 0.5);
+        arrow.lineTo(s * 0.55 + 2, 0);
+        arrow.lineTo(-s * 0.35 + 2, s * 0.5);
+        arrow.closePath();
+        arrow.endFill();
+        btn.addChild(arrow);
+    } else {
+        const xSym = new PIXI.Text('×', { fontFamily: 'Arial', fontSize: 22, fill: 0xFFFFFF });
+        xSym.anchor.set(0.5);
+        xSym.y = -1;
+        btn.addChild(xSym);
+    }
+
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.on('pointerover', () => { bg.tint = 0xb0b0b0; });
+    btn.on('pointerout', () => { bg.tint = 0xFFFFFF; });
+    return btn;
+}
+
 function createDetailWindow(artistDetails, details, link, cardBackground, x, y) {
     const detailContainer = new PIXI.Container();
     detailContainer.x = x;
     detailContainer.y = y;
 
-    // Detail window dimensions
-    const detailWidth = 320;
-    const detailHeight = 500;
-    const padding = 20;
+    // Tall card that runs down to the bottom of the play area.
+    const detailWidth = 340;
+    const detailHeight = 880;
+    const padding = 18;
+    const headerH = 56;          // top row holding the open + close buttons
+    const boxRadius = 14;
+    const contentTop = headerH;
+    const contentWidth = detailWidth - padding * 2;
+    const contentHeightVisible = detailHeight - contentTop - padding;
 
-    // Create background with rounded corners
+    // Light-grey card background.
     const background = new PIXI.Graphics();
-    background.lineStyle(1, 0xd2d2d2, 1);
-    background.beginFill(0xFFFFFF);
-    background.drawRoundedRect(0, 0, detailWidth, detailHeight, 15);
+    background.beginFill(0xECECEC);
+    background.drawRoundedRect(0, 0, detailWidth, detailHeight, 18);
     background.endFill();
     detailContainer.addChild(background);
 
-    // Create hit area for better interaction
-    const hitArea = new PIXI.Rectangle(0, 0, detailWidth, detailHeight);
-    detailContainer.hitArea = hitArea;
+    detailContainer.hitArea = new PIXI.Rectangle(0, 0, detailWidth, detailHeight);
     detailContainer.eventMode = 'static';
-    detailContainer.cursor = 'pointer';
+    detailContainer.cursor = 'default';
 
-    // Store initial position
-    const initialY = detailContainer.y;
-    let isHovered = false;
+    // White box holding a titled block of text, sized to its content.
+    function buildInfoBox(titleStr, bodyStr) {
+        const box = new PIXI.Container();
+        const innerPad = 16;
+        const innerWidth = contentWidth - innerPad * 2;
 
-    const applyHoverState = () => {
-        if (!isHovered) {
-            isHovered = true;
-            gsap.to(detailContainer, {
-                y: initialY - 5,
-                duration: 0.3,
-                ease: 'power2.out'
-            });
-            background.clear();
-            background.lineStyle(1, 0x2196F3, 1);
-            background.beginFill(0xFFFFFF);
-            background.drawRoundedRect(0, 0, detailWidth, detailHeight, 15);
-            background.endFill();
-            detailContainer.filters = [new PIXI.filters.DropShadowFilter({
-                distance: 4,
-                alpha: 0.1,
-                blur: 8,
-                quality: 3
-            })];
-        }
-    };
-
-    const removeHoverState = () => {
-        if (isHovered) {
-            isHovered = false;
-            gsap.to(detailContainer, {
-                y: initialY,
-                duration: 0.3,
-                ease: 'power2.out'
-            });
-            background.clear();
-            background.lineStyle(1, 0xd2d2d2, 1);
-            background.beginFill(0xFFFFFF);
-            background.drawRoundedRect(0, 0, detailWidth, detailHeight, 15);
-            background.endFill();
-            detailContainer.filters = [];
-        }
-    };
-
-    detailContainer.on('pointerover', applyHoverState);
-    detailContainer.on('pointerout', removeHoverState);
-    detailContainer.on('pointerupoutside', removeHoverState);
-
-    // Create scrollable content container
-    const scrollContainer = new PIXI.Container();
-    const scrollbarWidth = 8;
-    const closeButtonHeight = 24 + 10; // closeSize + top margin
-    const topPadding = closeButtonHeight + 10; // Space for close button + extra margin
-    const contentWidth = detailWidth - (padding * 2) - scrollbarWidth - 5;
-    const scrollAreaHeight = detailHeight - topPadding - padding - 70; // Reserve space for button at bottom
-
-    let currentY = 0;
-
-    // Add Artist Details Section
-    if (artistDetails) {
-        const artistTitle = new PIXI.Text('Artist Details', {
-            fontFamily: 'Georgia',
-            fontSize: 20,
-            fontStyle: 'italic',
-            fill: 0x808080,
-            wordWrap: true,
-            wordWrapWidth: contentWidth
+        const title = new PIXI.Text(titleStr, {
+            fontFamily: 'Georgia', fontSize: 20, fontStyle: 'italic',
+            fill: 0x808080, wordWrap: true, wordWrapWidth: innerWidth
         });
-        artistTitle.x = 0;
-        artistTitle.y = currentY;
-        scrollContainer.addChild(artistTitle);
-        currentY += artistTitle.height + 10;
+        title.x = innerPad;
+        title.y = innerPad;
 
-        const artistText = new PIXI.Text(artistDetails, {
-            fontFamily: 'Hind Madurai',
-            fontSize: 18,
-            fontStyle: 'normal',
-            fill: 0x444444,
-            wordWrap: true,
-            wordWrapWidth: contentWidth,
-            lineHeight: 26
+        const body = new PIXI.Text(bodyStr, {
+            fontFamily: 'Hind Madurai', fontSize: 18, fill: 0x444444,
+            wordWrap: true, wordWrapWidth: innerWidth, lineHeight: 26
         });
-        artistText.x = 0;
-        artistText.y = currentY;
-        scrollContainer.addChild(artistText);
-        currentY += artistText.height + 20;
+        body.x = innerPad;
+        body.y = title.y + title.height + 10;
 
-        // Add separator line
-        const separator = new PIXI.Graphics();
-        separator.lineStyle(0.5, 0xCCCCCC, 1);
-        separator.moveTo(0, 0);
-        separator.lineTo(contentWidth, 0);
-        separator.stroke();
-        separator.x = 0;
-        separator.y = currentY;
-        scrollContainer.addChild(separator);
-        currentY += 20;
+        const boxH = body.y + body.height + innerPad;
 
+        const bg = new PIXI.Graphics();
+        bg.beginFill(0xFFFFFF);
+        bg.drawRoundedRect(0, 0, contentWidth, boxH, boxRadius);
+        bg.endFill();
+
+        box.addChild(bg);
+        box.addChild(title);
+        box.addChild(body);
+        box.boxHeight = boxH;
+        return box;
     }
 
-    // Add Project Details Section
-    const projectTitle = new PIXI.Text('Project Details', {
-        fontFamily: 'Georgia',
-        fontSize: 20,
-        fontStyle: 'italic',
-        fill: 0x808080,
-        wordWrap: true,
-        wordWrapWidth: contentWidth
-    });
-    projectTitle.x = 0;
-    projectTitle.y = currentY;
-    scrollContainer.addChild(projectTitle);
-    currentY += projectTitle.height + 10;
-
-    const detailText = new PIXI.Text(details, {
-        fontFamily: 'Hind Madurai',
-        fontSize: 18,
-        fontStyle: 'normal',
-        fill: 0x444444,
-        wordWrap: true,
-        wordWrapWidth: contentWidth,
-        lineHeight: 26
-    });
-    detailText.x = 0;
-    detailText.y = currentY;
-    scrollContainer.addChild(detailText);
-    currentY += detailText.height;
-
-    const totalContentHeight = currentY;
-
-    // Position scroll container
+    // Scrollable content: two white boxes on the grey card.
+    const scrollContainer = new PIXI.Container();
     scrollContainer.x = padding;
-    scrollContainer.y = topPadding;
+    scrollContainer.y = contentTop;
 
-    // Create mask for scrollable area
+    let cy = 0;
+    if (artistDetails) {
+        const artistBox = buildInfoBox('Artist Details', artistDetails);
+        artistBox.y = cy;
+        scrollContainer.addChild(artistBox);
+        cy += artistBox.boxHeight + 14;
+    }
+    const projectBox = buildInfoBox('Project Details', details);
+    projectBox.y = cy;
+    scrollContainer.addChild(projectBox);
+    cy += projectBox.boxHeight;
+    const totalContentHeight = cy;
+
     const scrollMask = new PIXI.Graphics();
     scrollMask.beginFill(0xFFFFFF);
-    scrollMask.drawRect(padding, topPadding, contentWidth, scrollAreaHeight);
+    scrollMask.drawRect(padding, contentTop, contentWidth, contentHeightVisible);
     scrollMask.endFill();
     detailContainer.addChild(scrollMask);
     scrollContainer.mask = scrollMask;
-
     detailContainer.addChild(scrollContainer);
 
-    // Scrollable content (no visible scrollbar)
-    if (totalContentHeight > scrollAreaHeight) {
+    // Wheel scrolling within the card (no visible scrollbar).
+    if (totalContentHeight > contentHeightVisible) {
         let scrollY = 0;
-        const maxScroll = totalContentHeight - scrollAreaHeight;
-
-        // Mouse wheel scrolling
+        const maxScroll = totalContentHeight - contentHeightVisible;
         detailContainer.on('wheel', (event) => {
-            const scrollDelta = event.deltaY * 0.5;
-            scrollY = Math.max(0, Math.min(maxScroll, scrollY + scrollDelta));
-            scrollContainer.y = topPadding - scrollY;
+            if (event.preventDefault) event.preventDefault();
+            scrollY = Math.max(0, Math.min(maxScroll, scrollY + event.deltaY * 0.6));
+            scrollContainer.y = contentTop - scrollY;
         });
-    } else {
-        detailContainer.addChild(scrollContainer);
     }
 
-    // Create URL button
-    const urlButton = new PIXI.Container();
-    
-    const buttonSize = 50;
-    
-    const buttonBg = new PIXI.Sprite(whiteCircleBg);
-    buttonBg.width = buttonSize;
-    buttonBg.height = buttonSize;
-    urlButton.addChild(buttonBg);
-
-    // Triangle arrow inside detail button
-    const detailArrow = new PIXI.Graphics();
-    detailArrow.beginFill(0xAAAAAA);
-    const detailArrowSize = 16;
-    const daCx = buttonSize / 2 + 2;
-    const daCy = buttonSize / 2;
-    detailArrow.moveTo(daCx - detailArrowSize * 0.4, daCy - detailArrowSize * 0.5);
-    detailArrow.lineTo(daCx + detailArrowSize * 0.5, daCy);
-    detailArrow.lineTo(daCx - detailArrowSize * 0.4, daCy + detailArrowSize * 0.5);
-    detailArrow.closePath();
-    detailArrow.endFill();
-    urlButton.addChild(detailArrow);
-
-    urlButton.x = detailWidth - buttonSize - padding;
-    urlButton.y = detailHeight - buttonSize - padding;
-
-    urlButton.eventMode = 'static';
-    urlButton.cursor = 'pointer';
-
-    urlButton.on('pointerover', () => {
-        buttonBg.tint = 0x3570B2;
-        detailArrow.tint = 0xFFFFFF;
+    // Close button (top-right).
+    const closeButton = makeCircleButton('close');
+    closeButton.x = detailWidth - padding - 18;
+    closeButton.y = padding + 18;
+    closeButton.on('pointertap', () => {
+        slideOutToRight(detailContainer, { offset: DETAIL_SLIDE_OFFSET });
+        cardBackground.tint = 0xFFFFFF;
+        if (currentOpenDetailWindow === detailContainer) {
+            currentOpenDetailWindow = null;
+        }
     });
 
-    urlButton.on('pointerout', () => {
-        buttonBg.tint = 0xFFFFFF;
-        detailArrow.tint = 0xFFFFFF;
-    });
-
-    urlButton.on('pointertap', () => {
+    // Open-project button — moved to the top, beside the close button.
+    const openButton = makeCircleButton('arrow');
+    openButton.x = closeButton.x - 44;
+    openButton.y = padding + 18;
+    openButton.on('pointertap', () => {
         if (link) {
-            slideOutToRight(detailContainer, { offset: DETAIL_SLIDE_OFFSET });
-            cardBackground.tint = 0xFFFFFF; // White
-            if (currentOpenDetailWindow === detailContainer) {
-                currentOpenDetailWindow = null;
-            }
             window.open(link, '_blank');
         }
     });
 
-    detailContainer.addChild(urlButton);
-    detailContainer.visible = false;
-    
-    // Add close button
-    const closeButton = new PIXI.Container();
-    const closeSize = 24;
-    const closeBg = new PIXI.Graphics();
-    closeBg.beginFill(0xd2d2d2);
-    closeBg.drawCircle(closeSize/2, closeSize/2, closeSize/2);
-    closeBg.endFill();
-    closeButton.addChild(closeBg);
-
-    // Add X symbol
-    const closeSymbol = new PIXI.Text('×', {
-        fontFamily: 'Arial',
-        fontSize: 20,
-        fill: 0x000000
-    });
-    closeSymbol.x = (closeSize - closeSymbol.width) / 2;
-    closeSymbol.y = (closeSize - closeSymbol.height) / 2;
-    closeButton.addChild(closeSymbol);
-
-    closeButton.x = detailWidth - closeSize - 10;
-    closeButton.y = 10;
-    closeButton.eventMode = 'static';
-    closeButton.cursor = 'pointer';
-
-    closeButton.on('pointerover', () => {
-        closeBg.tint = 0xb0b0b0;
-    });
-
-    closeButton.on('pointerout', () => {
-        closeBg.tint = 0xFFFFFF;
-    });
-
-        if (currentOpenDetailWindow === detailContainer) {
-            currentOpenDetailWindow = null;
-        }
-    closeButton.on('pointertap', () => {
-        slideOutToRight(detailContainer, { offset: DETAIL_SLIDE_OFFSET });
-        cardBackground.tint = 0xFFFFFF; // White
-        if (currentOpenDetailWindow === detailContainer) {
-            currentOpenDetailWindow = null;
-        }
-    });
-
     detailContainer.addChild(closeButton);
-    
-    // Store references for scroll position reset
+    detailContainer.addChild(openButton);
+
+    detailContainer.visible = false;
+
+    // References used by the card toggle (scroll reset on open).
     detailContainer.scrollContainer = scrollContainer;
-    detailContainer.topPadding = topPadding;
-    
+    detailContainer.topPadding = contentTop;
+
     return detailContainer;
 }
 
@@ -403,8 +282,8 @@ export function createProjectCard(title, author, date, link, details, artistDeta
     const detailContainer = new PIXI.Container();
     app.stage.addChild(detailContainer);
 
-    // Create detail window
-    const detailWindow = createDetailWindow(artistDetails, details, link, background, cardContainer.x + cardWidth + 20, cardContainer.y + 60);
+    // Create detail window — anchored near the top so the tall card spans the play area
+    const detailWindow = createDetailWindow(artistDetails, details, link, background, cardContainer.x + cardWidth + 20, 80);
     detailContainer.addChild(detailWindow);
 
     // Click handler to toggle detail window
