@@ -261,7 +261,7 @@ async function LoadTextures() {
                 // Load all textures with retry logic
                 [interactiveBgTexture, restartButtonTexture, whitebgTexture, indexBg, whiteCircleBg, leavesTexture, dragonflyTexture, frogTexture] = await Promise.all([
                     loadTextureWithRetry('assets/interactive_bg.png'),
-                    loadTextureWithRetry('assets/restart_bg.png'),
+                    loadTextureWithRetry('assets/RESET.png'),
                     loadTextureWithRetry('assets/bg_white.png'),
                     loadTextureWithRetry('assets/index_bg.png'),
                     loadTextureWithRetry('assets/white_circle_bg.png'),

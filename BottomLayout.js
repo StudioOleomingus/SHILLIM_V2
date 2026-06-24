@@ -122,7 +122,8 @@ function updateSectionSizes(p1 = 16.67, p2 = 16.67, p3 = 16.67, p4 = 16.67, p5 =
                 // Apply rounded corners based on position
                 const isFirst = currentX === 0;
                 const isLast = index === sections.findLastIndex((_, i) => [p1, p2, p3, p4, p5, p6][i] > 0);
-                const radius = 20;
+                // Half the bar height -> fully rounded (capsule) end caps.
+                const radius = 25;
 
                 // Draw main rectangle
                 sectionBg.beginFill(section.color);

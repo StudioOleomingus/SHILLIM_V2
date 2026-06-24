@@ -8,6 +8,38 @@ const container = document.getElementById('app-container');
 let archiveIndexValueLabelText;
 let viewportHeight = 900;
 
+// ---- Help dialog (DOM overlay above the canvas) ----
+let helpBackdropEl = null;
+function buildHelpDialog() {
+    if (helpBackdropEl) return;
+    helpBackdropEl = document.createElement('div');
+    helpBackdropEl.className = 'help-backdrop';
+
+    const dialog = document.createElement('div');
+    dialog.className = 'help-dialog';
+    dialog.innerHTML = `
+        <button class="help-close" title="Close">&times;</button>
+        <h2>About the Shillim Archive</h2>
+        <p>The Shillim Archive is an interactive repository of projects by the Shillim Institute. This digital ecosystem encompasses work ranging from art residencies and mapping workshops to ecological surveys and reforestation programs, as well as educational initiatives and community medical outreach. By providing a browser-based interactive site, the archive invites visitors to draw new associations between these varied works, situating each project within the specific landscape of the Northern Western Ghats from which it emerges.</p>
+    `;
+    helpBackdropEl.appendChild(dialog);
+    container.appendChild(helpBackdropEl);
+
+    helpBackdropEl.addEventListener('click', hideHelpDialog);
+    dialog.addEventListener('click', (e) => e.stopPropagation());
+    dialog.querySelector('.help-close').addEventListener('click', hideHelpDialog);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') hideHelpDialog();
+    });
+}
+function showHelpDialog() {
+    buildHelpDialog();
+    helpBackdropEl.classList.add('open');
+}
+function hideHelpDialog() {
+    if (helpBackdropEl) helpBackdropEl.classList.remove('open');
+}
+
 async function initInfoSection() {
     try {
 
@@ -37,34 +69,98 @@ async function initInfoSection() {
         const bgContainer = new PIXI.Container();
 
         //archiveIndex -- circular button (flat, no shadow) -----------------
+        // Tucked into the top-left corner (imageContainer is offset +10,+10,
+        // so this leaves ~14px from the canvas edges).
         const archiveBtnRadius = 30;
         const archiveIndexButton = new PIXI.Container();
-        archiveIndexButton.x = 24 + archiveBtnRadius;
-        archiveIndexButton.y = 24 + archiveBtnRadius;
+        archiveIndexButton.x = 4 + archiveBtnRadius;
+        archiveIndexButton.y = 4 + archiveBtnRadius;
         archiveIndexButton.eventMode = 'static';
         archiveIndexButton.cursor = 'pointer';
         archiveIndexButton.hitArea = new PIXI.Circle(0, 0, archiveBtnRadius);
 
         const archiveBtnBg = new PIXI.Graphics();
-        archiveBtnBg.lineStyle(1.5, 0xd2d2d2, 1);
         archiveBtnBg.beginFill(0xffffff);
         archiveBtnBg.drawCircle(0, 0, archiveBtnRadius);
         archiveBtnBg.endFill();
         archiveIndexButton.addChild(archiveBtnBg);
+
+        // Play triangle inside the button.
+        const archiveTriangle = new PIXI.Graphics();
+        archiveTriangle.beginFill(0x808080);
+        const triSize = 24;
+        archiveTriangle.moveTo(-triSize * 0.35 + 2, -triSize * 0.5);
+        archiveTriangle.lineTo(triSize * 0.55 + 2, 0);
+        archiveTriangle.lineTo(-triSize * 0.35 + 2, triSize * 0.5);
+        archiveTriangle.closePath();
+        archiveTriangle.endFill();
+        archiveTriangle.eventMode = 'none';
+        archiveIndexButton.addChild(archiveTriangle);
 
         // Count value is still tracked (updated elsewhere) but no longer shown.
         archiveIndexValueLabelText = new PIXI.Text('0', { fontFamily: 'Georgia', fontSize: 22, fill: 0x808080 });
         archiveIndexValueLabelText.visible = false;
         archiveIndexValueLabelText.eventMode = 'none';
 
-        archiveIndexButton.on('pointerover', () => { archiveBtnBg.tint = 0xf0f0f0; });
-        archiveIndexButton.on('pointerout', () => { archiveBtnBg.tint = 0xffffff; });
+        // Hover label that reveals "Archive Index" to the right of the button.
+        const archiveHoverLabel = new PIXI.Text('Archive Index', {
+            fontFamily: 'Georgia', fontStyle: 'italic', fontSize: 20, fill: 0x808080
+        });
+        archiveHoverLabel.anchor.set(0, 0.5);
+        archiveHoverLabel.x = archiveIndexButton.x + archiveBtnRadius + 14;
+        archiveHoverLabel.y = archiveIndexButton.y;
+        archiveHoverLabel.eventMode = 'none';
+        archiveHoverLabel.alpha = 0;
+
+        archiveIndexButton.on('pointerover', () => {
+            archiveBtnBg.tint = 0xf0f0f0;
+            gsap.killTweensOf(archiveHoverLabel);
+            gsap.to(archiveHoverLabel, { alpha: 1, duration: 0.2, ease: 'power2.out' });
+        });
+        archiveIndexButton.on('pointerout', () => {
+            archiveBtnBg.tint = 0xffffff;
+            gsap.killTweensOf(archiveHoverLabel);
+            gsap.to(archiveHoverLabel, { alpha: 0, duration: 0.2, ease: 'power2.out' });
+        });
         archiveIndexButton.on('pointerdown', () => {
             // Cascade the project index out from the right as an in-page panel.
             openArchivePanel();
         });
 
         bgContainer.addChild(archiveIndexButton);
+        bgContainer.addChild(archiveHoverLabel);
+
+        //help -- circular button at the bottom-left corner -----------------
+        const helpBtnRadius = 30;
+        const helpButton = new PIXI.Container();
+        helpButton.x = 4 + helpBtnRadius;                              // mirror archive button (left margin)
+        helpButton.y = container.clientHeight - 14 - helpBtnRadius - 10; // ~14px from the bottom (imageContainer +10)
+        helpButton.eventMode = 'static';
+        helpButton.cursor = 'pointer';
+        helpButton.hitArea = new PIXI.Circle(0, 0, helpBtnRadius);
+
+        const helpBtnBg = new PIXI.Graphics();
+        helpBtnBg.beginFill(0xffffff);
+        helpBtnBg.drawCircle(0, 0, helpBtnRadius);
+        helpBtnBg.endFill();
+        helpButton.addChild(helpBtnBg);
+
+        const helpMark = new PIXI.Text('?', { fontFamily: 'Georgia', fontSize: 34, fill: 0x808080 });
+        helpMark.anchor.set(0.5);
+        helpMark.y = 1;
+        helpMark.eventMode = 'none';
+        helpButton.addChild(helpMark);
+
+        // Keep the help button pinned to the bottom on resize.
+        window.addEventListener('resize', () => {
+            helpButton.y = container.clientHeight - 14 - helpBtnRadius - 10;
+        });
+
+        helpButton.on('pointerover', () => { helpBtnBg.tint = 0xf0f0f0; });
+        helpButton.on('pointerout', () => { helpBtnBg.tint = 0xffffff; });
+        helpButton.on('pointertap', () => { showHelpDialog(); });
+
+        bgContainer.addChild(helpButton);
 
         // Create scrollable container
         const scrollContainer = new PIXI.Container();

@@ -622,11 +622,12 @@ async function initImageSection() {
         const percentBarTop = interactiveRect.height - PERCENT_BAR_MARGIN - PERCENT_BAR_H;
         const cardBottom = percentBarTop + PERCENT_BAR_H / 2;
         const playH = cardBottom - playY;
-        // Selector bar: same width as the card, sitting inside near its bottom.
+        // Selector bar: inset evenly from the play card's left, right and bottom
+        // edges so it floats with a thin, even margin on all three sides.
         const BAR_H = SELECTOR_H;
-        const barW = playW;
-        const barX = playX;
-        const barY = cardBottom - 18 - SELECTOR_H;
+        const barW = playW - PLAY_GAP * 2;
+        const barX = playX + PLAY_GAP;
+        const barY = cardBottom - PLAY_GAP - SELECTOR_H;
 
         // Flat white play area as a rounded card
         const backgroundImage = new PIXI.Graphics();
