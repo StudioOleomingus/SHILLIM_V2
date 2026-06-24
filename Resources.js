@@ -16,6 +16,10 @@ let leavesTexture;
 let dragonflyTexture;
 let frogTexture;
 
+// Gutter (in source pixels) left between tiles in the atlas so that linear
+// filtering when the tiles are scaled down can't bleed in neighbouring pixels.
+const ATLAS_PADDING = 2;
+
 async function downloadAndExtractZip(zipUrl, index) {
     try {
         // Check if JSZip is available
@@ -28,92 +32,89 @@ async function downloadAndExtractZip(zipUrl, index) {
         if (!response.ok) {
             throw new Error(`Failed to download zip file: ${response.status} ${response.statusText}`);
         }
-        //console.log('Zip file downloaded, getting array buffer...');
         const zipData = await response.arrayBuffer();
-        //console.log('Array buffer received, size:', zipData.byteLength);
-        
+
         // Load zip data
-        //console.log('Creating new JSZip instance...');
         const zip = new JSZip();
-        //console.log('Loading zip data...');
         await zip.loadAsync(zipData);
-        //console.log('Zip loaded successfully');
 
-        const texturePromises = [];
-
-        // Process each file in the zip
-        const files = Object.entries(zip.files);
-        //console.log('Found files in zip:', files.length);
-        
-        for (const [filename, file] of files) {
-            //console.log('Processing file:', filename);
-            if (!file.dir && filename.endsWith('.png')) {
-                const promise = file.async('blob').then(async (blob) => {
-                    //console.log('Extracted blob for:', filename, 'size:', blob.size);
-                    
-                    // Create an image element
-                    const img = new Image();
-                    const objectUrl = URL.createObjectURL(blob);
-                    
-                    // Extract row and column from filename
-                    const match = filename.match(/tile_(\d+)_(\d+)\.png$/);
-                    if (match) {
-                        const row = parseInt(match[1]);
-                        const col = parseInt(match[2]);
-                        //console.log(`Processing texture ${filename} for position [${row}][${col}]`);
-                        
-                        // Create a promise that resolves when the image loads
-                        const imageLoadPromise = new Promise((resolve, reject) => {
-                            img.onload = () => {
-                                // Create a canvas and draw the image
-                                const canvas = document.createElement('canvas');
-                                canvas.width = img.width;
-                                canvas.height = img.height;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(img, 0, 0);
-                                
-                                // Create PIXI texture from canvas
-                                const texture = PIXI.Texture.from(canvas);
-                                
-                                // Create and configure sprite
-                                const sprite = new PIXI.Sprite(texture);
-                                sprite.width = cellSize;
-                                sprite.height = cellSize;
-                                sprite.x = col * cellSize;
-                                sprite.y = row * cellSize;
-                                
-                                // Store in texture array
-                                TextureArray[index][row][col] = sprite;
-                                
-                                // Clean up
-                                URL.revokeObjectURL(objectUrl);
-                                resolve();
-                            };
-                            
-                            img.onerror = () => {
-                                URL.revokeObjectURL(objectUrl);
-                                reject(new Error(`Failed to load image for ${filename}`));
-                            };
-                        });
-                        
-                        // Set the image source to start loading
-                        img.src = objectUrl;
-                        return imageLoadPromise;
-                    } else {
-                        //console.warn('Invalid filename format:', filename);
-                        URL.revokeObjectURL(objectUrl);
-                    }
-                }).catch(error => {
-                    //console.error('Error processing file:', filename, error);
-                });
-                
-                texturePromises.push(promise);
-            }
+        // Collect the real tile entries. macOS zips also contain resource-fork
+        // junk (e.g. "__MACOSX/textures/._tile_0_0.png") whose name matches the
+        // tile pattern but is not a valid PNG — skip those so we don't waste
+        // time decoding ~3000 images that only ever fail.
+        const tileEntries = [];
+        for (const [filename, file] of Object.entries(zip.files)) {
+            if (file.dir) continue;
+            const baseName = filename.split('/').pop();
+            if (filename.includes('__MACOSX') || baseName.startsWith('._')) continue;
+            const match = baseName.match(/tile_(\d+)_(\d+)\.png$/);
+            if (!match) continue;
+            tileEntries.push({
+                file,
+                row: parseInt(match[1], 10),
+                col: parseInt(match[2], 10)
+            });
         }
 
-        // Wait for all files to be processed
-        //console.log('Waiting for all textures to be processed...');
-        await Promise.all(texturePromises.filter(p => p)); // Filter out undefined promises
+        // Decode every tile PNG into an Image element.
+        const decoded = await Promise.all(tileEntries.map(async (entry) => {
+            const blob = await entry.file.async('blob');
+            const objectUrl = URL.createObjectURL(blob);
+            try {
+                const img = await new Promise((resolve, reject) => {
+                    const image = new Image();
+                    image.onload = () => resolve(image);
+                    image.onerror = () => reject(new Error(`Failed to load tile_${entry.row}_${entry.col}`));
+                    image.src = objectUrl;
+                });
+                return { row: entry.row, col: entry.col, img };
+            } catch (error) {
+                // Skip individual tiles that fail to decode rather than aborting
+                // the whole illustration.
+                return null;
+            } finally {
+                URL.revokeObjectURL(objectUrl);
+            }
+        }));
+
+        const tiles = decoded.filter(Boolean);
+        if (tiles.length === 0) {
+            console.warn(`No usable tiles found in ${zipUrl}`);
+            return true;
+        }
+
+        // Determine tile size from the first decoded tile (all tiles are the
+        // same size in practice).
+        const tileW = tiles[0].img.naturalWidth || tiles[0].img.width;
+        const tileH = tiles[0].img.naturalHeight || tiles[0].img.height;
+        const cellW = tileW + ATLAS_PADDING;
+        const cellH = tileH + ATLAS_PADDING;
+
+        // Pack every tile of this illustration into ONE atlas canvas, so the GPU
+        // only has to allocate a single texture per illustration (6 total)
+        // instead of thousands. Chrome's WebGL backend loses the rendering
+        // context when too many individual textures are uploaded, which left the
+        // interactive page blank.
+        const atlas = document.createElement('canvas');
+        atlas.width = numberOfColumns * cellW;
+        atlas.height = numberOfRows * cellH;
+        const atlasCtx = atlas.getContext('2d');
+
+        for (const tile of tiles) {
+            atlasCtx.drawImage(tile.img, tile.col * cellW, tile.row * cellH, tileW, tileH);
+        }
+
+        // Upload the atlas as a single shared texture source, then give each grid
+        // cell a lightweight sub-texture (a frame into the atlas). Downstream code
+        // only ever reads `.texture` off the stored entry.
+        const atlasSource = PIXI.Texture.from(atlas).source;
+        atlasSource.update();
+
+        for (const tile of tiles) {
+            const frame = new PIXI.Rectangle(tile.col * cellW, tile.row * cellH, tileW, tileH);
+            const tileTexture = new PIXI.Texture({ source: atlasSource, frame });
+            TextureArray[index][tile.row][tile.col] = { texture: tileTexture };
+        }
 
         return true;
     } catch (error) {
