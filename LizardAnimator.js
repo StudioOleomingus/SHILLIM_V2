@@ -1,6 +1,7 @@
-import { app } from './Config.js';
+import { app, interactiveRect } from './Config.js';
 
 let parentContainer = null;
+let creatureLayer = null;
 let lastSpawnX = null;
 let lastSpawnY = null;
 
@@ -47,6 +48,33 @@ const frameCache = {};
 export async function initLizardAnimator(container) {
     parentContainer = container;
 
+    // Create a creature layer on app.stage between the game area and sidebar.
+    creatureLayer = new PIXI.Container();
+    creatureLayer.sortableChildren = true;
+    app.stage.addChild(creatureLayer);
+
+    // Mask creatures to the game card area — they vanish at the card edges
+    const PLAY_GAP = 14;
+    const cardLeft = interactiveRect.x + PLAY_GAP;
+    const cardTop = interactiveRect.y + PLAY_GAP;
+    const cardWidth = interactiveRect.width - PLAY_GAP * 2;
+    const cardHeight = interactiveRect.height - PLAY_GAP * 2;
+    const creatureMask = new PIXI.Graphics();
+    creatureMask.beginFill(0xFFFFFF);
+    creatureMask.drawRoundedRect(cardLeft, cardTop, cardWidth, cardHeight, 28);
+    creatureMask.endFill();
+    app.stage.addChild(creatureMask);
+    creatureLayer.mask = creatureMask;
+
+    // Set z-ordering: game area behind creatures, sidebar in front
+    parentContainer.zIndex = 0;
+    creatureLayer.zIndex = 1;
+    app.stage.children.forEach(child => {
+        if (child !== parentContainer && child !== creatureLayer && child !== creatureMask && child.zIndex !== -1) {
+            child.zIndex = 2;
+        }
+    });
+
     for (const creature of CREATURES) {
         try {
             const frames = [];
@@ -69,10 +97,14 @@ export function setSpawnPoint(x, y) {
 
 // ── Public spawn ─────────────────────────────────────────────────────
 export function spawnLizard(x, y, groupSize) {
-    if (!parentContainer) return;
+    if (!parentContainer || !creatureLayer) return;
 
-    x = x ?? lastSpawnX ?? parentContainer.width / 2;
-    y = y ?? lastSpawnY ?? parentContainer.height / 2;
+    x = x ?? lastSpawnX ?? app.screen.width / 2;
+    y = y ?? lastSpawnY ?? app.screen.height / 2;
+
+    // Convert grid-local coords to stage coords
+    const stageX = parentContainer.x + x;
+    const stageY = parentContainer.y + y;
 
     const creature = pickCreature(groupSize ?? 25);
     const frames = frameCache[creature.name];
@@ -81,8 +113,7 @@ export function spawnLizard(x, y, groupSize) {
     const [minCount, maxCount] = creature.spawnCount;
     const count = minCount + Math.floor(Math.random() * (maxCount - minCount + 1));
 
-    // Shared exit angle so ant colony converges on the same heading
-    const exitAngle = getOutwardAngle(x, y, parentContainer.width, parentContainer.height);
+    const exitAngle = getOutwardAngle(stageX, stageY, app.screen.width, app.screen.height);
 
     for (let i = 0; i < count; i++) {
         const offsetX = count > 1 ? (Math.random() - 0.5) * 30 : 0;
@@ -90,12 +121,12 @@ export function spawnLizard(x, y, groupSize) {
         const delay = count > 1 ? i * (80 + Math.random() * 120) : 0;
 
         setTimeout(() => {
-            spawnOne(frames, creature, x + offsetX, y + offsetY, exitAngle);
+            spawnOne(frames, creature, stageX + offsetX, stageY + offsetY, exitAngle);
         }, delay);
     }
 }
 
-// ── Internal: spawn and walk a waypoint path ─────────────────────────
+// ── Internal: spawn on app.stage so creatures walk across the full screen ──
 function spawnOne(frames, creature, x, y, exitAngle) {
     const sprite = new PIXI.AnimatedSprite(frames);
     sprite.animationSpeed = creature.animSpeed;
@@ -105,9 +136,9 @@ function spawnOne(frames, creature, x, y, exitAngle) {
     sprite.y = y;
     sprite.play();
 
-    parentContainer.addChild(sprite);
+    creatureLayer.addChild(sprite);
 
-    const waypoints = creature.pathBuilder(x, y, exitAngle, parentContainer.width, parentContainer.height);
+    const waypoints = creature.pathBuilder(x, y, exitAngle, app.screen.width, app.screen.height);
 
     let wpIndex = 0;
     let prevX = x;
@@ -148,12 +179,13 @@ function spawnOne(frames, creature, x, y, exitAngle) {
             sprite.y = prevY + dy * progress;
         }
 
-        const margin = 150;
+        // Destroy when off the full screen
+        const margin = 200;
         if (
             sprite.x < -margin ||
-            sprite.x > parentContainer.width  + margin ||
+            sprite.x > app.screen.width  + margin ||
             sprite.y < -margin ||
-            sprite.y > parentContainer.height + margin
+            sprite.y > app.screen.height + margin
         ) {
             app.ticker.remove(onTick);
             sprite.destroy();
@@ -167,26 +199,14 @@ function spawnOne(frames, creature, x, y, exitAngle) {
 // PATH BUILDERS
 // ═══════════════════════════════════════════════════════════════════════
 
-/**
- * Ants: three phases —
- *   1. SCATTER  – burst outward in a random direction away from spawn
- *   2. WANDER   – keep going roughly in the scattered direction with wobble
- *   3. CONVERGE – gradually arc back toward the shared exit heading at the end
- *
- * Each ant fans out on its own path for most of the journey,
- * only pulling together near the screen edge.
- */
 function buildAntPath(startX, startY, exitAngle) {
     const points = [];
     let x = startX;
     let y = startY;
 
-    // Each ant gets a unique heading well away from the exit
     const scatterAngle = exitAngle + Math.PI * (0.3 + Math.random() * 0.4) * (Math.random() < 0.5 ? 1 : -1);
     let angle = scatterAngle;
 
-    // ── Phase 1: Scatter ──
-    // Quick burst outward in the scattered direction
     const scatterSteps = 3;
     for (let i = 0; i < scatterSteps; i++) {
         const len = 10 + Math.random() * 15;
@@ -196,20 +216,16 @@ function buildAntPath(startX, startY, exitAngle) {
         points.push({ x, y });
     }
 
-    // ── Phase 2: Wander ──
-    // Continue roughly in the scattered direction — this is the bulk of the path
     const wanderSteps = 10 + Math.floor(Math.random() * 6);
     for (let i = 0; i < wanderSteps; i++) {
         const wobble = (Math.random() - 0.5) * 0.6;
         const len = 12 + Math.random() * 18;
-        angle += wobble * 0.3; // slow drift, mostly keeps scattered heading
+        angle += wobble * 0.3;
         x += Math.cos(angle) * len;
         y += Math.sin(angle) * len;
         points.push({ x, y });
     }
 
-    // ── Phase 3: Converge ──
-    // Arc toward the shared exit heading over the final waypoints
     const convergeSteps = 5;
     const angleDiff = normalizeAngle(exitAngle - angle);
     for (let i = 1; i <= convergeSteps; i++) {
@@ -221,24 +237,18 @@ function buildAntPath(startX, startY, exitAngle) {
         points.push({ x, y });
     }
 
-    // Final offscreen along exit
-    x += Math.cos(exitAngle) * 300;
-    y += Math.sin(exitAngle) * 300;
+    x += Math.cos(exitAngle) * 500;
+    y += Math.sin(exitAngle) * 500;
     points.push({ x, y });
     return points;
 }
 
-/**
- * Beetles: slight continuous curve toward the nearest edge.
- * One gentle arc — no S-curves, no reversals.
- */
 function buildBeetlePath(startX, startY, exitAngle) {
     const points = [];
     let x = startX;
     let y = startY;
     const segments = 6;
 
-    // Small consistent bend in one direction
     const curveBias = (Math.random() < 0.5 ? 1 : -1) * (0.04 + Math.random() * 0.06);
     let angle = exitAngle;
 
@@ -250,25 +260,21 @@ function buildBeetlePath(startX, startY, exitAngle) {
         points.push({ x, y });
     }
 
-    x += Math.cos(angle) * 350;
-    y += Math.sin(angle) * 350;
+    x += Math.cos(angle) * 500;
+    y += Math.sin(angle) * 500;
     points.push({ x, y });
     return points;
 }
 
-/**
- * Lizards: beeline — straight to the edge, no turns.
- * Two waypoints: one mid-distance, one well offscreen.
- */
 function buildLizardPath(startX, startY, exitAngle) {
     return [
         {
-            x: startX + Math.cos(exitAngle) * 200,
-            y: startY + Math.sin(exitAngle) * 200
+            x: startX + Math.cos(exitAngle) * 300,
+            y: startY + Math.sin(exitAngle) * 300
         },
         {
-            x: startX + Math.cos(exitAngle) * 600,
-            y: startY + Math.sin(exitAngle) * 600
+            x: startX + Math.cos(exitAngle) * 800,
+            y: startY + Math.sin(exitAngle) * 800
         }
     ];
 }
@@ -302,7 +308,6 @@ function angleTo(x1, y1, x2, y2) {
     return Math.atan2(y2 - y1, x2 - x1);
 }
 
-/** Normalize angle to -π…π */
 function normalizeAngle(a) {
     while (a > Math.PI) a -= Math.PI * 2;
     while (a < -Math.PI) a += Math.PI * 2;
