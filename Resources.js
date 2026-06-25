@@ -164,19 +164,19 @@ async function LoadTextures() {
                 heading: 'Inspiring Commitment to Action through Sustainable art practices in the Sahyadri Western Ghats India',
                 body: 'Located in the Western Ghats, The Shillim Institute safeguards approximately 2000 acres of land in the Northern region of this mountain range, which has been declared a UNESCO World Heritage Site and a biodiversity conservation hotspot. The Institute has enlisted local communities as forest guards and introduced thousands of native plant species, resulting in the flourishing of over a million trees comprising 64 diverse species.\n\nThe Pavna Collective is a consortium of conservation, ecology, and art organizations, convened by the Shillim Institute. Among its initiatives, the Pavna Collective sponsors 3-6 art residencies a year, fellowships, Mapping Workshop, Cultural documentation and Skill development programs in the Sayadri ranges.'
             },
-            { name: 'Organisation 01', heading: 'Organisation 01', body: 'Placeholder description for Organisation 01. Replace this with a short overview of the organisation, its mission, and its work within the Sahyadri landscape.' },
-            { name: 'Organisation 02', heading: 'Organisation 02', body: 'Placeholder description for Organisation 02. Replace this with a short overview of the organisation, its mission, and its work within the Sahyadri landscape.' },
-            { name: 'Organisation 03', heading: 'Organisation 03', body: 'Placeholder description for Organisation 03. Replace this with a short overview of the organisation, its mission, and its work within the Sahyadri landscape.' },
-            { name: 'Organisation 04', heading: 'Organisation 04', body: 'Placeholder description for Organisation 04. Replace this with a short overview of the organisation, its mission, and its work within the Sahyadri landscape.' },
-            { name: 'Organisation 05', heading: 'Organisation 05', body: 'Placeholder description for Organisation 05. Replace this with a short overview of the organisation, its mission, and its work within the Sahyadri landscape.' },
-            { name: 'Organisation 06', heading: 'Organisation 06', body: 'Placeholder description for Organisation 06. Replace this with a short overview of the organisation, its mission, and its work within the Sahyadri landscape.' },
-            { name: 'Organisation 07', heading: 'Organisation 07', body: 'Placeholder description for Organisation 07. Replace this with a short overview of the organisation, its mission, and its work within the Sahyadri landscape.' }
+            { name: 'Organisation 01', heading: 'Organisation 01', body: 'Placeholder description for Organisation 01. Replace this with a short overview of the organisation.' },
+            { name: 'Organisation 02', heading: 'Organisation 02', body: 'Placeholder description for Organisation 02. Replace this with a short overview of the organisation.' },
+            { name: 'Organisation 03', heading: 'Organisation 03', body: 'Placeholder description for Organisation 03. Replace this with a short overview of the organisation.' },
+            { name: 'Organisation 04', heading: 'Organisation 04', body: 'Placeholder description for Organisation 04. Replace this with a short overview of the organisation.' },
+            { name: 'Organisation 05', heading: 'Organisation 05', body: 'Placeholder description for Organisation 05. Replace this with a short overview of the organisation.' },
+            { name: 'Organisation 06', heading: 'Organisation 06', body: 'Placeholder description for Organisation 06. Replace this with a short overview of the organisation.' },
+            { name: 'Organisation 07', heading: 'Organisation 07', body: 'Placeholder description for Organisation 07. Replace this with a short overview of the organisation.' }
         ];
 
         // Big title — lighter weight, large enough to span the box width,
         // pushed up from the very bottom.
         const bigTitle = new PIXI.Text('THE SHILLIM ARCHIVE', {
-            fontFamily: 'Hind Madurai', fontWeight: '400', fontSize: 120, fill: 0x111111
+            fontFamily: 'Hind Madurai', fontWeight: '520', fontSize: 120, fill: 0xa4a4a4
         });
         bigTitle.anchor.set(0, 1);
         bigTitle.x = TEXT_LEFT;
@@ -412,6 +412,8 @@ async function LoadTextures() {
                     loadTextureWithRetry('assets/LEAVES2.png'),
                     loadTextureWithRetry('assets/DRAGONFLY3.png'),
                     loadTextureWithRetry('assets/FROG1.png'),
+                    loadTextureWithRetry('assets/PLUS.png'),
+                    loadTextureWithRetry('assets/HELP.png'),
                 ]);
 
                 texturesLoaded = true;
