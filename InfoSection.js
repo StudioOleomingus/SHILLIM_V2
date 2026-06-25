@@ -98,13 +98,13 @@ async function initInfoSection() {
         archiveIndexButton.addChild(archiveTriangle);
 
         // Count value is still tracked (updated elsewhere) but no longer shown.
-        archiveIndexValueLabelText = new PIXI.Text('0', { fontFamily: 'Georgia', fontSize: 22, fill: 0x808080 });
+        archiveIndexValueLabelText = new PIXI.Text('0', { fontFamily: 'Gelasio', fontSize: 22, fill: 0x808080 });
         archiveIndexValueLabelText.visible = false;
         archiveIndexValueLabelText.eventMode = 'none';
 
         // Hover label that reveals "Archive Index" to the right of the button.
         const archiveHoverLabel = new PIXI.Text('Archive Index', {
-            fontFamily: 'Georgia', fontStyle: 'italic', fontSize: 20, fill: 0x808080
+            fontFamily: 'Gelasio', fontStyle: 'italic', fontSize: 20, fill: 0x808080
         });
         archiveHoverLabel.anchor.set(0, 0.5);
         archiveHoverLabel.x = archiveIndexButton.x + archiveBtnRadius + 14;
@@ -145,7 +145,7 @@ async function initInfoSection() {
         helpBtnBg.endFill();
         helpButton.addChild(helpBtnBg);
 
-        const helpMark = new PIXI.Text('?', { fontFamily: 'Georgia', fontSize: 34, fill: 0x808080 });
+        const helpMark = new PIXI.Text('?', { fontFamily: 'Gelasio', fontSize: 34, fill: 0x808080 });
         helpMark.anchor.set(0.5);
         helpMark.y = 1;
         helpMark.eventMode = 'none';

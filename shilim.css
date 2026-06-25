@@ -3,6 +3,72 @@
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
+   0. SELF-HOSTED FONTS (no external CDN, no system-font dependency)
+   Hind Madurai = body/sans · Gelasio = serif titles (Georgia metric clone)
+   IBM Plex Mono = mono labels
+   -------------------------------------------------------------------------- */
+@font-face {
+    font-family: 'Hind Madurai';
+    font-style: normal; font-weight: 300; font-display: swap;
+    src: url('assets/fonts/hind-madurai-latin-300-normal.woff2') format('woff2'),
+         url('assets/fonts/hind-madurai-latin-300-normal.woff') format('woff');
+}
+@font-face {
+    font-family: 'Hind Madurai';
+    font-style: normal; font-weight: 400; font-display: swap;
+    src: url('assets/fonts/hind-madurai-latin-400-normal.woff2') format('woff2'),
+         url('assets/fonts/hind-madurai-latin-400-normal.woff') format('woff');
+}
+@font-face {
+    font-family: 'Hind Madurai';
+    font-style: normal; font-weight: 500; font-display: swap;
+    src: url('assets/fonts/hind-madurai-latin-500-normal.woff2') format('woff2'),
+         url('assets/fonts/hind-madurai-latin-500-normal.woff') format('woff');
+}
+@font-face {
+    font-family: 'Hind Madurai';
+    font-style: normal; font-weight: 600; font-display: swap;
+    src: url('assets/fonts/hind-madurai-latin-600-normal.woff2') format('woff2'),
+         url('assets/fonts/hind-madurai-latin-600-normal.woff') format('woff');
+}
+@font-face {
+    font-family: 'Hind Madurai';
+    font-style: normal; font-weight: 700; font-display: swap;
+    src: url('assets/fonts/hind-madurai-latin-700-normal.woff2') format('woff2'),
+         url('assets/fonts/hind-madurai-latin-700-normal.woff') format('woff');
+}
+@font-face {
+    font-family: 'Gelasio';
+    font-style: normal; font-weight: 400; font-display: swap;
+    src: url('assets/fonts/gelasio-latin-400-normal.woff2') format('woff2'),
+         url('assets/fonts/gelasio-latin-400-normal.woff') format('woff');
+}
+@font-face {
+    font-family: 'Gelasio';
+    font-style: italic; font-weight: 400; font-display: swap;
+    src: url('assets/fonts/gelasio-latin-400-italic.woff2') format('woff2'),
+         url('assets/fonts/gelasio-latin-400-italic.woff') format('woff');
+}
+@font-face {
+    font-family: 'Gelasio';
+    font-style: normal; font-weight: 700; font-display: swap;
+    src: url('assets/fonts/gelasio-latin-700-normal.woff2') format('woff2'),
+         url('assets/fonts/gelasio-latin-700-normal.woff') format('woff');
+}
+@font-face {
+    font-family: 'Gelasio';
+    font-style: italic; font-weight: 700; font-display: swap;
+    src: url('assets/fonts/gelasio-latin-700-italic.woff2') format('woff2'),
+         url('assets/fonts/gelasio-latin-700-italic.woff') format('woff');
+}
+@font-face {
+    font-family: 'IBM Plex Mono';
+    font-style: normal; font-weight: 400; font-display: swap;
+    src: url('assets/fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2'),
+         url('assets/fonts/ibm-plex-mono-latin-400-normal.woff') format('woff');
+}
+
+/* --------------------------------------------------------------------------
    1. RESET & BASE
    -------------------------------------------------------------------------- */
 *, *::before, *::after {
@@ -12,7 +78,7 @@
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Hind Madurai', 'Lucida Grande',sans-serif;
+    font-family: 'Hind Madurai', sans-serif;
     background-color: #e0e0e0;
     color: #333;
     min-height: 100vh;
@@ -539,7 +605,7 @@ body.page-index {
    PAGE-SPECIFIC: projectpage.html
    ========================================================================== */
 body.page-projectpage {
-    font-family: 'Hind Madurai', 'Lucida Grande', sans-serif;
+    font-family: 'Hind Madurai', sans-serif;
     background-color: #e0e0e0;
 }
 
@@ -579,14 +645,14 @@ body.page-projectpage {
     color: #666;
     margin-bottom: 10px;
     font-style: italic;
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
 }
 .project-title {
     font-size: 18px;
     margin-bottom: 8px;
     font-weight: normal;
     font-style: italic;
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
     color: #333;
 }
 
@@ -661,7 +727,7 @@ body.page-projectpage {
 }
 .help-popup h4 {
     margin: 0 0 10px;
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
     font-style: italic;
     font-size: 16px;
     color: #333;
@@ -738,7 +804,7 @@ body.page-projectpage {
 
 /* Project heading — full width, not split by columns */
 .project-heading {
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
     font-style: italic;
     font-size: 24px;
     font-weight: normal;
@@ -1167,7 +1233,7 @@ body.page-admin-projectpage {
 }
 .archive-titlerow h2 {
     margin: 0;
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
     font-style: italic;
     font-weight: normal;
     font-size: 26px;
@@ -1440,7 +1506,7 @@ body.page-admin-projectpage {
 }
 .help-dialog h2 {
     margin: 0 0 18px;
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
     font-style: italic;
     font-weight: normal;
     font-size: 26px;
@@ -1507,7 +1573,7 @@ body.page-admin-projectpage {
 }
 
 #tutorial-text {
-    font-family: 'Lucida Grande', 'Trebuchet MS', Arial, sans-serif;
+    font-family: 'Hind Madurai', sans-serif;
     font-size: 15px;
     line-height: 1.6;
     color: #333;
@@ -1517,7 +1583,7 @@ body.page-admin-projectpage {
 
 #tutorial-hint {
     display: block;
-    font-family: 'Lucida Grande', 'Trebuchet MS', Arial, sans-serif;
+    font-family: 'Hind Madurai', sans-serif;
     font-size: 12px;
     color: #999;
     letter-spacing: 0.02em;

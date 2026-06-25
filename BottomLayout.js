@@ -72,7 +72,7 @@ function updateSectionSizes(p1 = 16.67, p2 = 16.67, p3 = 16.67, p4 = 16.67, p5 =
 
         // Add text label
         const textLabel = new PIXI.Text(section.text, {
-            fontFamily: 'Arial',
+            fontFamily: 'Hind Madurai',
             fontSize: 16,
             fill: 0xFFFFFF,
             align: 'right'
@@ -196,7 +196,7 @@ async function initBottomLayout() {
 
         // Add text to the textbox
         textElement = new PIXI.Text('Welcome to the interactive grid! Drag to create shapes.', {
-            fontFamily: 'Arial',
+            fontFamily: 'Hind Madurai',
             fontSize: 16,
             fill: 0x808080,
             align: 'center'
@@ -221,7 +221,7 @@ async function initBottomLayout() {
 
         // Close button X symbol
         const closeSymbol = new PIXI.Text('×', {
-            fontFamily: 'Arial',
+            fontFamily: 'Hind Madurai',
             fontSize: 20,
             fill: 0x808080,
             align: 'center'

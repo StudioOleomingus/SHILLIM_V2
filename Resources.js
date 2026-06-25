@@ -127,7 +127,7 @@ async function LoadTextures() {
     try {
         // Create organization title
         const titleText = new PIXI.Text('SHILLIM INSTITUTE', {
-            fontFamily: 'Trebuchet MS',
+            fontFamily: 'Hind Madurai',
             fontSize: 30,
             fill: 'black',
             align: 'left'
@@ -139,7 +139,7 @@ async function LoadTextures() {
 
         // Create subtitle
         const subtitleText = new PIXI.Text('Inspiring Commitment to Action through Sustainable art practices in the Sahyadri Western Ghats India.', {
-            fontFamily: 'Lucida Grande',
+            fontFamily: 'Hind Madurai',
             fontSize: 17,
             fill: 'black',
             //fontStyle: 'italic',
@@ -154,7 +154,7 @@ async function LoadTextures() {
 
         // Create description
         const descriptionText = new PIXI.Text('Located in the Western Ghats, The Shillim Institute safeguards approximately 2000 acres of land in the Northern region of this mountain range, which has been declared a UNESCO World Heritage Site and a biodiversity conservation hotspot. The Institute has enlisted local communities as forest guards, and introduced thousands of native plant species, resulting in the flourishing of over a million trees comprising 64 diverse species.\n\nThe Pavna Collective is a consortium of conservation, ecology, and arts organizations, convened by the Shillim Institute. Among its initiatives, the Pavna Collective sponsors 3-6 art residencies a year, fellowships, Mapping Workshop, Cultural documentation and Skill development programs in the Sayadri ranges.', {
-            fontFamily: 'Lucida Grande',
+            fontFamily: 'Hind Madurai',
             fontSize: 15,
             fill: 'black',
             align: 'left',
@@ -168,7 +168,7 @@ async function LoadTextures() {
 
         // Create continue button
         continueText = new PIXI.Text('CONTINUE', {
-            fontFamily: 'Lucida Grande',
+            fontFamily: 'Hind Madurai',
             fontSize: 16,
             fill: '#4A90E2',
             align: 'left'
@@ -191,7 +191,7 @@ async function LoadTextures() {
 
         //Create loading text
         const loadingText = new PIXI.Text('LOADING ARCHIVE...', {
-            fontFamily: 'Lucida Grande',
+            fontFamily: 'Hind Madurai',
             fontSize: 16,
             fill: '#3092cfff',
             align: 'left',

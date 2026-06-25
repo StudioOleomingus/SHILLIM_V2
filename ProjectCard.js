@@ -64,7 +64,7 @@ function makeCircleButton(kind) {
         arrow.endFill();
         btn.addChild(arrow);
     } else {
-        const xSym = new PIXI.Text('×', { fontFamily: 'Arial', fontSize: 28, fill: 0xFFFFFF });
+        const xSym = new PIXI.Text('×', { fontFamily: 'Hind Madurai', fontSize: 28, fill: 0xFFFFFF });
         xSym.anchor.set(0.5);
         xSym.y = -1;
         btn.addChild(xSym);
@@ -110,7 +110,7 @@ function createDetailWindow(artistDetails, details, link, cardBackground, x, y) 
         const innerWidth = contentWidth - innerPad * 2;
 
         const title = new PIXI.Text(titleStr, {
-            fontFamily: 'Georgia', fontSize: 20, fontStyle: 'italic',
+            fontFamily: 'Gelasio', fontSize: 20, fontStyle: 'italic',
             fill: 0x808080, wordWrap: true, wordWrapWidth: innerWidth
         });
         title.x = innerPad;
@@ -209,7 +209,7 @@ export function createProjectCard(title, author, date, link, details, artistDeta
     // Add text elements first to calculate total height
     // Title text
     const titleText = new PIXI.Text(title, {
-        fontFamily: 'Georgia',
+        fontFamily: 'Gelasio',
         fontSize: 22,
         fontStyle: 'italic',
         fill: 0x000000,
