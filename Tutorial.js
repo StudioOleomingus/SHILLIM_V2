@@ -1,36 +1,42 @@
 // Tutorial.js — Floating tutorial overlay for Shillim Interactive Archive
-// Shows a sequence of instructional messages as the user interacts with the canvas.
+// Shows a sequence of instructional messages with optional GIF demonstrations.
 
 const TUTORIAL_MESSAGES = [
     {
         id: 'welcome',
         text: 'Welcome to the Interactive Archive for Shillim.\nClick to continue or press Esc to skip the tutorial.',
-        trigger: 'auto',       // shows immediately
-        advance: 'click'       // advances on click
+        advance: 'click',
+        gif: null
+    },
+    {
+        id: 'category',
+        text: 'Start by choosing a category from the palette below. Each colour represents a different type of project in the archive.',
+        advance: 'click',
+        gif: 'assets/tutorial/pick-category.gif'
     },
     {
         id: 'select',
-        text: 'Start by selecting a portion of space in the box above to create a pattern. Click and drag to make your selection.',
-        trigger: 'auto',       // shows after welcome is dismissed
-        advance: 'drag'        // advances when user completes a drag
+        text: 'Click and drag on the canvas to paint with the selected texture.',
+        advance: 'drag',
+        gif: 'assets/tutorial/drag-paint.gif'
     },
     {
         id: 'enclose',
-        text: 'Great! Now try to create enclosed spaces to form empty pockets surrounded by textures.',
-        trigger: 'afterDrag',  // shows right after first drag
-        advance: 'surround'   // advances when first surrounded group detected
+        text: 'Try creating enclosed spaces — surround empty cells with texture to reveal projects.',
+        advance: 'surround',
+        gif: 'assets/tutorial/enclose.gif'
     },
     {
         id: 'firstEnclosed',
         text: 'Excellent! You\'ve created your first enclosed space. Try creating more to reveal projects from the archive.',
-        trigger: 'afterSurround',
-        advance: 'click'
+        advance: 'click',
+        gif: null
     },
     {
         id: 'direction',
-        text: 'Notice how the direction you select creates a different texture. Each texture corresponds to a category of project in the archive — plan your compositions to explore different kinds of projects.',
-        trigger: 'auto',
-        advance: 'click'
+        text: 'Each category produces a different texture. Switch categories to explore more of the archive.',
+        advance: 'click',
+        gif: 'assets/tutorial/switch-category.gif'
     }
 ];
 
@@ -39,27 +45,73 @@ let tutorialActive = false;
 let tutorialSkipped = false;
 let overlayEl = null;
 let boxEl = null;
+let gifEl = null;
 let textEl = null;
 let hintEl = null;
 
-// Callbacks that ImageSection will invoke
-let onDragComplete = null;
-let onSurroundDetected = null;
-
 function createOverlay() {
-    // Outer overlay – covers the whole viewport, pointer-events only on the box itself
     overlayEl = document.createElement('div');
     overlayEl.id = 'tutorial-overlay';
+    Object.assign(overlayEl.style, {
+        position: 'fixed',
+        top: '0', left: '0', width: '100%', height: '100%',
+        display: 'none',
+        alignItems: 'flex-end',
+        justifyContent: 'center',
+        pointerEvents: 'none',
+        zIndex: '9999',
+        background: 'none',
+        padding: '0 0 140px 300px'  // left padding matches sidebar width, centers over play area
+    });
 
     boxEl = document.createElement('div');
     boxEl.id = 'tutorial-box';
+    Object.assign(boxEl.style, {
+        pointerEvents: 'auto',
+        background: 'rgba(255,255,255,0.96)',
+        borderRadius: '12px',
+        padding: '20px 30px 25px',
+        maxWidth: '525px',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
+        transition: 'opacity 0.3s, transform 0.3s',
+        cursor: 'default',
+        textAlign: 'center'
+    });
+
+    gifEl = document.createElement('img');
+    gifEl.id = 'tutorial-gif';
+    Object.assign(gifEl.style, {
+        display: 'none',
+        width: '100%',
+        maxHeight: '225px',
+        objectFit: 'contain',
+        borderRadius: '8px',
+        marginBottom: '12px',
+        background: '#f5f5f5'
+    });
 
     textEl = document.createElement('p');
     textEl.id = 'tutorial-text';
+    Object.assign(textEl.style, {
+        margin: '0 0 8px 0',
+        fontFamily: 'Lucida Grande, sans-serif',
+        fontSize: '19px',
+        lineHeight: '1.5',
+        color: '#333',
+        whiteSpace: 'pre-line',
+        textAlign: 'left'
+    });
 
     hintEl = document.createElement('span');
     hintEl.id = 'tutorial-hint';
+    Object.assign(hintEl.style, {
+        fontFamily: 'Lucida Grande, sans-serif',
+        fontSize: '15px',
+        color: '#999',
+        display: 'none'
+    });
 
+    boxEl.appendChild(gifEl);
     boxEl.appendChild(textEl);
     boxEl.appendChild(hintEl);
     overlayEl.appendChild(boxEl);
@@ -75,18 +127,27 @@ function showStep(index) {
     currentStep = index;
     const msg = TUTORIAL_MESSAGES[index];
 
+    // GIF
+    if (msg.gif) {
+        gifEl.src = msg.gif;
+        gifEl.style.display = 'block';
+    } else {
+        gifEl.src = '';
+        gifEl.style.display = 'none';
+    }
+
     textEl.textContent = msg.text;
 
-    // Hint text
+    // Hint
     if (msg.advance === 'click') {
-        hintEl.textContent = 'Click this box to continue';
+        hintEl.textContent = 'Click anywhere to continue';
         hintEl.style.display = 'block';
     } else if (msg.advance === 'drag') {
-        hintEl.textContent = '';
-        hintEl.style.display = 'none';
+        hintEl.textContent = 'Try it — drag on the canvas above';
+        hintEl.style.display = 'block';
     } else if (msg.advance === 'surround') {
-        hintEl.textContent = '';
-        hintEl.style.display = 'none';
+        hintEl.textContent = 'Enclose some empty space to continue';
+        hintEl.style.display = 'block';
     } else {
         hintEl.textContent = '';
         hintEl.style.display = 'none';
@@ -101,22 +162,22 @@ function showStep(index) {
         boxEl.style.transform = 'translateY(0)';
     });
 
-    // Bind advance behaviour
     setupAdvance(msg.advance);
 }
 
 function setupAdvance(advanceType) {
-    // Remove old listeners
-    overlayEl.removeEventListener('click', handleClickAdvance);
+    document.removeEventListener('pointerdown', handleClickAdvance);
 
     if (advanceType === 'click') {
-        overlayEl.addEventListener('click', handleClickAdvance);
+        boxEl.style.cursor = 'pointer';
+        document.addEventListener('pointerdown', handleClickAdvance);
+    } else {
+        boxEl.style.cursor = 'default';
     }
-    // 'drag' and 'surround' are advanced externally via tutorialDragDone / tutorialSurroundDone
 }
 
 function handleClickAdvance() {
-    overlayEl.removeEventListener('click', handleClickAdvance);
+    document.removeEventListener('pointerdown', handleClickAdvance);
     advanceToNext();
 }
 
@@ -125,7 +186,6 @@ function advanceToNext() {
 
     const nextIndex = currentStep + 1;
 
-    // Animate out then show next
     boxEl.style.opacity = '0';
     boxEl.style.transform = 'translateY(8px)';
     setTimeout(() => {
@@ -144,7 +204,6 @@ function endTutorial() {
             overlayEl.style.display = 'none';
         }, 300);
     }
-    // Clean up Esc listener
     window.removeEventListener('keydown', handleEsc);
 }
 
@@ -154,11 +213,9 @@ function handleEsc(e) {
     }
 }
 
-// ── Public API ──────────────────────────────────────────────────────────────
+// ── Public API ──────────────────────────────────────────────────────
 
-/** Call once after initInfoSection / initImageSection / initBottomLayout */
 function startTutorial() {
-    // Check if user has already seen it (persisted per-session in sessionStorage)
     if (sessionStorage.getItem('shillim-tutorial-done')) {
         tutorialSkipped = true;
         return;
@@ -173,23 +230,20 @@ function startTutorial() {
     showStep(0);
 }
 
-/** Called by ImageSection when a drag-to-paint is completed */
 function tutorialDragDone() {
     if (!tutorialActive || tutorialSkipped) return;
-    if (currentStep === 1 && TUTORIAL_MESSAGES[1].advance === 'drag') {
+    if (currentStep === 2 && TUTORIAL_MESSAGES[2].advance === 'drag') {
         advanceToNext();
     }
 }
 
-/** Called by ImageSection when a new surrounded group is detected */
 function tutorialSurroundDone() {
     if (!tutorialActive || tutorialSkipped) return;
-    if (currentStep === 2 && TUTORIAL_MESSAGES[2].advance === 'surround') {
+    if (currentStep === 3 && TUTORIAL_MESSAGES[3].advance === 'surround') {
         advanceToNext();
     }
 }
 
-/** Is the tutorial currently blocking interaction? (for step 0 only) */
 function isTutorialBlocking() {
     return tutorialActive && !tutorialSkipped && currentStep === 0;
 }
