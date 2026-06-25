@@ -1,4 +1,4 @@
-import { app, TextureArray, folderPaths, numberOfRows, numberOfColumns, cellSize } from './Config.js';
+import { app, TextureArray, folderPaths, numberOfRows, numberOfColumns, cellSize, interactiveRect } from './Config.js';
 import { initInfoSection } from './InfoSection.js';
 import { initImageSection } from './ImageSection.js';
 import { initBottomLayout } from './BottomLayout.js';
@@ -125,95 +125,245 @@ async function downloadAndExtractZip(zipUrl, index) {
 
 async function LoadTextures() {
     try {
-        // Create organization title
-        const titleText = new PIXI.Text('SHILLIM INSTITUTE', {
-            fontFamily: 'Hind Madurai',
-            fontSize: 30,
-            fill: 'black',
-            align: 'left'
-        });
-        titleText.anchor.set(0, 0.5);
-        titleText.x = app.screen.width / 2 - 250;
-        titleText.y = app.screen.height / 2 - 60;
-        app.stage.addChild(titleText);
-
-        // Create subtitle
-        const subtitleText = new PIXI.Text('Inspiring Commitment to Action through Sustainable art practices in the Sahyadri Western Ghats India.', {
-            fontFamily: 'Hind Madurai',
-            fontSize: 17,
-            fill: 'black',
-            //fontStyle: 'italic',
-            align: 'left',
-            wordWrap: true,
-            wordWrapWidth: 600
-        });
-        subtitleText.anchor.set(0, 0.5);
-        subtitleText.x = app.screen.width / 2 - 250;
-        subtitleText.y = titleText.y + 40;
-        app.stage.addChild(subtitleText);
-
-        // Create description
-        const descriptionText = new PIXI.Text('Located in the Western Ghats, The Shillim Institute safeguards approximately 2000 acres of land in the Northern region of this mountain range, which has been declared a UNESCO World Heritage Site and a biodiversity conservation hotspot. The Institute has enlisted local communities as forest guards, and introduced thousands of native plant species, resulting in the flourishing of over a million trees comprising 64 diverse species.\n\nThe Pavna Collective is a consortium of conservation, ecology, and arts organizations, convened by the Shillim Institute. Among its initiatives, the Pavna Collective sponsors 3-6 art residencies a year, fellowships, Mapping Workshop, Cultural documentation and Skill development programs in the Sayadri ranges.', {
-            fontFamily: 'Hind Madurai',
-            fontSize: 15,
-            fill: 'black',
-            align: 'left',
-            wordWrap: true,
-            wordWrapWidth: 600
-        });
-        descriptionText.anchor.set(0, 0.5);
-        descriptionText.x = app.screen.width / 2 - 250;
-        descriptionText.y = subtitleText.y + 160;
-        app.stage.addChild(descriptionText);
-
-        // Create continue button
-        continueText = new PIXI.Text('CONTINUE', {
-            fontFamily: 'Hind Madurai',
-            fontSize: 16,
-            fill: '#4A90E2',
-            align: 'left'
-        });
-        continueText.anchor.set(0, 0.45);
-        continueText.x = app.screen.width / 2 - 250;
-        continueText.y = descriptionText.y + 160;
-        continueText.eventMode = 'static';
-        continueText.cursor = 'pointer';
-        continueText.visible = false;
-        app.stage.addChild(continueText);
-
+        // ===================================================================
+        // LANDING / INTRO SCREEN
+        // White content box matches the game page's play-card geometry.
+        // ===================================================================
         let isLoading = false;
         let texturesLoaded = false;
 
-        // Create loading container
+        const PLAY_GAP = 14;
+        const boxX = interactiveRect.x + PLAY_GAP;                 // 324
+        const boxY = PLAY_GAP;                                      // 14
+        const boxW = interactiveRect.width - PLAY_GAP * 2;          // 1212
+        // Use the actual rendered canvas height (the renderer is resized to the
+        // container in initApp) so the box never overflows the visible area.
+        const boxH = app.screen.height - PLAY_GAP * 2;
+
+        const intro = new PIXI.Container();
+        app.stage.addChild(intro);
+
+        // White rounded inner box (same size/feel as the game page).
+        const whiteBox = new PIXI.Graphics();
+        whiteBox.beginFill(0xFFFFFF);
+        whiteBox.drawRoundedRect(boxX, boxY, boxW, boxH, 28);
+        whiteBox.endFill();
+        intro.addChild(whiteBox);
+
+        // Content anchors inside the white box (left-aligned with the title).
+        const TEXT_LEFT = boxX + 22;
+        const CONTENT_LEFT = TEXT_LEFT;
+        const CONTENT_WRAP = 760;
+
+        const WEBSITE_DESC = 'This website is an interactive repository of projects by the Shillim Institute. It encompasses work ranging from art residencies and mapping workshops to ecological surveys and reforestation programs, as well as educational initiatives and community outreach.\n\nThe archive invites visitors to draw new associations between these varied works, situating each project within the landscape of the Sahyadris from which they emerge.';
+
+        // First institute is real; the remaining seven are placeholders.
+        const institutes = [
+            {
+                name: 'The Shillim Institute',
+                heading: 'Inspiring Commitment to Action through Sustainable art practices in the Sahyadri Western Ghats India',
+                body: 'Located in the Western Ghats, The Shillim Institute safeguards approximately 2000 acres of land in the Northern region of this mountain range, which has been declared a UNESCO World Heritage Site and a biodiversity conservation hotspot. The Institute has enlisted local communities as forest guards and introduced thousands of native plant species, resulting in the flourishing of over a million trees comprising 64 diverse species.\n\nThe Pavna Collective is a consortium of conservation, ecology, and art organizations, convened by the Shillim Institute. Among its initiatives, the Pavna Collective sponsors 3-6 art residencies a year, fellowships, Mapping Workshop, Cultural documentation and Skill development programs in the Sayadri ranges.'
+            },
+            { name: 'Organisation 01', heading: 'Organisation 01', body: 'Placeholder description for Organisation 01. Replace this with a short overview of the organisation.' },
+            { name: 'Organisation 02', heading: 'Organisation 02', body: 'Placeholder description for Organisation 02. Replace this with a short overview of the organisation.' },
+            { name: 'Organisation 03', heading: 'Organisation 03', body: 'Placeholder description for Organisation 03. Replace this with a short overview of the organisation.' },
+            { name: 'Organisation 04', heading: 'Organisation 04', body: 'Placeholder description for Organisation 04. Replace this with a short overview of the organisation.' },
+            { name: 'Organisation 05', heading: 'Organisation 05', body: 'Placeholder description for Organisation 05. Replace this with a short overview of the organisation.' },
+            { name: 'Organisation 06', heading: 'Organisation 06', body: 'Placeholder description for Organisation 06. Replace this with a short overview of the organisation.' },
+            { name: 'Organisation 07', heading: 'Organisation 07', body: 'Placeholder description for Organisation 07. Replace this with a short overview of the organisation.' }
+        ];
+
+        // Big title — lighter weight, large enough to span the box width,
+        // pushed up from the very bottom.
+        const bigTitle = new PIXI.Text('THE SHILLIM ARCHIVE', {
+            fontFamily: 'Hind Madurai', fontWeight: '520', fontSize: 120, fill: 0xa4a4a4
+        });
+        bigTitle.anchor.set(0, 1);
+        bigTitle.x = TEXT_LEFT;
+        bigTitle.y = boxY + boxH - 18;
+        intro.addChild(bigTitle);
+
+        // Full-width loading-bar / continue row, just above the title.
+        const BAR_X = TEXT_LEFT;
+        const BAR_W = boxW - (TEXT_LEFT - boxX) * 2;     // even left/right inset
+        const BAR_Y = bigTitle.y - bigTitle.height - 30;
+
+        // Heading line (shown only when an institute is selected).
+        const headingText = new PIXI.Text('', {
+            fontFamily: 'Hind Madurai', fontSize: 24, fill: 0x222222,
+            wordWrap: true, wordWrapWidth: CONTENT_WRAP, lineHeight: 32
+        });
+        headingText.x = CONTENT_LEFT;
+        headingText.visible = false;
+        intro.addChild(headingText);
+
+        // Body / description text (swaps between website and institute copy).
+        const bodyText = new PIXI.Text(WEBSITE_DESC, {
+            fontFamily: 'Hind Madurai', fontSize: 20, fill: 0x222222,
+            align: 'justify',
+            wordWrap: true, wordWrapWidth: CONTENT_WRAP, lineHeight: 25.5
+        });
+        bodyText.x = CONTENT_LEFT;
+        intro.addChild(bodyText);
+
+        // Top of the website description (measured at creation). Institute text
+        // is shown at this exact same height.
+        const DESC_TOP = BAR_Y - 28 - bodyText.height;
+
+        function layoutContent() {
+            if (selectedInstitute === -1) {
+                // Default: website description sits low, just above the loading bar.
+                bodyText.y = DESC_TOP;
+            } else {
+                // Institute: body shown at the same height as the website description.
+                let cy = DESC_TOP;
+                if (headingText.visible && headingText.text) {
+                    headingText.y = cy;
+                    cy += headingText.height + 24;
+                }
+                bodyText.y = cy;
+            }
+        }
+
+        // ----- Continue button (right end of the loading-bar row) -----
+        continueText = new PIXI.Text('CONTINUE', {
+            fontFamily: 'Hind Madurai', fontSize: 22, fill: '#4A90E2'
+        });
+        continueText.anchor.set(1, 0.5);
+        continueText.x = BAR_X + BAR_W - 56;
+        continueText.y = BAR_Y - 18;
+        continueText.eventMode = 'static';
+        continueText.cursor = 'pointer';
+        continueText.visible = false;
+        intro.addChild(continueText);
+
+        // ----- Loading bar (full width of the box, above the title) -----
         loadingContainer = new PIXI.Container();
         loadingContainer.visible = true;
-        app.stage.addChild(loadingContainer);
+        intro.addChild(loadingContainer);
 
-        //Create loading text
         const loadingText = new PIXI.Text('LOADING ARCHIVE...', {
-            fontFamily: 'Hind Madurai',
-            fontSize: 16,
-            fill: '#3092cfff',
-            align: 'left',
-            wordWrap: true,
-            wordWrapWidth: 500
+            fontFamily: 'Hind Madurai', fontSize: 20, fill: '#3092cf'
         });
-        loadingText.anchor.set(0.45); //edited from 0,5 to align fonts.
-        loadingText.x = app.screen.width / 2 - 178;
-        loadingText.y = descriptionText.y + 160;
+        loadingText.anchor.set(0, 1);
+        loadingText.x = BAR_X + BAR_W - 180;
+        loadingText.y = BAR_Y - 18;
         loadingContainer.addChild(loadingText);
 
-        // Create loading bar background
         const loadingBarBg = new PIXI.Graphics();
         loadingBarBg.beginFill(0xDDDDDD);
-        loadingBarBg.drawRoundedRect(app.screen.width / 2 - 250, descriptionText.y + 120, 600, 10, 1);
+        loadingBarBg.drawRoundedRect(BAR_X, BAR_Y, BAR_W, 20, 10);
         loadingBarBg.endFill();
         loadingContainer.addChild(loadingBarBg);
 
-        // Create loading bar fill
         const loadingBarFill = new PIXI.Graphics();
         loadingBarFill.beginFill(0x4A90E2);
         loadingContainer.addChild(loadingBarFill);
+
+        // ----- Institute name list (left column, light-grey capsule buttons) -----
+        let selectedInstitute = -1;
+        const nameItems = [];
+        const NAME_X = 40;
+        const NAME_GAP = 70;            // tighter spacing
+        const NAME_PAD_X = 27;          // capsule grown by ~10px each dimension
+        const NAME_PAD_Y = 16;
+
+        // Vertically centre the whole stack of buttons in the box.
+        const sampleLabel = new PIXI.Text('A', { fontFamily: 'Hind Madurai', fontWeight: '200', fontSize: 20 });
+        const NAME_CAP_H = sampleLabel.height + NAME_PAD_Y * 2;
+        sampleLabel.destroy();
+        const NAME_GROUP_H = (institutes.length - 1) * NAME_GAP + NAME_CAP_H;
+        const NAME_Y0 = Math.round(app.screen.height / 2 - NAME_GROUP_H / 2);
+
+        // Uniform button width — sized to the widest name so all capsules match.
+        let NAME_MAX_W = 0;
+        institutes.forEach((inst) => {
+            const t = new PIXI.Text(inst.name.toUpperCase(), { fontFamily: 'Hind Madurai', fontWeight: '200', fontSize: 20 });
+            NAME_MAX_W = Math.max(NAME_MAX_W, t.width);
+            t.destroy();
+        });
+        const NAME_CAP_W = Math.ceil(NAME_MAX_W) + NAME_PAD_X * 2;
+
+        function applyNameStyles() {
+            nameItems.forEach(({ label, bg }, i) => {
+                const active = (selectedInstitute === -1 || i === selectedInstitute);
+                label.style.fill = active ? 0x111111 : 0xb8b8b8;
+                // selected capsule reads slightly darker; others sit at base grey
+                bg.tint = (i === selectedInstitute) ? 0xdcdcdc : 0xffffff;
+            });
+        }
+
+        function showDefault() {
+            selectedInstitute = -1;
+            bigTitle.visible = true;
+            headingText.visible = false;
+            headingText.text = '';
+            bodyText.text = WEBSITE_DESC;
+            continueText.visible = texturesLoaded;
+            loadingContainer.visible = !texturesLoaded;
+            applyNameStyles();
+            layoutContent();
+        }
+
+        function selectInstitute(i) {
+            selectedInstitute = i;
+            const inst = institutes[i];
+            bigTitle.visible = false;
+            headingText.visible = true;
+            headingText.text = inst.heading;
+            bodyText.text = inst.body;
+            continueText.visible = false;
+            loadingContainer.visible = false;
+            applyNameStyles();
+            layoutContent();
+        }
+
+        institutes.forEach((inst, i) => {
+            const item = new PIXI.Container();
+            item.x = NAME_X;
+            item.y = NAME_Y0 + i * NAME_GAP;
+
+            const label = new PIXI.Text(inst.name.toUpperCase(), {
+                fontFamily: 'Hind Madurai', fontWeight: '200', fontSize: 20, fill: 0x111111
+            });
+            label.x = NAME_PAD_X;
+            label.y = NAME_PAD_Y;
+
+            const capW = NAME_CAP_W;            // uniform width for every button
+            const capH = label.height + NAME_PAD_Y * 2;
+
+            const bg = new PIXI.Graphics();
+            bg.beginFill(0xf0f0f0);
+            bg.drawRoundedRect(0, 0, capW, capH, 12);
+            bg.endFill();
+
+            item.addChild(bg);
+            item.addChild(label);
+            item.eventMode = 'static';
+            item.cursor = 'pointer';
+            item.hitArea = new PIXI.Rectangle(0, 0, capW, capH);
+
+            // Hover: darken the capsule unless it's the selected one.
+            item.on('pointerover', () => { if (selectedInstitute !== i) bg.tint = 0xe2e2e2; });
+            item.on('pointerout', () => { applyNameStyles(); });
+            item.on('pointertap', (e) => {
+                if (e && e.stopPropagation) e.stopPropagation();
+                selectInstitute(i);
+            });
+
+            intro.addChild(item);
+            nameItems.push({ item, label, bg });
+        });
+
+        // Click anywhere outside a name returns to the default title view.
+        app.stage.eventMode = 'static';
+        app.stage.hitArea = new PIXI.Rectangle(0, 0, app.screen.width, app.screen.height);
+        app.stage.on('pointertap', () => {
+            if (selectedInstitute !== -1) showDefault();
+        });
+
+        // Set the initial (default) state.
+        showDefault();
 
         // Start loading textures immediately in the background
         const textureLoadingPromise = (async () => {
@@ -228,13 +378,7 @@ async function LoadTextures() {
                 const progress = (index + 1) / totalFolders;
                 loadingBarFill.clear();
                 loadingBarFill.beginFill(0x4A90E2);
-                loadingBarFill.drawRoundedRect(
-                    app.screen.width / 2 - 250,
-                    descriptionText.y + 120,
-                    600 * progress,
-                    10,
-                    1
-                );
+                loadingBarFill.drawRoundedRect(BAR_X, BAR_Y, BAR_W * progress, 20, 10);
                 loadingBarFill.endFill();
                 
                 index++;
@@ -268,27 +412,33 @@ async function LoadTextures() {
                     loadTextureWithRetry('assets/LEAVES2.png'),
                     loadTextureWithRetry('assets/DRAGONFLY3.png'),
                     loadTextureWithRetry('assets/FROG1.png'),
+                    loadTextureWithRetry('assets/PLUS.png'),
+                    loadTextureWithRetry('assets/HELP.png'),
                 ]);
 
-                continueText.visible = true;
-                loadingContainer.visible = false;
                 texturesLoaded = true;
+                // Reveal the continue button only if we're on the default view.
+                if (selectedInstitute === -1) {
+                    continueText.visible = true;
+                    loadingContainer.visible = false;
+                }
             } catch (error) {
                 console.error('Failed to load background textures:', error);
-                // Update loading text to show error
-                descriptionText.text = 'Error loading textures. Please refresh the page.';
-                descriptionText.style.fill = 0xFF0000; // Red color for error
+                // Surface the error in the body text.
+                bodyText.text = 'Error loading textures. Please refresh the page.';
+                bodyText.style.fill = 0xFF0000; // Red color for error
             }
         })();
 
         // Handle continue button click
-        continueText.on('pointertap', async () => {
+        continueText.on('pointertap', async (e) => {
+            if (e && e.stopPropagation) e.stopPropagation();
             if (isLoading) return;
 
-            // Hide organization content
-            titleText.visible = false;
-            subtitleText.visible = false;
-            descriptionText.visible = false;
+            // Hide the landing content.
+            bigTitle.visible = false;
+            headingText.visible = false;
+            bodyText.visible = false;
             continueText.visible = false;
 
             // Show loading container while waiting for textures
@@ -306,6 +456,9 @@ async function LoadTextures() {
 
             loadingContainer.visible = false;
             isLoading = false;
+
+            // Remove the whole landing screen before the game cascades in.
+            intro.visible = false;
 
             // Push the whole stage off to the right BEFORE building the
             // interactive sections, so they're created off-screen and can

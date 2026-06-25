@@ -54,15 +54,15 @@ function makeCircleButton(kind) {
     btn.addChild(bg);
 
     if (kind === 'arrow') {
-        const arrow = new PIXI.Graphics();
-        arrow.beginFill(0xFFFFFF);
-        const s = 16;
-        arrow.moveTo(-s * 0.4 + 2, -s * 0.5);
-        arrow.lineTo(s * 0.5 + 2, 0);
-        arrow.lineTo(-s * 0.4 + 2, s * 0.5);
-        arrow.closePath();
-        arrow.endFill();
-        btn.addChild(arrow);
+        // Plus sign (white, to match the white-on-grey button icons).
+        const plus = new PIXI.Graphics();
+        plus.beginFill(0xFFFFFF);
+        const span = 18;   // overall width/height of the plus
+        const arm = 4.5;   // arm thickness
+        plus.drawRect(-arm / 2, -span / 2, arm, span);   // vertical arm
+        plus.drawRect(-span / 2, -arm / 2, span, arm);   // horizontal arm
+        plus.endFill();
+        btn.addChild(plus);
     } else {
         const xSym = new PIXI.Text('×', { fontFamily: 'Hind Madurai', fontSize: 28, fill: 0xFFFFFF });
         xSym.anchor.set(0.5);

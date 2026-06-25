@@ -85,17 +85,12 @@ async function initInfoSection() {
         archiveBtnBg.endFill();
         archiveIndexButton.addChild(archiveBtnBg);
 
-        // Play triangle inside the button.
-        const archiveTriangle = new PIXI.Graphics();
-        archiveTriangle.beginFill(0x808080);
-        const triSize = 24;
-        archiveTriangle.moveTo(-triSize * 0.35 + 2, -triSize * 0.5);
-        archiveTriangle.lineTo(triSize * 0.55 + 2, 0);
-        archiveTriangle.lineTo(-triSize * 0.35 + 2, triSize * 0.5);
-        archiveTriangle.closePath();
-        archiveTriangle.endFill();
-        archiveTriangle.eventMode = 'none';
-        archiveIndexButton.addChild(archiveTriangle);
+        // Plus icon (PNG) inside the button.
+        const archivePlus = PIXI.Sprite.from('assets/PLUS.png');
+        archivePlus.anchor.set(0.5);
+        archivePlus.scale.set(34 / 512);   // PLUS.png is 512x512
+        archivePlus.eventMode = 'none';
+        archiveIndexButton.addChild(archivePlus);
 
         // Count value is still tracked (updated elsewhere) but no longer shown.
         archiveIndexValueLabelText = new PIXI.Text('0', { fontFamily: 'Gelasio', fontSize: 22, fill: 0x808080 });
@@ -145,8 +140,9 @@ async function initInfoSection() {
         helpBtnBg.endFill();
         helpButton.addChild(helpBtnBg);
 
-        const helpMark = new PIXI.Text('?', { fontFamily: 'Gelasio', fontSize: 34, fill: 0x808080 });
+        const helpMark = PIXI.Sprite.from('assets/HELP.png');
         helpMark.anchor.set(0.5);
+        helpMark.scale.set(58 / 512);   // HELP.png is 512x512
         helpMark.y = 1;
         helpMark.eventMode = 'none';
         helpButton.addChild(helpMark);
