@@ -16,28 +16,23 @@ async function initApp() {
         app.view.style.borderRadius = '40px';
        // app.view.style.border = '1px solid rgb(213, 213, 213)';
         app.view.style.backgroundColor = '#ECECEC';
-        app.view.style.width = '1550px';
-        app.view.style.height = '1000px';
+        // The canvas is rendered at a FIXED logical size (1550x1000). It is then
+        // scaled to fit the window purely via CSS (see #app-container in
+        // shilim.css), so every element inside keeps its mutual proportions and
+        // nothing is ever cropped. Let it fill its container; CSS handles the
+        // aspect-ratio-preserving downscale.
+        app.view.style.width = '100%';
+        app.view.style.height = '100%';
         app.view.style.boxShadow = 'none';
 
         // Add the Pixi canvas to our container
         document.getElementById('app-container').appendChild(app.view);
 
-        // Handle window resizing
-        function resize() {
-            const container = document.getElementById('app-container');
-            const containerWidth = container.clientWidth;
-            const containerHeight = container.clientHeight;
-            
-            // Update renderer size to match container
-            app.renderer.resize(containerWidth, containerHeight);
-        }
-
-        // Initial resize
-        resize();
-
-        // Add window resize listener
-        window.addEventListener('resize', resize);
+        // NOTE: We intentionally do NOT resize the PIXI renderer on window
+        // resize. The whole experience is laid out in a fixed 1550x1000
+        // coordinate space; resizing the renderer would change that space and
+        // crop the bottom control bar / text. CSS scaling of the canvas keeps
+        // the proportions intact at any window size.
 
         try {
             // Initialize the asset loader

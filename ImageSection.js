@@ -261,21 +261,12 @@ async function initImageSection() {
         // Create instance of TextureStats
         let textureStats = new TextureStats();
 
-        // Handle window resizing
-        function resize() {
-            
-            console.log('container.clientHeight: ',container.clientHeight);
-
-            interactiveRect.height -= (1000 -container.clientHeight);
-
-            textureStats.updateSections();
-        }
-
-        // Initial resize
-        resize();
-
-        // Add window resize listener
-        window.addEventListener('resize', resize);
+        // The grid is laid out in the fixed 1550x1000 logical space and scaled
+        // to the window via CSS, so interactiveRect must stay at its design
+        // dimensions. (Previously this mutated interactiveRect.height from the
+        // live container height on every resize, which shifted/cropped the grid
+        // and the bottom bar.) Just lay the sections out once at design size.
+        textureStats.updateSections();
 
         // Helper function to update sprite's corner mask
         const updateSpriteCornerMask = (sprite, row, col, isCorner, cornerPosition) => {

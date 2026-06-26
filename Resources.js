@@ -1,4 +1,4 @@
-import { app, TextureArray, folderPaths, numberOfRows, numberOfColumns, cellSize, interactiveRect } from './Config.js';
+import { app, TextureArray, folderPaths, numberOfRows, numberOfColumns, cellSize, interactiveRect, stageHeight } from './Config.js';
 import { initInfoSection } from './InfoSection.js';
 import { initImageSection } from './ImageSection.js';
 import { initBottomLayout } from './BottomLayout.js';
@@ -136,9 +136,10 @@ async function LoadTextures() {
         const boxX = interactiveRect.x + PLAY_GAP;                 // 324
         const boxY = PLAY_GAP;                                      // 14
         const boxW = interactiveRect.width - PLAY_GAP * 2;          // 1212
-        // Use the actual rendered canvas height (the renderer is resized to the
-        // container in initApp) so the box never overflows the visible area.
-        const boxH = app.screen.height - PLAY_GAP * 2;
+        // Lay the intro box out in the fixed 1550x1000 logical space; the canvas
+        // is scaled to the window via CSS, so the design height keeps the box
+        // matching the game-page play card at any window size.
+        const boxH = stageHeight - PLAY_GAP * 2;
 
         const intro = new PIXI.Container();
         app.stage.addChild(intro);

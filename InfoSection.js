@@ -1,4 +1,4 @@
-import { app, projects, PLAIN_COLORS } from './Config.js';
+import { app, projects, PLAIN_COLORS, stageHeight } from './Config.js';
 import { createProjectCard } from './ProjectCard.js';
 import { indexBg, whiteCircleBg } from './Resources.js';
 import { openArchivePanel } from './ArchivePanel.js';
@@ -48,16 +48,10 @@ async function initInfoSection() {
         const LIST_TOP = 100;
         const LIST_BOTTOM_MARGIN = 100;
 
-         // Handle window resizing
-         function resize() {
-            viewportHeight = container.clientHeight - LIST_TOP - LIST_BOTTOM_MARGIN;
-        }
-
-        // Initial resize
-        resize();
-
-        // Add window resize listener
-        window.addEventListener('resize', resize);
+        // Lay the scrollable card viewport out in the fixed 1550x1000 logical
+        // space; CSS scales the canvas to the window, so we use the design
+        // height (not the live, scaled container height).
+        viewportHeight = stageHeight - LIST_TOP - LIST_BOTTOM_MARGIN;
 
         // Create a container for the image section
         const imageContainer = new PIXI.Container();
@@ -129,7 +123,7 @@ async function initInfoSection() {
         const helpBtnRadius = 30;
         const helpButton = new PIXI.Container();
         helpButton.x = 4 + helpBtnRadius;                              // mirror archive button (left margin)
-        helpButton.y = container.clientHeight - 14 - helpBtnRadius - 10; // ~14px from the bottom (imageContainer +10)
+        helpButton.y = stageHeight - 14 - helpBtnRadius - 10;          // ~14px from the bottom (imageContainer +10)
         helpButton.eventMode = 'static';
         helpButton.cursor = 'pointer';
         helpButton.hitArea = new PIXI.Circle(0, 0, helpBtnRadius);
@@ -147,10 +141,9 @@ async function initInfoSection() {
         helpMark.eventMode = 'none';
         helpButton.addChild(helpMark);
 
-        // Keep the help button pinned to the bottom on resize.
-        window.addEventListener('resize', () => {
-            helpButton.y = container.clientHeight - 14 - helpBtnRadius - 10;
-        });
+        // Help button is pinned to the bottom of the fixed-size canvas; the CSS
+        // scale keeps it correctly placed at any window size, so no resize
+        // handler is needed.
 
         helpButton.on('pointerover', () => { helpBtnBg.tint = 0xf0f0f0; });
         helpButton.on('pointerout', () => { helpBtnBg.tint = 0xffffff; });

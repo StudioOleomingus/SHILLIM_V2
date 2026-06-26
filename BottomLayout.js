@@ -272,8 +272,11 @@ async function initBottomLayout() {
 
         app.stage.addChild(layoutContainer);
 
-        // Handle window resizing
-        function resize() {
+        // Lay out the bottom bar in the fixed 1550x1000 logical space. The
+        // canvas is scaled to the window via CSS, so we use design coordinates
+        // (interactiveRect.height) rather than the live, scaled container size —
+        // this is what keeps the control bar from being cropped on resize.
+        function layout() {
             totalWidth = interactiveRect.width - 28; // match the play card width
 
             // Update layout container position
@@ -281,8 +284,8 @@ async function initBottomLayout() {
             layoutContainer.y = interactiveRect.height - 62;
 
             // Update text box container position and size
-            textBoxContainer.y = container.clientHeight - 145;
-            
+            textBoxContainer.y = interactiveRect.height - 145;
+
             // Update shadow
             shadow.clear();
             shadow.beginFill(0x000000, 0.1);
@@ -303,11 +306,8 @@ async function initBottomLayout() {
             closeButton.x = totalWidth - 30;
         }
 
-        // Initial resize
-        resize();
-
-        // Add window resize listener
-        window.addEventListener('resize', resize);
+        // Lay out once at design size; CSS scaling handles window resizing.
+        layout();
 
     } catch (error) {
         console.error('Error in initBottomLayout:', error);
