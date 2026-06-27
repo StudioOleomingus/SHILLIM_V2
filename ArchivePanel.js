@@ -49,21 +49,21 @@ function buildPanel() {
     panelEl.innerHTML = `
         <div class="archive-header">
             <div class="archive-titlerow">
-                <h2>Project Index</h2>
-                <div class="archive-count"><span id="archiveCountText">0</span></div>
+                <h2>Archive Index</h2>
+                <span id="archiveCountText" hidden>0</span>
+                <div class="archive-search">
+                    <input type="text" id="archiveSearchInput" placeholder="Search projects...">
+                    <select id="archiveYearFilter"><option value="">All Years</option></select>
+                    <select id="archivePrimaryFilter">
+                        <option value="">All Primary Categories</option>
+                        ${categoryOptions}
+                    </select>
+                    <select id="archiveSecondaryFilter">
+                        <option value="">All Secondary Categories</option>
+                        ${categoryOptions}
+                    </select>
+                </div>
                 <button class="archive-close" id="archiveCloseBtn" title="Close">&times;</button>
-            </div>
-            <div class="archive-search">
-                <input type="text" id="archiveSearchInput" placeholder="Search projects...">
-                <select id="archiveYearFilter"><option value="">All Years</option></select>
-                <select id="archivePrimaryFilter">
-                    <option value="">All Primary Categories</option>
-                    ${categoryOptions}
-                </select>
-                <select id="archiveSecondaryFilter">
-                    <option value="">All Secondary Categories</option>
-                    ${categoryOptions}
-                </select>
             </div>
         </div>
         <div class="archive-content">
@@ -183,16 +183,11 @@ function refreshGrid() {
             ? `${project.startdate} to ${project.enddate}`
             : (project.date || '');
 
-        const thumb = project.thumbnail
-            ? `<img src="${escapeHtml(project.thumbnail)}" alt="${escapeHtml(project.title)}" onerror="this.style.display='none'">`
-            : '';
-
         card.innerHTML = `
-            ${thumb}
             <h3>${escapeHtml(project.title)}</h3>
-            <p><strong>Author:</strong> ${escapeHtml(project.author)}</p>
-            <p><strong>Date:</strong> ${escapeHtml(dateDisplay)}</p>
-            <p>${escapeHtml(displayText)}</p>
+            <p class="archive-card-meta"><strong>Author:</strong> ${escapeHtml(project.author)}</p>
+            <p class="archive-card-meta"><strong>Date:</strong> ${escapeHtml(dateDisplay)}</p>
+            <p class="archive-card-desc">${escapeHtml(displayText)}</p>
         `;
         grid.appendChild(card);
     });
