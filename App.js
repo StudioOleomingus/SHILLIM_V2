@@ -4,7 +4,7 @@ async function initApp() {
     try {
         // Configure the application
         await app.init({
-            width: 1550,
+            width: 1650,
             height: 1000,
             backgroundColor: 0xECECEC,
             antialias: true,
@@ -16,7 +16,7 @@ async function initApp() {
         app.view.style.borderRadius = '40px';
        // app.view.style.border = '1px solid rgb(213, 213, 213)';
         app.view.style.backgroundColor = '#ECECEC';
-        // The canvas is rendered at a FIXED logical size (1550x1000). It is then
+        // The canvas is rendered at a FIXED logical size (1650x1000). It is then
         // scaled to fit the window purely via CSS (see #app-container in
         // shilim.css), so every element inside keeps its mutual proportions and
         // nothing is ever cropped. Let it fill its container; CSS handles the
@@ -29,7 +29,7 @@ async function initApp() {
         document.getElementById('app-container').appendChild(app.view);
 
         // NOTE: We intentionally do NOT resize the PIXI renderer on window
-        // resize. The whole experience is laid out in a fixed 1550x1000
+        // resize. The whole experience is laid out in a fixed 1650x1000
         // coordinate space; resizing the renderer would change that space and
         // crop the bottom control bar / text. CSS scaling of the canvas keeps
         // the proportions intact at any window size.

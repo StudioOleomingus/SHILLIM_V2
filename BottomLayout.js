@@ -272,7 +272,7 @@ async function initBottomLayout() {
 
         app.stage.addChild(layoutContainer);
 
-        // Lay out the bottom bar in the fixed 1550x1000 logical space. The
+        // Lay out the bottom bar in the fixed 1650x1000 logical space. The
         // canvas is scaled to the window via CSS, so we use design coordinates
         // (interactiveRect.height) rather than the live, scaled container size —
         // this is what keeps the control bar from being cropped on resize.

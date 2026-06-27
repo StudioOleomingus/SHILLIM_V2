@@ -48,7 +48,7 @@ async function initInfoSection() {
         const LIST_TOP = 100;
         const LIST_BOTTOM_MARGIN = 100;
 
-        // Lay the scrollable card viewport out in the fixed 1550x1000 logical
+        // Lay the scrollable card viewport out in the fixed 1650x1000 logical
         // space; CSS scales the canvas to the window, so we use the design
         // height (not the live, scaled container height).
         viewportHeight = stageHeight - LIST_TOP - LIST_BOTTOM_MARGIN;

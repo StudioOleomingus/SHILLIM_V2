@@ -1,4 +1,4 @@
-const stageWidth = 1550;
+const stageWidth = 1650;
 const stageHeight = 1000;
 
 // Create PIXI application with optimized settings
@@ -98,10 +98,16 @@ var TileImageDirection;
 
 var stage, layer, leftLayer, rightLayer, selectionLayer;
 
+// The interactive section sits to the right of the 310px sidebar zone. Its
+// width grew from 1240 to 1340 when the design ratio changed from 1550:1000 to
+// 1650:1000 (310 + 1340 = 1650). The painting grid itself stays a fixed 1240px
+// square (see numberOfColumns * cellSize) and is centred inside this wider
+// card, so the extra width shows as even white padding rather than stretching
+// the illustration tiles.
 let interactiveRect = {
     x: 310,
     y: 0,
-    width: 1240,
+    width: 1340,
     height: 1000,
 };
 

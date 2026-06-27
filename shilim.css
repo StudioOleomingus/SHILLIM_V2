@@ -268,14 +268,14 @@ body.page-index {
 
 #app-container {
     position: relative;
-    aspect-ratio: 1550 / 1000;
-    /* Fit the largest 1550:1000 box that fits within 95vw x 95vh. Using min()
+    aspect-ratio: 1650 / 1000;
+    /* Fit the largest 1650:1000 box that fits within 95vw x 95vh. Using min()
        on a single dimension (and deriving the other from aspect-ratio) keeps the
        proportions exact at every window size — the canvas scales as a whole and
-       the bottom control bar / text never get cropped. 1.55 = 1550 / 1000. */
-    width: min(95vw, calc(95vh * 1.55));
+       the bottom control bar / text never get cropped. 1.65 = 1650 / 1000. */
+    width: min(95vw, calc(95vh * 1.65));
     height: auto;
-    max-width: 1550px;
+    max-width: 1650px;
     max-height: 1000px;
 }
 
@@ -1217,7 +1217,7 @@ body.page-admin-projectpage {
     display: flex;
     flex-direction: column;
     padding: 28px 32px;
-    transform: translateX(110%);
+    transform: translateX(130%);
     transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
     overflow: hidden;
 }
@@ -1242,22 +1242,6 @@ body.page-admin-projectpage {
     font-style: italic;
     font-weight: normal;
     font-size: 26px;
-    color: #333;
-}
-.archive-count {
-    background-image: url('assets/white_circle_bg.png');
-    background-size: cover;
-    background-position: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.archive-count span {
-    font-size: 14px;
-    font-weight: 600;
     color: #333;
 }
 .archive-close {
@@ -1287,33 +1271,35 @@ body.page-admin-projectpage {
     display: flex;
     gap: 12px;
     align-items: center;
-    margin-top: 16px;
+    flex: 1;
+    min-width: 0;
 }
 .archive-search input {
     flex: 1;
+    min-width: 0;
     padding: 9px 14px;
-    border: 1px solid #ddd;
+    border: none;
     border-radius: 40px;
     font-size: 14px;
     font-family: inherit;
-    transition: border-color 0.25s ease;
+    background: #f2f2f2;
+    text-transform: uppercase;
+}
+.archive-search input::placeholder {
+    text-transform: uppercase;
 }
 .archive-search select {
     padding: 9px 14px;
-    border: 1px solid #ddd;
+    border: none;
     border-radius: 40px;
     font-size: 13px;
-    background: #fff;
+    background: #f2f2f2;
     cursor: pointer;
-    transition: border-color 0.25s ease;
+    text-transform: uppercase;
 }
 .archive-search input:focus,
 .archive-search select:focus {
     outline: none;
-    border-color: #2196F3;
-}
-.archive-search select:hover {
-    border-color: #2196F3;
 }
 
 /* Content: grid + detail */
@@ -1353,37 +1339,52 @@ body.page-admin-projectpage {
 .archive-card {
     background: #fff;
     border: none;
-    border-radius: 10px;
+    border-radius: 20px;
     padding: 16px;
     cursor: pointer;
     transition: background 0.25s ease;
-    height: fit-content;
+    height: 210px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
-.archive-card img {
-    width: 100%;
-    height: 130px;
-    object-fit: cover;
-    border-radius: 6px;
-    margin-bottom: 10px;
-    filter: grayscale(100%);
-    transition: filter 0.3s ease;
-}
-.archive-card:hover img {
-    filter: grayscale(0%);
+.archive-card:hover {
+    background: #e3f2fd;
 }
 .archive-card.selected {
-    background: #e3f2fd;
+    background: #d6ebfb;
 }
 .archive-card h3 {
     margin: 0 0 8px;
-    font-size: 16px;
+    font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: normal;
+    font-size: 18px;
     color: #333;
+    flex-shrink: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 .archive-card p {
     margin: 4px 0;
     font-size: 13px;
     color: #666;
     line-height: 1.4;
+}
+.archive-card-meta {
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+.archive-card-desc {
+    flex: 1;
+    min-height: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 3;
 }
 
 .archive-right {

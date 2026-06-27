@@ -261,7 +261,7 @@ async function initImageSection() {
         // Create instance of TextureStats
         let textureStats = new TextureStats();
 
-        // The grid is laid out in the fixed 1550x1000 logical space and scaled
+        // The grid is laid out in the fixed 1650x1000 logical space and scaled
         // to the window via CSS, so interactiveRect must stay at its design
         // dimensions. (Previously this mutated interactiveRect.height from the
         // live container height on every resize, which shifted/cropped the grid
@@ -667,9 +667,18 @@ async function initImageSection() {
 
         imageContainer.addChild(bgContainer);
 
-        // Create a container for the grid
+        // Create a container for the grid.
+        // The grid is a fixed 1240px square (numberOfColumns * cellSize) so the
+        // illustration tiles never stretch. The play card is wider than that, so
+        // centre the grid inside it — the leftover width becomes even white
+        // padding on the left and right. All grid contents (cells, surrounded
+        // groups, selection, etc.) live inside this container and use its local
+        // coordinates, and painting reads getLocalPosition(gridContainer), so
+        // this single offset keeps everything pixel-aligned.
+        const GRID_W = numberOfColumns * cellSize;            // 1240, square cells
+        const gridShiftX = playX + (playW - GRID_W) / 2;      // centre grid in card
         const gridContainer = new PIXI.Container();
-        gridContainer.x = 0;
+        gridContainer.x = gridShiftX;
         gridContainer.y = 0;
 
         // Create selection rectangle
@@ -684,9 +693,12 @@ async function initImageSection() {
         let endX = 0;
         let endY = 0;
 
-        // Make grid container interactive (limited to the visible rounded play card)
+        // Make grid container interactive. The hit area is the grid's own extent
+        // (in gridContainer-local space, so x starts at 0), clipped to the card's
+        // visible height. This keeps the white padding around the centred grid
+        // non-interactive, so clicks always map onto a real cell.
         gridContainer.eventMode = 'static';
-        gridContainer.hitArea = new PIXI.Rectangle(playX, playY, playW, playH);
+        gridContainer.hitArea = new PIXI.Rectangle(0, playY, GRID_W, playH);
         gridContainer.mask = playMask;
 
         // Mouse down event
@@ -1090,7 +1102,9 @@ async function initImageSection() {
 
                 if (nearestGroup) {
                     const cell = nearestGroup[Math.floor(Math.random() * nearestGroup.length)];
-                    const spawnX = cell.col * cellSize + cellSize / 2;
+                    // Lizard sprites live in imageContainer space, so add the
+                    // grid's centring offset to land on the actual cell.
+                    const spawnX = cell.col * cellSize + cellSize / 2 + gridShiftX;
                     const spawnY = cell.row * cellSize + cellSize / 2;
                     setSpawnPoint(spawnX, spawnY);
                     spawnLizard(spawnX, spawnY, nearestGroup.length);
