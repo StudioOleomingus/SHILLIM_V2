@@ -268,14 +268,14 @@ body.page-index {
 
 #app-container {
     position: relative;
-    aspect-ratio: 1550 / 1000;
-    /* Fit the largest 1550:1000 box that fits within 95vw x 95vh. Using min()
+    aspect-ratio: 1650 / 1000;
+    /* Fit the largest 1650:1000 box that fits within 95vw x 95vh. Using min()
        on a single dimension (and deriving the other from aspect-ratio) keeps the
        proportions exact at every window size — the canvas scales as a whole and
-       the bottom control bar / text never get cropped. 1.55 = 1550 / 1000. */
-    width: min(95vw, calc(95vh * 1.55));
+       the bottom control bar / text never get cropped. 1.65 = 1650 / 1000. */
+    width: min(95vw, calc(95vh * 1.65));
     height: auto;
-    max-width: 1550px;
+    max-width: 1650px;
     max-height: 1000px;
 }
 
