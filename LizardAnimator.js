@@ -1,7 +1,8 @@
 import { app, interactiveRect } from './Config.js';
 
 let parentContainer = null;
-let creatureLayer = null;
+let underLayer = null;   // masked — creatures vanish at card edges, go under sidebar
+let overLayer = null;    // unmasked — creatures walk over everything
 let lastSpawnX = null;
 let lastSpawnY = null;
 
@@ -48,12 +49,10 @@ const frameCache = {};
 export async function initLizardAnimator(container) {
     parentContainer = container;
 
-    // Create a creature layer on app.stage between the game area and sidebar.
-    creatureLayer = new PIXI.Container();
-    creatureLayer.sortableChildren = true;
-    app.stage.addChild(creatureLayer);
+    // Under layer — masked to game card, creatures disappear at edges
+    underLayer = new PIXI.Container();
+    app.stage.addChild(underLayer);
 
-    // Mask creatures to the game card area — they vanish at the card edges
     const PLAY_GAP = 14;
     const cardLeft = interactiveRect.x + PLAY_GAP;
     const cardTop = interactiveRect.y + PLAY_GAP;
@@ -64,16 +63,21 @@ export async function initLizardAnimator(container) {
     creatureMask.drawRoundedRect(cardLeft, cardTop, cardWidth, cardHeight, 28);
     creatureMask.endFill();
     app.stage.addChild(creatureMask);
-    creatureLayer.mask = creatureMask;
+    underLayer.mask = creatureMask;
 
-    // Set z-ordering: game area behind creatures, sidebar in front
+    // Over layer — no mask, creatures walk over everything
+    overLayer = new PIXI.Container();
+    app.stage.addChild(overLayer);
+
+    // Z-ordering: game(0) → underLayer(1) → sidebar(2) → overLayer(3)
     parentContainer.zIndex = 0;
-    creatureLayer.zIndex = 1;
+    underLayer.zIndex = 1;
     app.stage.children.forEach(child => {
-        if (child !== parentContainer && child !== creatureLayer && child !== creatureMask && child.zIndex !== -1) {
+        if (child !== parentContainer && child !== underLayer && child !== overLayer && child !== creatureMask && child.zIndex !== -1) {
             child.zIndex = 2;
         }
     });
+    overLayer.zIndex = 3;
 
     for (const creature of CREATURES) {
         try {
@@ -97,7 +101,7 @@ export function setSpawnPoint(x, y) {
 
 // ── Public spawn ─────────────────────────────────────────────────────
 export function spawnLizard(x, y, groupSize) {
-    if (!parentContainer || !creatureLayer) return;
+    if (!parentContainer || !underLayer || !overLayer) return;
 
     x = x ?? lastSpawnX ?? app.screen.width / 2;
     y = y ?? lastSpawnY ?? app.screen.height / 2;
@@ -126,7 +130,7 @@ export function spawnLizard(x, y, groupSize) {
     }
 }
 
-// ── Internal: spawn on app.stage so creatures walk across the full screen ──
+// ── Internal: spawn on a random layer ────────────────────────────────
 function spawnOne(frames, creature, x, y, exitAngle) {
     const sprite = new PIXI.AnimatedSprite(frames);
     sprite.animationSpeed = creature.animSpeed;
@@ -136,7 +140,9 @@ function spawnOne(frames, creature, x, y, exitAngle) {
     sprite.y = y;
     sprite.play();
 
-    creatureLayer.addChild(sprite);
+    // 50/50 chance: under the sidebar or over everything
+    const layer = Math.random() < 0.5 ? underLayer : overLayer;
+    layer.addChild(sprite);
 
     const waypoints = creature.pathBuilder(x, y, exitAngle, app.screen.width, app.screen.height);
 

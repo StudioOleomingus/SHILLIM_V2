@@ -1,22 +1,30 @@
-import { app } from './Config.js';
+import { app, interactiveRect } from './Config.js';
 import { whiteCircleBg } from './Resources.js';
-import { slideInFromRight, slideOutToRight } from './Transitions.js';
+import { slideInFromLeft, slideOutToLeft } from './Transitions.js';
+import { initLadybugAnimator, spawnLadybug } from './LadybugAnimator.js';
 
-// Offset used for the detail-window cascade (matches the panel feel)
-const DETAIL_SLIDE_OFFSET = 180;
+// Offset used for the detail-window cascade
+const DETAIL_SLIDE_OFFSET = 450;
 
 // Track currently open detail window
 let currentOpenDetailWindow = null;
+let currentLadybug = null;
+let ladybugReady = false;
+let spawnTimeout = null;
+
+// Lazy-init ladybug frames on first card open
+async function ensureLadybug() {
+    if (ladybugReady) return;
+    await initLadybugAnimator();
+    ladybugReady = true;
+}
 
 // Close the open detail window when the user clicks anywhere outside of it
-// (and outside the card that owns it). Installed once, lazily.
 let outsideCloseInstalled = false;
 function installOutsideClose() {
     if (outsideCloseInstalled) return;
     outsideCloseInstalled = true;
 
-    // Ensure the stage itself reports taps on empty regions (not just on
-    // interactive children), so clicks anywhere outside the box register.
     app.stage.eventMode = 'static';
     app.stage.hitArea = new PIXI.Rectangle(0, 0, app.screen.width, app.screen.height);
 
@@ -31,19 +39,20 @@ function installOutsideClose() {
             return p.x >= b.x && p.x <= b.x + b.width && p.y >= b.y && p.y <= b.y + b.height;
         };
 
-        // Ignore clicks on the detail window itself or on its owning card
-        // (the card handles its own open/close toggle).
         if (within(win) || within(win.ownerCard)) return;
 
-        slideOutToRight(win, { offset: DETAIL_SLIDE_OFFSET });
+        // Reparent ladybug before the card slides away
+        if (spawnTimeout) { clearTimeout(spawnTimeout); spawnTimeout = null; }
+        if (currentLadybug) { currentLadybug.drop(); currentLadybug = null; }
+
+        slideOutToLeft(win, { offset: DETAIL_SLIDE_OFFSET });
         if (win.cardBackground) win.cardBackground.tint = 0xFFFFFF;
+
         currentOpenDetailWindow = null;
     });
 }
 
-// Circular icon button matching the project-card buttons outside:
-// grey circle, white icon, darker-grey on hover. Radius 24 == the 48px
-// card buttons outside the detail window.
+// Circular icon button
 function makeCircleButton(kind) {
     const btn = new PIXI.Container();
     const r = 24;
@@ -54,13 +63,12 @@ function makeCircleButton(kind) {
     btn.addChild(bg);
 
     if (kind === 'arrow') {
-        // Plus sign (white, to match the white-on-grey button icons).
         const plus = new PIXI.Graphics();
         plus.beginFill(0xFFFFFF);
-        const span = 18;   // overall width/height of the plus
-        const arm = 4.5;   // arm thickness
-        plus.drawRect(-arm / 2, -span / 2, arm, span);   // vertical arm
-        plus.drawRect(-span / 2, -arm / 2, span, arm);   // horizontal arm
+        const span = 18;
+        const arm = 4.5;
+        plus.drawRect(-arm / 2, -span / 2, arm, span);
+        plus.drawRect(-span / 2, -arm / 2, span, arm);
         plus.endFill();
         btn.addChild(plus);
     } else {
@@ -82,20 +90,26 @@ function createDetailWindow(artistDetails, details, link, cardBackground, x, y) 
     detailContainer.x = x;
     detailContainer.y = y;
 
-    const detailWidth = 408;     // 20% wider than the original 340
-    // Match the gap below the box to the gap above it (the box opens at y).
+    const detailWidth = 408;
     const detailHeight = app.screen.height - y * 2;
     const padding = 18;
-    const headerH = 84;          // top row holding the open button
+    const headerH = 84;
     const boxRadius = 14;
     const contentTop = headerH;
     const contentWidth = detailWidth - padding * 2;
     const contentHeightVisible = detailHeight - contentTop - padding;
 
-    // Light-grey card background.
+    // Flat left edge (slides from behind sidebar), rounded right edge
+    const r = 18;
     const background = new PIXI.Graphics();
     background.beginFill(0xF5F5F5);
-    background.drawRoundedRect(0, 0, detailWidth, detailHeight, 18);
+    background.moveTo(0, 0);
+    background.lineTo(detailWidth - r, 0);
+    background.arcTo(detailWidth, 0, detailWidth, r, r);
+    background.lineTo(detailWidth, detailHeight - r);
+    background.arcTo(detailWidth, detailHeight, detailWidth - r, detailHeight, r);
+    background.lineTo(0, detailHeight);
+    background.closePath();
     background.endFill();
     detailContainer.addChild(background);
 
@@ -103,7 +117,6 @@ function createDetailWindow(artistDetails, details, link, cardBackground, x, y) 
     detailContainer.eventMode = 'static';
     detailContainer.cursor = 'default';
 
-    // White box holding a titled block of text, sized to its content.
     function buildInfoBox(titleStr, bodyStr) {
         const box = new PIXI.Container();
         const innerPad = 16;
@@ -137,7 +150,6 @@ function createDetailWindow(artistDetails, details, link, cardBackground, x, y) 
         return box;
     }
 
-    // Scrollable content: two white boxes on the grey card.
     const scrollContainer = new PIXI.Container();
     scrollContainer.x = padding;
     scrollContainer.y = contentTop;
@@ -163,7 +175,6 @@ function createDetailWindow(artistDetails, details, link, cardBackground, x, y) 
     scrollContainer.mask = scrollMask;
     detailContainer.addChild(scrollContainer);
 
-    // Wheel scrolling within the card (no visible scrollbar).
     if (totalContentHeight > contentHeightVisible) {
         let scrollY = 0;
         const maxScroll = totalContentHeight - contentHeightVisible;
@@ -174,22 +185,15 @@ function createDetailWindow(artistDetails, details, link, cardBackground, x, y) 
         });
     }
 
-    // Open-project button (top-right). The box closes by clicking outside it,
-    // so no dedicated close button is needed.
     const openButton = makeCircleButton('arrow');
     openButton.x = detailWidth - padding - 24;
     openButton.y = padding + 24;
     openButton.on('pointertap', () => {
-        if (link) {
-            window.open(link, '_blank');
-        }
+        if (link) window.open(link, '_blank');
     });
-
     detailContainer.addChild(openButton);
 
     detailContainer.visible = false;
-
-    // References used by the card toggle (scroll reset on open).
     detailContainer.scrollContainer = scrollContainer;
     detailContainer.topPadding = contentTop;
 
@@ -201,83 +205,74 @@ export function createProjectCard(title, author, date, link, details, artistDeta
     cardContainer.x = x;
     cardContainer.y = y;
 
-    // Card dimensions
     const cardWidth = 300;
     let cardHeight = 100;
     const padding = 15;
 
-    // Add text elements first to calculate total height
-    // Title text
     const titleText = new PIXI.Text(title, {
-        fontFamily: 'Gelasio',
-        fontSize: 22,
-        fontStyle: 'italic',
-        fill: 0x000000,
-        wordWrap: true,
-        wordWrapWidth: cardWidth - (padding * 2)
+        fontFamily: 'Gelasio', fontSize: 22, fontStyle: 'italic', fill: 0x000000,
+        wordWrap: true, wordWrapWidth: cardWidth - (padding * 2)
     });
     titleText.x = padding;
     titleText.y = padding;
 
-    // Author text
     const authorText = new PIXI.Text(author, {
-        fontFamily: 'Hind Madurai',
-        fontSize: 16,
-        fill: 0x808080,
-        wordWrap: true,
-        wordWrapWidth: cardWidth - (padding * 2)
+        fontFamily: 'Hind Madurai', fontSize: 16, fill: 0x808080,
+        wordWrap: true, wordWrapWidth: cardWidth - (padding * 2)
     });
     authorText.x = padding;
     authorText.y = titleText.y + titleText.height + 8;
 
-    // Date text
     const dateText = new PIXI.Text(date, {
-        fontFamily: 'Hind Madurai',
-        fontSize: 16,
-        fill: 0x808080,
-        wordWrap: true,
-        wordWrapWidth: cardWidth - (padding * 2)
+        fontFamily: 'Hind Madurai', fontSize: 16, fill: 0x808080,
+        wordWrap: true, wordWrapWidth: cardWidth - (padding * 2)
     });
     dateText.x = padding;
     dateText.y = authorText.y + authorText.height + 8;
 
-    // Calculate required height — snug fit around the text (card is fully clickable).
     const contentHeight = dateText.y + dateText.height + padding;
     cardHeight = Math.max(cardHeight, contentHeight);
 
-    // Create background with rounded corners (no outline)
     const background = new PIXI.Graphics();
     background.beginFill(0xFFFFFF);
     background.drawRoundedRect(0, 0, cardWidth, cardHeight, 26);
     background.endFill();
     cardContainer.addChild(background);
 
-    // Now add the text elements to the container
     cardContainer.addChild(titleText);
     cardContainer.addChild(authorText);
     cardContainer.addChild(dateText);
 
-    // The whole card is the clickable target.
     cardContainer.eventMode = 'static';
     cardContainer.cursor = 'pointer';
     cardContainer.hitArea = new PIXI.Rectangle(0, 0, cardWidth, cardHeight);
 
-    // Create a separate container for the detail window to avoid clipping
     const detailContainer = new PIXI.Container();
+    app.stage.sortableChildren = true;
     app.stage.addChild(detailContainer);
 
-    // Create detail window — anchored near the top so the tall card spans the play area
+    // Mask the detail container to the game card edge — drawer hides behind the card boundary
+    const PLAY_GAP = 14;
+    const cardEdge = interactiveRect.x + PLAY_GAP;
+    const drawerMask = new PIXI.Graphics();
+    drawerMask.beginFill(0xFFFFFF);
+    drawerMask.drawRoundedRect(cardEdge, PLAY_GAP, app.screen.width - cardEdge - PLAY_GAP, app.screen.height - PLAY_GAP * 2, 28);
+    drawerMask.endFill();
+    app.stage.addChild(drawerMask);
+    detailContainer.mask = drawerMask;
+
     const detailWindow = createDetailWindow(artistDetails, details, link, background, cardContainer.x + cardWidth + 20, 80);
     detailContainer.addChild(detailWindow);
 
-    // Tints used to signal card state.
-    const TINT_OPEN = 0xE6F3FF;   // light blue while its detail window is open
-    const TINT_HOVER = 0xEFEFEF;  // subtle grey on hover to signal clickability
+    const TINT_OPEN = 0xE6F3FF;
+    const TINT_HOVER = 0xEFEFEF;
 
-    function toggleDetail() {
-        // Close any previously open detail window (cascade it back out)
+    async function toggleDetail() {
+        // Close any previously open detail window
         if (currentOpenDetailWindow && currentOpenDetailWindow !== detailWindow) {
-            slideOutToRight(currentOpenDetailWindow, { offset: DETAIL_SLIDE_OFFSET });
+            if (spawnTimeout) { clearTimeout(spawnTimeout); spawnTimeout = null; }
+            if (currentLadybug) { currentLadybug.drop(); currentLadybug = null; }
+            slideOutToLeft(currentOpenDetailWindow, { offset: DETAIL_SLIDE_OFFSET });
             if (currentOpenDetailWindow.cardBackground) {
                 currentOpenDetailWindow.cardBackground.tint = 0xFFFFFF;
             }
@@ -294,9 +289,22 @@ export function createProjectCard(title, author, date, link, details, artistDeta
             detailWindow.cardBackground = background;
             detailWindow.ownerCard = cardContainer;
             background.tint = TINT_OPEN;
-            slideInFromRight(detailWindow, { offset: DETAIL_SLIDE_OFFSET });
+            slideInFromLeft(detailWindow, { offset: DETAIL_SLIDE_OFFSET });
+
+            // Spawn ladybug after 1 second delay
+            await ensureLadybug();
+            const targetX = 200;
+            if (spawnTimeout) clearTimeout(spawnTimeout);
+            spawnTimeout = setTimeout(() => {
+                spawnTimeout = null;
+                currentLadybug = spawnLadybug(detailWindow, targetX);
+            }, 1000);
         } else {
-            slideOutToRight(detailWindow, { offset: DETAIL_SLIDE_OFFSET });
+            // Cancel pending spawn and reparent ladybug before the card slides away
+            if (spawnTimeout) { clearTimeout(spawnTimeout); spawnTimeout = null; }
+            if (currentLadybug) { currentLadybug.drop(); currentLadybug = null; }
+
+            slideOutToLeft(detailWindow, { offset: DETAIL_SLIDE_OFFSET });
             if (currentOpenDetailWindow === detailWindow) {
                 currentOpenDetailWindow = null;
             }
@@ -304,8 +312,6 @@ export function createProjectCard(title, author, date, link, details, artistDeta
         }
     }
 
-    // Distinguish a genuine click from a list drag-scroll: only toggle when the
-    // pointer hasn't moved far between press and release.
     let downX = 0, downY = 0, moved = false;
     cardContainer.on('pointerdown', (event) => {
         downX = event.global.x;
@@ -319,7 +325,6 @@ export function createProjectCard(title, author, date, link, details, artistDeta
         if (!moved) toggleDetail();
     });
 
-    // Hover state — only when this card's detail window isn't already open.
     cardContainer.on('pointerover', () => {
         if (!detailWindow.visible) background.tint = TINT_HOVER;
     });
@@ -327,7 +332,6 @@ export function createProjectCard(title, author, date, link, details, artistDeta
         if (!detailWindow.visible) background.tint = 0xFFFFFF;
     });
 
-    // Store reference to detail container for cleanup
     cardContainer.detailContainer = detailContainer;
 
     installOutsideClose();
