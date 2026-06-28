@@ -13,7 +13,7 @@ const CREATURES = [
         folder: 'assets/ant/',
         frameCount: 12,
         maxCells: 12,
-        scale: 0.1,
+        scale: 0.2,
         animSpeed: 0.25,
         spawnCount: [4, 8],
         speed: 2.0,
@@ -24,10 +24,10 @@ const CREATURES = [
         folder: 'assets/beetle/',
         frameCount: 11,
         maxCells: 40,
-        scale: 0.25,
-        animSpeed: 0.18,
+        scale: 0.45,
+        animSpeed: 0.2,
         spawnCount: [1, 1],
-        speed: 1.6,
+        speed: 1.2,
         pathBuilder: buildBeetlePath
     },
     {
