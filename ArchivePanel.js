@@ -178,8 +178,8 @@ function refreshGrid() {
 
         card.innerHTML = `
             <h3>${escapeHtml(project.title)}</h3>
-            <p class="archive-card-meta"><strong>Author:</strong> ${escapeHtml(project.author)}</p>
-            <p class="archive-card-meta"><strong>Date:</strong> ${escapeHtml(dateDisplay)}</p>
+            <p class="archive-card-meta">${escapeHtml(project.author)}</p>
+            <p class="archive-card-meta">${escapeHtml(dateDisplay)}</p>
             <p class="archive-card-desc">${escapeHtml(displayText)}</p>
         `;
         grid.appendChild(card);

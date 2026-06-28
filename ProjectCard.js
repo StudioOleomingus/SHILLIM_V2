@@ -99,17 +99,12 @@ function createDetailWindow(artistDetails, details, link, cardBackground, x, y) 
     const contentWidth = detailWidth - padding * 2;
     const contentHeightVisible = detailHeight - contentTop - padding;
 
-    // Flat left edge (slides from behind sidebar), rounded right edge
-    const r = 18;
+    // Rounded on all four corners so the panel reads as one complete element.
+    // Radius matches the project cards (26) for a consistent look.
+    const r = 26;
     const background = new PIXI.Graphics();
     background.beginFill(0xF5F5F5);
-    background.moveTo(0, 0);
-    background.lineTo(detailWidth - r, 0);
-    background.arcTo(detailWidth, 0, detailWidth, r, r);
-    background.lineTo(detailWidth, detailHeight - r);
-    background.arcTo(detailWidth, detailHeight, detailWidth - r, detailHeight, r);
-    background.lineTo(0, detailHeight);
-    background.closePath();
+    background.drawRoundedRect(0, 0, detailWidth, detailHeight, r);
     background.endFill();
     detailContainer.addChild(background);
 
@@ -261,7 +256,7 @@ export function createProjectCard(title, author, date, link, details, artistDeta
     app.stage.addChild(drawerMask);
     detailContainer.mask = drawerMask;
 
-    const detailWindow = createDetailWindow(artistDetails, details, link, background, cardContainer.x + cardWidth + 20, 80);
+    const detailWindow = createDetailWindow(artistDetails, details, link, background, cardContainer.x + cardWidth + 60, 80);
     detailContainer.addChild(detailWindow);
 
     const TINT_OPEN = 0xE6F3FF;

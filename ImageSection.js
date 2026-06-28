@@ -1139,14 +1139,15 @@ async function initImageSection() {
         // A row of small circular buttons that select which category you are
         // drawing with. Replaces the old "drag direction decides the category"
         // mechanic — now the direction of the drag no longer matters.
-        // Order matches Config.js (TextureArray / projectType / DIRECTION_COLORS).
+        // Order matches Config.js (TextureArray / projectType) and the colours
+        // used by the category bar in BottomLayout.js so the dots and the bar agree.
         const categoryOptions = [
-            { dir: DragDirection.Top,         label: projectType[0], color: parseInt(DIRECTION_COLORS.Top.replace('#', '0x')) },
-            { dir: DragDirection.TopRight,    label: projectType[1], color: parseInt(DIRECTION_COLORS.TopRight.replace('#', '0x')) },
-            { dir: DragDirection.BottomRight, label: projectType[2], color: parseInt(DIRECTION_COLORS.BottomRight.replace('#', '0x')) },
-            { dir: DragDirection.Bottom,      label: projectType[3], color: parseInt(DIRECTION_COLORS.Bottom.replace('#', '0x')) },
-            { dir: DragDirection.BottomLeft,  label: projectType[4], color: parseInt(DIRECTION_COLORS.BottomLeft.replace('#', '0x')) },
-            { dir: DragDirection.TopLeft,     label: projectType[5], color: parseInt(DIRECTION_COLORS.TopLeft.replace('#', '0x')) },
+            { dir: DragDirection.Top,         label: projectType[0], color: 0xb1c6c9 },  // ART
+            { dir: DragDirection.TopRight,    label: projectType[1], color: 0xBCAB99 },  // COMMUNITY
+            { dir: DragDirection.BottomRight, label: projectType[2], color: 0x97a266 },  // ECOLOGY
+            { dir: DragDirection.Bottom,      label: projectType[3], color: 0x445768 },  // RESEARCH
+            { dir: DragDirection.BottomLeft,  label: projectType[4], color: 0x9b6b9e },  // HEALTH
+            { dir: DragDirection.TopLeft,     label: projectType[5], color: 0xd4915d },  // EDUCATION
         ];
 
         const pickerRadius = 15;
@@ -1193,7 +1194,7 @@ async function initImageSection() {
 
             // Selection ring (only visible for the active category).
             const ring = new PIXI.Graphics();
-            ring.lineStyle(3, 0x2b2b2b, 1);
+            ring.lineStyle(1.5, 0x999999, 1);
             ring.drawCircle(0, 0, pickerRadius + 4);
             ring.visible = false;
             btn.addChild(ring);

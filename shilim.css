@@ -1359,7 +1359,7 @@ body.page-admin-projectpage {
     font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
     font-style: italic;
     font-weight: normal;
-    font-size: 18px;
+    font-size: 19px;
     color: #333;
     flex-shrink: 0;
     display: -webkit-box;
@@ -1369,7 +1369,7 @@ body.page-admin-projectpage {
 }
 .archive-card p {
     margin: 4px 0;
-    font-size: 13px;
+    font-size: 14px;
     color: #666;
     line-height: 1.4;
 }

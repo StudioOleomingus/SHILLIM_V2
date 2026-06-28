@@ -143,9 +143,7 @@ async function LoadTextures() {
             { name: 'Organisation 02', heading: 'Organisation 02', body: 'Placeholder description for Organisation 02. Replace this with a short overview of the organisation.' },
             { name: 'Organisation 03', heading: 'Organisation 03', body: 'Placeholder description for Organisation 03. Replace this with a short overview of the organisation.' },
             { name: 'Organisation 04', heading: 'Organisation 04', body: 'Placeholder description for Organisation 04. Replace this with a short overview of the organisation.' },
-            { name: 'Organisation 05', heading: 'Organisation 05', body: 'Placeholder description for Organisation 05. Replace this with a short overview of the organisation.' },
-            { name: 'Organisation 06', heading: 'Organisation 06', body: 'Placeholder description for Organisation 06. Replace this with a short overview of the organisation.' },
-            { name: 'Organisation 07', heading: 'Organisation 07', body: 'Placeholder description for Organisation 07. Replace this with a short overview of the organisation.' }
+            { name: 'Organisation 05', heading: 'Organisation 05', body: 'Placeholder description for Organisation 05. Replace this with a short overview of the organisation.' }
         ];
 
         const bigTitle = new PIXI.Text('THE SHILLIM ARCHIVE', {
