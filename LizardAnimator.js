@@ -35,10 +35,10 @@ const CREATURES = [
         folder: 'assets/lizard/',
         frameCount: 11,
         maxCells: Infinity,
-        scale: 0.6,
-        animSpeed: 0.16,
+        scale: 1,
+        animSpeed: 0.13,
         spawnCount: [1, 1],
-        speed: 3.4,
+        speed: 1.6,
         pathBuilder: buildLizardPath
     },
 ];
