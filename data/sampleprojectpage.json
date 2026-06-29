@@ -9,7 +9,7 @@
       "date": "2025-04-10, 5 mo",
       "primarycategory": "ECOLOGY",
       "secondarycategory": "RESEARCH",
-      "thumbnail": "assets/thumbnail/thumbnail_1767882428779.jpg",
+      "thumbnail": "assets/PREVIEW-ASSETS/thumbnail/thumbnail_1767882428779.jpg",
       "sections": [
         {
           "sectiontype": "text",
@@ -18,8 +18,8 @@
         {
           "sectiontype": "image",
           "value": [
-            { "filename": "assets/testartist/image1.jpg" },
-            { "filename": "assets/testartist/image2.jpg" }
+            { "filename": "assets/PROJECT-PAGES/testartist/image1.jpg" },
+            { "filename": "assets/PROJECT-PAGES/testartist/image2.jpg" }
           ]
         },
         {
@@ -38,7 +38,7 @@
       "date": "2025-04-10, 5 mo",
       "primarycategory": "ECOLOGY",
       "secondarycategory": "RESEARCH",
-      "thumbnail": "assets/thumbnail/thumbnail_1767882428779.jpg",
+      "thumbnail": "assets/PREVIEW-ASSETS/thumbnail/thumbnail_1767882428779.jpg",
       "sections": [
         {
           "sectiontype": "text",
@@ -47,8 +47,8 @@
         {
           "sectiontype": "image",
           "value": [
-            { "filename": "assets/testartist/image1.jpg" },
-            { "filename": "assets/testartist/image2.jpg" }
+            { "filename": "assets/PROJECT-PAGES/testartist/image1.jpg" },
+            { "filename": "assets/PROJECT-PAGES/testartist/image2.jpg" }
           ]
         },
         {

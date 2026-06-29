@@ -9,7 +9,7 @@ const port = 3001;
 // Configure multer for thumbnail uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'assets/thumbnail/');
+        cb(null, 'assets/PREVIEW-ASSETS/thumbnail/');
     },
     filename: function (req, file, cb) {
         const timestamp = Date.now();
@@ -41,7 +41,7 @@ app.post('/api/upload-thumbnail', upload.single('thumbnail'), async (req, res) =
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
         }
-        const thumbnailPath = `assets/thumbnail/${req.file.filename}`;
+        const thumbnailPath = `assets/PREVIEW-ASSETS/thumbnail/${req.file.filename}`;
         res.json({ success: true, path: thumbnailPath });
     } catch (error) {
         res.status(500).json({ error: error.message });

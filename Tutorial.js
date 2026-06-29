@@ -12,19 +12,19 @@ const TUTORIAL_MESSAGES = [
         id: 'category',
         text: 'Start by choosing a category from the palette below. Each colour represents a different type of project in the archive.',
         advance: 'click',
-        gif: 'assets/tutorial/pick-category.gif'
+        gif: 'assets/UI-ELEMENTS/tutorial/pick-category.gif'
     },
     {
         id: 'select',
         text: 'Click and drag on the canvas to paint with the selected texture.',
         advance: 'drag',
-        gif: 'assets/tutorial/drag-paint.gif'
+        gif: 'assets/UI-ELEMENTS/tutorial/drag-paint.gif'
     },
     {
         id: 'enclose',
         text: 'Try creating enclosed spaces — surround empty cells with texture to reveal projects.',
         advance: 'surround',
-        gif: 'assets/tutorial/enclose.gif'
+        gif: 'assets/UI-ELEMENTS/tutorial/enclose.gif'
     },
     {
         id: 'firstEnclosed',
@@ -36,7 +36,7 @@ const TUTORIAL_MESSAGES = [
         id: 'direction',
         text: 'Each category produces a different texture. Switch categories to explore more of the archive.',
         advance: 'click',
-        gif: 'assets/tutorial/switch-category.gif'
+        gif: 'assets/UI-ELEMENTS/tutorial/switch-category.gif'
     }
 ];
 

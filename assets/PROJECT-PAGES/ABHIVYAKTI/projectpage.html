@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Page — Shillim Institute</title>
+    <title>Project Page</title>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Madurai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -492,7 +492,7 @@
         <div class="main-content" id="mainContent">
             <div class="heading-row">
                 <h2 class="project-heading" id="projectHeading">Project Title</h2>
-                <button class="page-btn home-btn" onclick="window.location.href='index.html'" title="Home">
+                <button class="page-btn home-btn" onclick="window.location.href='../../index.html'" title="Home">
                     <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
                 </button>
             </div>
@@ -522,7 +522,7 @@
 
         async function loadProjectData() {
             try {
-                const response = await fetch('data/sampleprojectpage.json');
+                const response = await fetch('projectpage.json');
                 projectData = await response.json();
                 initializePage();
             } catch (error) {
@@ -792,5 +792,6 @@
         // Load data when page loads
         document.addEventListener('DOMContentLoaded', loadProjectData);
     </script>
+<script src="../../../CaterpillarAnimator.js"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 // CaterpillarAnimator.js — canvas-overlay caterpillar for the archive panel
 // Usage: import { initCaterpillar, spawnCaterpillar } from './CaterpillarAnimator.js'
 
-const ASSET_PATH = 'assets/caterpillar/';
+const ASSET_PATH = 'assets/ANIMATION-SPRITES/caterpillar/';
 const SEGMENT_COUNT_MIN = 9;
 const SEGMENT_COUNT_MAX = 12;
 const SEGMENT_SPACING = 18;

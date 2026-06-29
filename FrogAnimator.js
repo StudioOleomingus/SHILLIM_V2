@@ -20,7 +20,7 @@ export async function initFrogAnimator() {
         const textures = [];
         for (let i = 0; i < FRAME_COUNT; i++) {
             const pad = String(i).padStart(2, '0');
-            const tex = await PIXI.Assets.load(`assets/Frog/Frogcycle_${pad}.png`);
+            const tex = await PIXI.Assets.load(`assets/ANIMATION-SPRITES/Frog/Frogcycle_${pad}.png`);
             textures.push(tex);
         }
         frames = textures;

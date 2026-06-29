@@ -44,13 +44,13 @@ async function initImageSection() {
         window.addEventListener('keydown', (event) => {
             switch(event.key) {
                 case '1':
-                    playAudio('assets/geeqtwith15sec fadeout.mp4');
+                    playAudio('assets/MEDIA-FILES/geeqtwith15sec fadeout.mp4');
                     break;
                 case '2':
-                    playAudio('assets/shillimmorningchorus30sec.mp4');
+                    playAudio('assets/MEDIA-FILES/shillimmorningchorus30sec.mp4');
                     break;
                 case '3':
-                    playAudio('assets/jigneshtune.m4v');
+                    playAudio('assets/MEDIA-FILES/jigneshtune.m4v');
                     break;
             }
         });

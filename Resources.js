@@ -405,7 +405,7 @@ async function LoadTextures() {
             const attempts = [];
             for (let i = 0; i < 5; i++) {
                 attempts.push(
-                    PIXI.Assets.load(`assets/previewimages/${i}.png`).catch(() => null)
+                    PIXI.Assets.load(`assets/PREVIEW-ASSETS/previewimages/${i}.png`).catch(() => null)
                 );
             }
             const results = await Promise.all(attempts);
@@ -436,7 +436,7 @@ async function LoadTextures() {
             const lizardFrames = [];
             for (let f = 0; f < 11; f++) {
                 try {
-                    lizardFrames.push(await PIXI.Assets.load(`assets/lizard/${f}.png`));
+                    lizardFrames.push(await PIXI.Assets.load(`assets/ANIMATION-SPRITES/lizard/${f}.png`));
                 } catch (e) {
                     console.warn(`Preview lizard: could not load frame ${f}`, e);
                     break;
@@ -549,22 +549,22 @@ async function LoadTextures() {
 
             try {
                 [interactiveBgTexture, restartButtonTexture, whitebgTexture, indexBg, whiteCircleBg, leavesTexture, dragonflyTexture, frogTexture] = await Promise.all([
-                    loadTextureWithRetry('assets/interactive_bg.png'),
-                    loadTextureWithRetry('assets/RESET.png'),
-                    loadTextureWithRetry('assets/bg_white.png'),
-                    loadTextureWithRetry('assets/index_bg.png'),
-                    loadTextureWithRetry('assets/white_circle_bg.png'),
-                    loadTextureWithRetry('assets/LEAVES2.png'),
-                    loadTextureWithRetry('assets/DRAGONFLY3.png'),
-                    loadTextureWithRetry('assets/FROG1.png'),
+                    loadTextureWithRetry('assets/GAME-TEXTURES/interactive_bg.png'),
+                    loadTextureWithRetry('assets/UI-ELEMENTS/RESET.png'),
+                    loadTextureWithRetry('assets/GAME-TEXTURES/bg_white.png'),
+                    loadTextureWithRetry('assets/GAME-TEXTURES/index_bg.png'),
+                    loadTextureWithRetry('assets/GAME-TEXTURES/white_circle_bg.png'),
+                    loadTextureWithRetry('assets/ANIMATION-SPRITES/LEAVES2.png'),
+                    loadTextureWithRetry('assets/ANIMATION-SPRITES/DRAGONFLY3.png'),
+                    loadTextureWithRetry('assets/ANIMATION-SPRITES/FROG1.png'),
                 ]);
 
                 // Warm the Assets cache for sprites used later in InfoSection
                 // (loaded there via PIXI.Sprite.from). Not captured into the
                 // exported texture variables — just preloaded so they're ready.
                 await Promise.all([
-                    loadTextureWithRetry('assets/PLUS.png'),
-                    loadTextureWithRetry('assets/HELP.png'),
+                    loadTextureWithRetry('assets/UI-ELEMENTS/PLUS.png'),
+                    loadTextureWithRetry('assets/UI-ELEMENTS/HELP.png'),
                 ]);
 
                 texturesLoaded = true;

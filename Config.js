@@ -65,12 +65,12 @@ const DragDirection = {
 
 // Define the folder paths - 6 hexagonal categories
 const folderPaths = [
-    'assets/illustration1',  // ART - Top
-    'assets/illustration2',  // COMMUNITY - TopRight
-    'assets/illustration3',  // ECOLOGY - BottomRight
-    'assets/illustration4',  // RESEARCH - Bottom
-    'assets/illustration5',  // HEALTH - BottomLeft
-    'assets/illustration6'   // EDUCATION - TopLeft
+    'assets/GAME-TEXTURES/illustration1',  // ART - Top
+    'assets/GAME-TEXTURES/illustration2',  // COMMUNITY - TopRight
+    'assets/GAME-TEXTURES/illustration3',  // ECOLOGY - BottomRight
+    'assets/GAME-TEXTURES/illustration4',  // RESEARCH - Bottom
+    'assets/GAME-TEXTURES/illustration5',  // HEALTH - BottomLeft
+    'assets/GAME-TEXTURES/illustration6'   // EDUCATION - TopLeft
 ];
 
 const projectType = [

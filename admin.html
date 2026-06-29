@@ -170,7 +170,7 @@
                     const timestamp = new Date().getTime();
                     const extension = file.name.split('.').pop();
                     const thumbnailFileName = `thumbnail_${timestamp}.${extension}`;
-                    document.getElementById('thumbnailPath').value = `assets/thumbnail/${thumbnailFileName}`;
+                    document.getElementById('thumbnailPath').value = `assets/PREVIEW-ASSETS/thumbnail/${thumbnailFileName}`;
                 };
                 reader.readAsDataURL(file);
             }

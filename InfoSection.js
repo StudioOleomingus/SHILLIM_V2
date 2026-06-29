@@ -86,7 +86,7 @@ async function initInfoSection() {
         archiveBtnBg.endFill();
         archiveIndexButton.addChild(archiveBtnBg);
 
-        const archivePlus = PIXI.Sprite.from('assets/PLUS.png');
+        const archivePlus = PIXI.Sprite.from('assets/UI-ELEMENTS/PLUS.png');
         archivePlus.anchor.set(0.5);
         archivePlus.scale.set(34 / 512);
         archivePlus.eventMode = 'none';
@@ -137,7 +137,7 @@ async function initInfoSection() {
         helpBtnBg.endFill();
         helpButton.addChild(helpBtnBg);
 
-        const helpMark = PIXI.Sprite.from('assets/HELP.png');
+        const helpMark = PIXI.Sprite.from('assets/UI-ELEMENTS/HELP.png');
         helpMark.anchor.set(0.5);
         helpMark.scale.set(58 / 512);
         helpMark.y = 1;

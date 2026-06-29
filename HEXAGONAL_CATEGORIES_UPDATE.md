@@ -80,8 +80,8 @@ Uses angle-based calculation with 60-degree segments:
 
 #### Assets:
 7. **Created new folders:**
-   - `assets/illustration5/` (for HEALTH category)
-   - `assets/illustration6/` (for EDUCATION category)
+   - `assets/GAME-TEXTURES/illustration5/` (for HEALTH category)
+   - `assets/GAME-TEXTURES/illustration6/` (for EDUCATION category)
    - Both include README.md files with instructions for textures.zip
 
 ### 4. Color Scheme
@@ -98,8 +98,8 @@ Uses angle-based calculation with 60-degree segments:
 ### 5. Assets Required
 
 **Action Needed:** Add textures.zip files to the new illustration folders:
-- `assets/illustration5/textures.zip` (HEALTH - BottomLeft direction)
-- `assets/illustration6/textures.zip` (EDUCATION - TopLeft direction)
+- `assets/GAME-TEXTURES/illustration5/textures.zip` (HEALTH - BottomLeft direction)
+- `assets/GAME-TEXTURES/illustration6/textures.zip` (EDUCATION - TopLeft direction)
 
 Each zip should contain PNG files in the format: `tile_row_col.png`
 - Grid: 50 rows × 62 columns

@@ -10,62 +10,62 @@
 @font-face {
     font-family: 'Hind Madurai';
     font-style: normal; font-weight: 300; font-display: swap;
-    src: url('assets/fonts/hind-madurai-latin-300-normal.woff2') format('woff2'),
-         url('assets/fonts/hind-madurai-latin-300-normal.woff') format('woff');
+    src: url('assets/UI-ELEMENTS/fonts/hind-madurai-latin-300-normal.woff2') format('woff2'),
+         url('assets/UI-ELEMENTS/fonts/hind-madurai-latin-300-normal.woff') format('woff');
 }
 @font-face {
     font-family: 'Hind Madurai';
     font-style: normal; font-weight: 400; font-display: swap;
-    src: url('assets/fonts/hind-madurai-latin-400-normal.woff2') format('woff2'),
-         url('assets/fonts/hind-madurai-latin-400-normal.woff') format('woff');
+    src: url('assets/UI-ELEMENTS/fonts/hind-madurai-latin-400-normal.woff2') format('woff2'),
+         url('assets/UI-ELEMENTS/fonts/hind-madurai-latin-400-normal.woff') format('woff');
 }
 @font-face {
     font-family: 'Hind Madurai';
     font-style: normal; font-weight: 500; font-display: swap;
-    src: url('assets/fonts/hind-madurai-latin-500-normal.woff2') format('woff2'),
-         url('assets/fonts/hind-madurai-latin-500-normal.woff') format('woff');
+    src: url('assets/UI-ELEMENTS/fonts/hind-madurai-latin-500-normal.woff2') format('woff2'),
+         url('assets/UI-ELEMENTS/fonts/hind-madurai-latin-500-normal.woff') format('woff');
 }
 @font-face {
     font-family: 'Hind Madurai';
     font-style: normal; font-weight: 600; font-display: swap;
-    src: url('assets/fonts/hind-madurai-latin-600-normal.woff2') format('woff2'),
-         url('assets/fonts/hind-madurai-latin-600-normal.woff') format('woff');
+    src: url('assets/UI-ELEMENTS/fonts/hind-madurai-latin-600-normal.woff2') format('woff2'),
+         url('assets/UI-ELEMENTS/fonts/hind-madurai-latin-600-normal.woff') format('woff');
 }
 @font-face {
     font-family: 'Hind Madurai';
     font-style: normal; font-weight: 700; font-display: swap;
-    src: url('assets/fonts/hind-madurai-latin-700-normal.woff2') format('woff2'),
-         url('assets/fonts/hind-madurai-latin-700-normal.woff') format('woff');
+    src: url('assets/UI-ELEMENTS/fonts/hind-madurai-latin-700-normal.woff2') format('woff2'),
+         url('assets/UI-ELEMENTS/fonts/hind-madurai-latin-700-normal.woff') format('woff');
 }
 @font-face {
     font-family: 'Gelasio';
     font-style: normal; font-weight: 400; font-display: swap;
-    src: url('assets/fonts/gelasio-latin-400-normal.woff2') format('woff2'),
-         url('assets/fonts/gelasio-latin-400-normal.woff') format('woff');
+    src: url('assets/UI-ELEMENTS/fonts/gelasio-latin-400-normal.woff2') format('woff2'),
+         url('assets/UI-ELEMENTS/fonts/gelasio-latin-400-normal.woff') format('woff');
 }
 @font-face {
     font-family: 'Gelasio';
     font-style: italic; font-weight: 400; font-display: swap;
-    src: url('assets/fonts/gelasio-latin-400-italic.woff2') format('woff2'),
-         url('assets/fonts/gelasio-latin-400-italic.woff') format('woff');
+    src: url('assets/UI-ELEMENTS/fonts/gelasio-latin-400-italic.woff2') format('woff2'),
+         url('assets/UI-ELEMENTS/fonts/gelasio-latin-400-italic.woff') format('woff');
 }
 @font-face {
     font-family: 'Gelasio';
     font-style: normal; font-weight: 700; font-display: swap;
-    src: url('assets/fonts/gelasio-latin-700-normal.woff2') format('woff2'),
-         url('assets/fonts/gelasio-latin-700-normal.woff') format('woff');
+    src: url('assets/UI-ELEMENTS/fonts/gelasio-latin-700-normal.woff2') format('woff2'),
+         url('assets/UI-ELEMENTS/fonts/gelasio-latin-700-normal.woff') format('woff');
 }
 @font-face {
     font-family: 'Gelasio';
     font-style: italic; font-weight: 700; font-display: swap;
-    src: url('assets/fonts/gelasio-latin-700-italic.woff2') format('woff2'),
-         url('assets/fonts/gelasio-latin-700-italic.woff') format('woff');
+    src: url('assets/UI-ELEMENTS/fonts/gelasio-latin-700-italic.woff2') format('woff2'),
+         url('assets/UI-ELEMENTS/fonts/gelasio-latin-700-italic.woff') format('woff');
 }
 @font-face {
     font-family: 'IBM Plex Mono';
     font-style: normal; font-weight: 400; font-display: swap;
-    src: url('assets/fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2'),
-         url('assets/fonts/ibm-plex-mono-latin-400-normal.woff') format('woff');
+    src: url('assets/UI-ELEMENTS/fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2'),
+         url('assets/UI-ELEMENTS/fonts/ibm-plex-mono-latin-400-normal.woff') format('woff');
 }
 
 /* --------------------------------------------------------------------------
@@ -419,7 +419,7 @@ body.page-index {
 }
 
 .project-count {
-    background-image: url('assets/white_circle_bg.png');
+    background-image: url('assets/GAME-TEXTURES/white_circle_bg.png');
     background-size: cover;
     background-position: center;
     padding: 8px 12px;
@@ -999,11 +999,11 @@ body.page-projectpage {
     position: absolute;
     right: 15px; bottom: 15px;
     width: 30px; height: 30px;
-    -webkit-mask-image: url('assets/white_circle_bg.png');
+    -webkit-mask-image: url('assets/GAME-TEXTURES/white_circle_bg.png');
     -webkit-mask-repeat: no-repeat;
     -webkit-mask-position: center;
     -webkit-mask-size: contain;
-    mask-image: url('assets/white_circle_bg.png');
+    mask-image: url('assets/GAME-TEXTURES/white_circle_bg.png');
     mask-repeat: no-repeat;
     mask-position: center;
     mask-size: contain;

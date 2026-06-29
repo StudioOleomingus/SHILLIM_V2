@@ -17,9 +17,9 @@
     // `height` is the on-screen draw height in CSS px (the source art is tall),
     // `fps` how fast the walk cycle plays, `speed` travel in px per second.
     const CREATURES = [
-        { name: 'ant',    folder: 'assets/ant/',    frameCount: 12, height: 38,  fps: 15, speed: 120, spawnCount: [3, 6], weight: 5, path: antPath },
-        { name: 'beetle', folder: 'assets/beetle/', frameCount: 11, height: 64,  fps: 12, speed: 80,  spawnCount: [1, 1], weight: 2, path: beetlePath },
-        { name: 'lizard', folder: 'assets/lizard/', frameCount: 11, height: 120, fps: 8,  speed: 100, spawnCount: [1, 1], weight: 1, path: lizardPath },
+        { name: 'ant',    folder: 'assets/ANIMATION-SPRITES/ant/',    frameCount: 12, height: 38,  fps: 15, speed: 120, spawnCount: [3, 6], weight: 5, path: antPath },
+        { name: 'beetle', folder: 'assets/ANIMATION-SPRITES/beetle/', frameCount: 11, height: 64,  fps: 12, speed: 80,  spawnCount: [1, 1], weight: 2, path: beetlePath },
+        { name: 'lizard', folder: 'assets/ANIMATION-SPRITES/lizard/', frameCount: 11, height: 120, fps: 8,  speed: 100, spawnCount: [1, 1], weight: 1, path: lizardPath },
     ];
 
     const frameCache = {};   // name -> [HTMLImageElement]

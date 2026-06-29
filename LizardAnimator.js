@@ -10,7 +10,7 @@ let lastSpawnY = null;
 const CREATURES = [
     {
         name: 'ant',
-        folder: 'assets/ant/',
+        folder: 'assets/ANIMATION-SPRITES/ant/',
         frameCount: 12,
         maxCells: 12,
         scale: 0.2,
@@ -21,7 +21,7 @@ const CREATURES = [
     },
     {
         name: 'beetle',
-        folder: 'assets/beetle/',
+        folder: 'assets/ANIMATION-SPRITES/beetle/',
         frameCount: 11,
         maxCells: 40,
         scale: 0.45,
@@ -32,7 +32,7 @@ const CREATURES = [
     },
     {
         name: 'lizard',
-        folder: 'assets/lizard/',
+        folder: 'assets/ANIMATION-SPRITES/lizard/',
         frameCount: 11,
         maxCells: Infinity,
         scale: 1,

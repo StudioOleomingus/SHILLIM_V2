@@ -7,9 +7,9 @@ let walkFrames = null;
 let transitionFrames = null;
 
 export async function initLadybugAnimator() {
-    idleFrames = await loadFrames('assets/ladybug/idle/', FRAME_COUNTS.idle);
-    walkFrames = await loadFrames('assets/ladybug/walk/', FRAME_COUNTS.walk);
-    transitionFrames = await loadFrames('assets/ladybug/idle-to-active/', FRAME_COUNTS.transition);
+    idleFrames = await loadFrames('assets/ANIMATION-SPRITES/ladybug/idle/', FRAME_COUNTS.idle);
+    walkFrames = await loadFrames('assets/ANIMATION-SPRITES/ladybug/walk/', FRAME_COUNTS.walk);
+    transitionFrames = await loadFrames('assets/ANIMATION-SPRITES/ladybug/idle-to-active/', FRAME_COUNTS.transition);
 
     if (!idleFrames) idleFrames = makePlaceholderFrames(0xCC3333, 4);
     if (!walkFrames) walkFrames = makePlaceholderFrames(0xCC3333, 4);
