@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archive Admin (CRUD) — Shillim Institute</title>
+    <link rel="stylesheet" href="shilim.css">
+    <!-- CKEditor 5 Classic (CDN) -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/35.3.0/classic/ckeditor.js"></script>
+    <style>
+        /* ---- Scoped styles for the unified CRUD admin ---- */
+        .crud-wrap { max-width: 1400px; margin: 0 auto; padding: 24px; }
+        .crud-topbar { display: flex; align-items: center; justify-content: space-between;
+            gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+        .crud-topbar h1 { margin: 0; font-size: 1.4rem; }
+        .crud-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .crud-btn { cursor: pointer; border: 1px solid #444; background: #f4f4f4;
+            padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; }
+        .crud-btn:hover { background: #e8e8e8; }
+        .crud-btn--primary { background: #2d2d2d; color: #fff; border-color: #2d2d2d; }
+        .crud-btn--primary:hover { background: #000; }
+        .crud-btn--danger { background: #b3261e; color: #fff; border-color: #b3261e; }
+        .crud-btn--danger:hover { background: #8c1d17; }
+        .crud-btn--sm { padding: 5px 9px; font-size: 0.78rem; }
+
+        .server-status { font-size: 0.78rem; padding: 4px 10px; border-radius: 20px;
+            border: 1px solid #ccc; white-space: nowrap; }
+        .server-status.ok { background: #e6f4ea; border-color: #34a853; color: #137333; }
+        .server-status.bad { background: #fce8e6; border-color: #ea4335; color: #b3261e; }
+
+        .crud-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+        .crud-search { flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; }
+        .crud-count { font-size: 0.8rem; color: #666; }
+
+        table.crud-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; background: #fff; }
+        .crud-table th, .crud-table td { border-bottom: 1px solid #e3e3e3; padding: 9px 10px;
+            text-align: left; vertical-align: middle; }
+        .crud-table th { background: #fafafa; position: sticky; top: 0; font-weight: 600;
+            cursor: pointer; user-select: none; }
+        .crud-table th:hover { background: #f0f0f0; }
+        .crud-table tr:hover td { background: #fafcff; }
+        .crud-thumb { width: 56px; height: 42px; object-fit: cover; border-radius: 4px;
+            background: #eee; display: block; }
+        .crud-thumb--empty { width: 56px; height: 42px; border-radius: 4px; background: #f0f0f0;
+            display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 0.65rem; }
+        .crud-title-cell strong { display: block; }
+        .crud-title-cell span { color: #777; font-size: 0.76rem; }
+        .pill { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem;
+            background: #eef; color: #224; margin: 1px 2px 1px 0; }
+        .pill--cat { background: #f0ece2; color: #5a4a2a; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; }
+        .badge--ok { background: #e6f4ea; color: #137333; }
+        .badge--warn { background: #fef7e0; color: #8a6d3b; }
+        .badge--miss { background: #fce8e6; color: #b3261e; }
+        .media-mini { font-size: 0.72rem; color: #555; white-space: nowrap; }
+        .path-cell { font-size: 0.72rem; color: #555; word-break: break-all; max-width: 200px; }
+        .row-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+
+        /* ---- Editor overlay ---- */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none;
+            z-index: 1000; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 24px; }
+        .overlay.open { display: flex; }
+        .editor { background: #fff; width: 100%; max-width: 900px; border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .editor-head { display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; border-bottom: 1px solid #eee; position: sticky; top: 0; background: #fff; border-radius: 10px 10px 0 0; z-index: 5; }
+        .editor-head h2 { margin: 0; font-size: 1.1rem; }
+        .editor-close { background: none; border: none; font-size: 1.6rem; cursor: pointer; line-height: 1; color: #888; }
+        .tabs { display: flex; gap: 4px; padding: 0 20px; border-bottom: 1px solid #eee; }
+        .tab { padding: 11px 18px; cursor: pointer; border: none; background: none; font-size: 0.9rem;
+            border-bottom: 3px solid transparent; color: #666; }
+        .tab.active { color: #000; border-bottom-color: #2d2d2d; font-weight: 600; }
+        .tab-panel { display: none; padding: 20px; }
+        .tab-panel.active { display: block; }
+
+        .fg { margin-bottom: 14px; }
+        .fg label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 5px; }
+        .fg input[type=text], .fg input[type=date], .fg select, .fg textarea {
+            width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.85rem;
+            box-sizing: border-box; font-family: inherit; }
+        .fg-row { display: flex; gap: 12px; }
+        .fg-row > div { flex: 1; }
+        .checkrow { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
+        .checkrow label { font-weight: 400; display: inline-flex; align-items: center; gap: 5px; font-size: 0.82rem; }
+        .duration { font-size: 0.78rem; color: #137333; margin-top: 4px; }
+        .hint { font-size: 0.74rem; color: #888; margin-top: 3px; }
+        .path-banner { background: #f4f6fb; border: 1px solid #dce3f0; border-radius: 6px;
+            padding: 8px 12px; font-size: 0.76rem; color: #334; margin-bottom: 14px; word-break: break-all; }
+        .thumb-prev { max-width: 160px; border-radius: 6px; margin-top: 8px; display: none; }
+
+        .pcard { border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; margin-bottom: 16px; position: relative; }
+        .pcard h4 { margin: 0 0 12px; }
+        .scard { border: 1px solid #ececec; border-radius: 6px; padding: 12px; margin-bottom: 10px; background: #fcfcfc; }
+        .scard-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .scard-head strong { font-size: 0.82rem; }
+        .img-item { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+        .img-item input { flex: 1; }
+        .ck-host { border: 1px solid #ddd; border-radius: 6px; }
+        .editor-foot { padding: 16px 20px; border-top: 1px solid #eee; display: flex; justify-content: space-between;
+            gap: 10px; position: sticky; bottom: 0; background: #fff; border-radius: 0 0 10px 10px; }
+        .save-status { font-size: 0.78rem; align-self: center; color: #666; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #888; }
+    </style>
+</head>
+<body class="page-admin">
+    <div class="crud-wrap">
+        <div class="crud-topbar">
+            <h1>Archive Admin &mdash; Projects &amp; Pages</h1>
+            <div class="crud-actions">
+                <span id="serverStatus" class="server-status">checking server…</span>
+                <button class="crud-btn" onclick="exportIndex()">Export Index JSON</button>
+                <button class="crud-btn crud-btn--primary" onclick="openEditor(-1)">+ Add New Project</button>
+            </div>
+        </div>
+
+        <div class="crud-toolbar">
+            <input id="search" class="crud-search" placeholder="Search title, author, category…" oninput="renderTable()">
+            <span id="rowCount" class="crud-count"></span>
+            <button class="crud-btn crud-btn--sm" onclick="loadArchive()">↻ Refresh</button>
+        </div>
+
+        <div id="tableHost"></div>
+    </div>
+
+    <!-- ============ EDITOR OVERLAY ============ -->
+    <div class="overlay" id="overlay">
+        <div class="editor">
+            <div class="editor-head">
+                <h2 id="editorTitle">Edit Project</h2>
+                <button class="editor-close" onclick="closeEditor()" title="Close">&times;</button>
+            </div>
+            <div class="tabs">
+                <button class="tab active" data-tab="index" onclick="switchTab('index')">Archive Entry</button>
+                <button class="tab" data-tab="page" onclick="switchTab('page')">Project Page</button>
+            </div>
+
+            <!-- ---- TAB: Archive index entry ---- -->
+            <div class="tab-panel active" id="panel-index">
+                <input type="hidden" id="f_index" value="-1">
+                <div class="fg">
+                    <label for="f_title">Title</label>
+                    <input type="text" id="f_title" required oninput="syncLinkSuggestion()">
+                </div>
+                <div class="fg">
+                    <label for="f_author">Author</label>
+                    <input type="text" id="f_author">
+                </div>
+                <div class="fg-row">
+                    <div class="fg">
+                        <label for="f_startdate">Start Date</label>
+                        <input type="date" id="f_startdate" onchange="calcDuration()">
+                    </div>
+                    <div class="fg">
+                        <label for="f_enddate">End Date</label>
+                        <input type="date" id="f_enddate" onchange="calcDuration()">
+                    </div>
+                </div>
+                <div class="duration" id="durationDisplay"></div>
+                <div class="fg">
+                    <label for="f_primary">Primary Category</label>
+                    <select id="f_primary">
+                        <option value="">-- Select --</option>
+                        <option>ART</option><option>COMMUNITY</option><option>ECOLOGY</option>
+                        <option>RESEARCH</option><option>HEALTH</option><option>EDUCATION</option>
+                    </select>
+                </div>
+                <div class="fg">
+                    <label>Secondary Categories</label>
+                    <div class="checkrow" id="secondaryWrap">
+                        <label><input type="checkbox" value="ART">ART</label>
+                        <label><input type="checkbox" value="COMMUNITY">COMMUNITY</label>
+                        <label><input type="checkbox" value="ECOLOGY">ECOLOGY</label>
+                        <label><input type="checkbox" value="RESEARCH">RESEARCH</label>
+                        <label><input type="checkbox" value="HEALTH">HEALTH</label>
+                        <label><input type="checkbox" value="EDUCATION">EDUCATION</label>
+                    </div>
+                </div>
+                <div class="fg">
+                    <label for="f_link">Link (page path)</label>
+                    <input type="text" id="f_link" placeholder="assets/PROJECT-PAGES/Name/projectpage.html">
+                    <div class="hint">Determines which folder the Project Page tab reads &amp; writes.</div>
+                </div>
+                <div class="fg">
+                    <label for="f_short">Short Description</label>
+                    <textarea id="f_short" rows="2" placeholder="One-line description"></textarea>
+                </div>
+                <div class="fg">
+                    <label for="f_artistdesc">Artist Description (index)</label>
+                    <textarea id="f_artistdesc" rows="3"></textarea>
+                </div>
+                <div class="fg">
+                    <label for="f_details">Project Details</label>
+                    <textarea id="f_details" rows="5"></textarea>
+                </div>
+                <div class="fg">
+                    <label for="f_thumbfile">Thumbnail Image</label>
+                    <input type="file" id="f_thumbfile" accept="image/*" onchange="previewThumb(event)">
+                    <input type="text" id="f_thumbpath" placeholder="assets/PREVIEW-ASSETS/thumbnail/…" style="margin-top:6px;">
+                    <img id="thumbPrev" class="thumb-prev" alt="thumbnail preview">
+                </div>
+            </div>
+
+            <!-- ---- TAB: Project page sections ---- -->
+            <div class="tab-panel" id="panel-page">
+                <div class="path-banner" id="pagePathBanner">Page JSON path will appear here.</div>
+                <div class="fg">
+                    <label for="p_author">Author / Artist Name (page)</label>
+                    <input type="text" id="p_author" placeholder="Full artist name">
+                </div>
+                <div class="fg">
+                    <label>Artist Bio (page)</label>
+                    <div class="ck-host"><div id="editor-artistbio" style="min-height:160px;"></div></div>
+                </div>
+                <h4 style="margin:18px 0 8px;">Projects &amp; Sections</h4>
+                <div id="projectsList"></div>
+                <button class="crud-btn crud-btn--sm" onclick="addProject()">+ Add Project</button>
+            </div>
+
+            <div class="editor-foot">
+                <span class="save-status" id="saveStatus"></span>
+                <div style="display:flex; gap:8px;">
+                    <button class="crud-btn" onclick="closeEditor()">Close</button>
+                    <button class="crud-btn crud-btn--primary" id="saveBtn" onclick="saveCurrentTab()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ============================================================
+    //  State
+    // ============================================================
+    const API = 'http://localhost:3001';
+    let archive = [];          // augmented index rows from /api/archive
+    let pageData = null;       // { author, artistdescription, projects: [...] } for current row
+    let pageProjects = [];     // working copy of page projects (with local ids)
+    let currentTab = 'index';
+    let sortKey = null, sortDir = 1;
+    window.ckEditors = {};
+
+    // ============================================================
+    //  Boot
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', () => { checkServer(); loadArchive(); });
+
+    async function checkServer() {
+        const el = document.getElementById('serverStatus');
+        try {
+            const r = await fetch(`${API}/api/projects`);
+            if (r.ok) { el.textContent = '● server connected'; el.className = 'server-status ok'; return true; }
+            throw new Error();
+        } catch (e) {
+            el.textContent = '● server offline — start: node server.js';
+            el.className = 'server-status bad';
+            return false;
+        }
+    }
+
+    async function loadArchive() {
+        try {
+            const r = await fetch(`${API}/api/archive`);
+            if (!r.ok) throw new Error('archive endpoint failed');
+            const data = await r.json();
+            archive = data.projects || [];
+        } catch (e) {
+            // Fallback: read the static file, derive no meta
+            try {
+                const r2 = await fetch('data/projects.json');
+                const d2 = await r2.json();
+                archive = (d2.projects || []).map(p => ({ ...p, _meta: null }));
+            } catch (e2) {
+                archive = [];
+            }
+        }
+        renderTable();
+    }
+
+    // ============================================================
+    //  Table
+    // ============================================================
+    function escapeHtml(s) {
+        return (s == null ? '' : String(s)).replace(/[&<>"']/g, c =>
+            ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function sortBy(key) {
+        if (sortKey === key) sortDir = -sortDir; else { sortKey = key; sortDir = 1; }
+        renderTable();
+    }
+
+    function renderTable() {
+        const host = document.getElementById('tableHost');
+        const q = (document.getElementById('search').value || '').toLowerCase();
+
+        let rows = archive.map((p, i) => ({ p, i }));
+        if (q) rows = rows.filter(({ p }) =>
+            [p.title, p.author, p.primarycategory, p.secondarycategory, p.link]
+                .some(v => (v || '').toLowerCase().includes(q)));
+
+        if (sortKey) {
+            rows.sort((a, b) => {
+                const va = (a.p[sortKey] || '').toString().toLowerCase();
+                const vb = (b.p[sortKey] || '').toString().toLowerCase();
+                return va < vb ? -sortDir : va > vb ? sortDir : 0;
+            });
+        }
+
+        document.getElementById('rowCount').textContent =
+            `${rows.length} of ${archive.length} projects`;
+
+        if (!archive.length) {
+            host.innerHTML = `<div class="empty-state">No projects loaded. Is the server running and data/projects.json present?</div>`;
+            return;
+        }
+
+        let html = `<table class="crud-table"><thead><tr>
+            <th>Thumb</th>
+            <th onclick="sortBy('title')">Title / Author</th>
+            <th onclick="sortBy('primarycategory')">Categories</th>
+            <th onclick="sortBy('startdate')">Dates</th>
+            <th>Page JSON</th>
+            <th>Media</th>
+            <th>Link / Path</th>
+            <th>Actions</th>
+        </tr></thead><tbody>`;
+
+        for (const { p, i } of rows) {
+            const m = p._meta || {};
+            const thumb = p.thumbnail
+                ? `<img class="crud-thumb" src="${escapeHtml(p.thumbnail)}" alt="" onerror="this.outerHTML='<div class=\\'crud-thumb--empty\\'>missing</div>'">`
+                : `<div class="crud-thumb--empty">none</div>`;
+
+            const secs = (p.secondarycategory || '').split(',').map(s => s.trim()).filter(Boolean)
+                .map(s => `<span class="pill">${escapeHtml(s)}</span>`).join('');
+            const cats = `<span class="pill pill--cat">${escapeHtml(p.primarycategory || '—')}</span>${secs}`;
+
+            const dates = (p.startdate || p.enddate)
+                ? `${escapeHtml(p.startdate || '?')}<br>→ ${escapeHtml(p.enddate || '?')}`
+                : escapeHtml(p.date || '—');
+
+            let pageBadge;
+            if (!p._meta) pageBadge = `<span class="badge badge--warn">unknown</span>`;
+            else if (m.pageJsonExists)
+                pageBadge = `<span class="badge badge--ok">✓ ${m.sectionCount} sec / ${m.imageRefCount} img</span>`;
+            else pageBadge = `<span class="badge badge--miss">missing</span>`;
+
+            const media = m.media
+                ? `<span class="media-mini">🖼 ${m.media.image} · 🎬 ${m.media.video} · 🔊 ${m.media.audio}</span>`
+                : `<span class="media-mini">—</span>`;
+
+            html += `<tr>
+                <td>${thumb}</td>
+                <td class="crud-title-cell"><strong>${escapeHtml(p.title || '(untitled)')}</strong><span>${escapeHtml(p.author || '')}</span></td>
+                <td>${cats}</td>
+                <td style="white-space:nowrap">${dates}</td>
+                <td>${pageBadge}</td>
+                <td>${media}</td>
+                <td class="path-cell">${escapeHtml(p.link || '—')}</td>
+                <td><div class="row-actions">
+                    <button class="crud-btn crud-btn--sm" onclick="openEditor(${i})">Edit</button>
+                    <button class="crud-btn crud-btn--sm" onclick="openLivePage(${i})">Open</button>
+                    <button class="crud-btn crud-btn--sm crud-btn--danger" onclick="deleteRow(${i})">Del</button>
+                </div></td>
+            </tr>`;
+        }
+        html += `</tbody></table>`;
+        host.innerHTML = html;
+    }
+
+    function openLivePage(i) {
+        const link = archive[i] && archive[i].link;
+        if (link) window.open(link, '_blank');
+        else alert('No link set for this project.');
+    }
+
+    async function deleteRow(i) {
+        const p = archive[i];
+        if (!confirm(`Delete "${p.title}" from the archive index?\n(The project folder & page JSON are NOT deleted.)`)) return;
+        try {
+            const r = await fetch(`${API}/api/projects/${i}`, { method: 'DELETE' });
+            if (!r.ok) { const e = await r.json(); throw new Error(e.error || 'failed'); }
+            await loadArchive();
+        } catch (e) {
+            alert('Delete failed: ' + e.message + '\nIs the server running?');
+        }
+    }
+
+    // ============================================================
+    //  Editor — open / tabs
+    // ============================================================
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+        document.getElementById('panel-index').classList.toggle('active', tab === 'index');
+        document.getElementById('panel-page').classList.toggle('active', tab === 'page');
+        document.getElementById('saveBtn').textContent = tab === 'index' ? 'Save Archive Entry' : 'Save Project Page';
+        if (tab === 'page') updatePagePathBanner();
+    }
+
+    function pageJsonPathFromLink(link) {
+        if (!link) return null;
+        link = link.replace(/\\/g, '/');
+        if (/projectpage\.html?$/i.test(link)) return link.replace(/projectpage\.html?$/i, 'projectpage.json');
+        // treat as folder
+        return link.replace(/\/?$/, '/') + 'projectpage.json';
+    }
+    function folderFromLink(link) {
+        const jp = pageJsonPathFromLink(link);
+        return jp ? jp.replace(/\/projectpage\.json$/i, '') : null;
+    }
+
+    async function openEditor(index) {
+        document.getElementById('f_index').value = index;
+        document.getElementById('editorTitle').textContent = index < 0 ? 'Add New Project' : 'Edit Project';
+        setSaveStatus('');
+
+        if (index < 0) {
+            // blank index entry
+            ['f_title','f_author','f_startdate','f_enddate','f_link','f_short','f_artistdesc','f_details','f_thumbpath']
+                .forEach(id => document.getElementById(id).value = '');
+            document.getElementById('f_primary').value = '';
+            document.querySelectorAll('#secondaryWrap input').forEach(c => c.checked = false);
+            document.getElementById('durationDisplay').textContent = '';
+            document.getElementById('thumbPrev').style.display = 'none';
+            document.getElementById('f_thumbfile').value = '';
+            resetPageEditor({ author: '', artistdescription: '', projects: [] });
+        } else {
+            const p = archive[index];
+            document.getElementById('f_title').value = p.title || '';
+            document.getElementById('f_author').value = p.author || '';
+            document.getElementById('f_startdate').value = p.startdate || '';
+            document.getElementById('f_enddate').value = p.enddate || '';
+            document.getElementById('f_primary').value = p.primarycategory || '';
+            document.getElementById('f_link').value = p.link || '';
+            document.getElementById('f_short').value = p.shortdescription || '';
+            document.getElementById('f_artistdesc').value = p.artistdescription || '';
+            document.getElementById('f_details').value = p.details || '';
+            document.getElementById('f_thumbpath').value = p.thumbnail || '';
+            document.getElementById('f_thumbfile').value = '';
+            const secs = (p.secondarycategory || '').split(',').map(s => s.trim());
+            document.querySelectorAll('#secondaryWrap input').forEach(c => c.checked = secs.includes(c.value));
+            calcDuration();
+            const prev = document.getElementById('thumbPrev');
+            if (p.thumbnail) { prev.src = p.thumbnail; prev.style.display = 'block'; } else prev.style.display = 'none';
+            // load the page JSON for this project
+            await loadPageForRow(p);
+        }
+
+        switchTab('index');
+        document.getElementById('overlay').classList.add('open');
+    }
+
+    function closeEditor() {
+        document.getElementById('overlay').classList.remove('open');
+    }
+
+    // ============================================================
+    //  Index tab helpers
+    // ============================================================
+    function calcDuration() {
+        const s = document.getElementById('f_startdate').value;
+        const e = document.getElementById('f_enddate').value;
+        const out = document.getElementById('durationDisplay');
+        if (!s || !e) { out.textContent = ''; return; }
+        const start = new Date(s), end = new Date(e);
+        if (end < start) { out.textContent = '⚠ End date is before start date'; return; }
+        const days = Math.ceil(Math.abs(end - start) / 86400000);
+        const yr = Math.floor(days / 365), mo = Math.floor((days % 365) / 30), d = (days % 365) % 30;
+        let t = 'Duration: ';
+        if (yr) t += `${yr} yr `; if (mo) t += `${mo} mo `; if (d && !yr) t += `${d} days`;
+        out.textContent = t.trim();
+    }
+
+    function durationString() {
+        const s = document.getElementById('f_startdate').value;
+        const e = document.getElementById('f_enddate').value;
+        if (!s || !e) return '';
+        const days = Math.ceil(Math.abs(new Date(e) - new Date(s)) / 86400000);
+        const yr = Math.floor(days / 365), mo = Math.floor((days % 365) / 30);
+        if (yr) return `${yr} yr`; if (mo) return `${mo} mo`; return `${days} days`;
+    }
+
+    function slugify(s) {
+        return (s || 'untitled').trim().replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_');
+    }
+    function syncLinkSuggestion() {
+        const linkEl = document.getElementById('f_link');
+        if (document.getElementById('f_index').value !== '-1') return; // only auto-fill new
+        if (linkEl.dataset.touched) return;
+        const slug = slugify(document.getElementById('f_title').value);
+        linkEl.value = `assets/PROJECT-PAGES/${slug}/projectpage.html`;
+    }
+    document.getElementById('f_link').addEventListener('input', function () { this.dataset.touched = '1'; });
+
+    function previewThumb(ev) {
+        const file = ev.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const prev = document.getElementById('thumbPrev');
+            prev.src = e.target.result; prev.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function saveCurrentTab() {
+        if (currentTab === 'index') await saveIndexEntry();
+        else await savePage();
+    }
+
+    async function saveIndexEntry() {
+        const title = document.getElementById('f_title').value.trim();
+        if (!title) { alert('Title is required.'); return; }
+        setSaveStatus('Saving archive entry…');
+
+        let thumbPath = document.getElementById('f_thumbpath').value.trim();
+        const file = document.getElementById('f_thumbfile').files[0];
+        if (file) {
+            try {
+                const fd = new FormData(); fd.append('thumbnail', file);
+                const ur = await fetch(`${API}/api/upload-thumbnail`, { method: 'POST', body: fd });
+                const uj = await ur.json();
+                if (uj.success) thumbPath = uj.path; else throw new Error(uj.error || 'upload failed');
+            } catch (e) { alert('Thumbnail upload failed: ' + e.message); setSaveStatus(''); return; }
+        }
+
+        const start = document.getElementById('f_startdate').value;
+        const dur = durationString();
+        const entry = {
+            title,
+            author: document.getElementById('f_author').value,
+            startdate: start,
+            enddate: document.getElementById('f_enddate').value,
+            date: start ? `${start}, ${dur}` : '',
+            primarycategory: document.getElementById('f_primary').value,
+            secondarycategory: Array.from(document.querySelectorAll('#secondaryWrap input:checked')).map(c => c.value).join(', '),
+            link: document.getElementById('f_link').value.trim(),
+            shortdescription: document.getElementById('f_short').value,
+            artistdescription: document.getElementById('f_artistdesc').value,
+            details: document.getElementById('f_details').value,
+            thumbnail: thumbPath
+        };
+
+        const index = parseInt(document.getElementById('f_index').value);
+        try {
+            const r = await fetch(`${API}/api/projects`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ index, project: entry })
+            });
+            const j = await r.json();
+            if (!j.success) throw new Error(j.error || 'save failed');
+            setSaveStatus('✓ Archive entry saved');
+            await loadArchive();
+            // keep editor open; if it was a new row, switch index to its new position
+            if (index < 0) {
+                const newIdx = archive.findIndex(p => p.title === entry.title && p.link === entry.link);
+                if (newIdx >= 0) document.getElementById('f_index').value = newIdx;
+                document.getElementById('editorTitle').textContent = 'Edit Project';
+            }
+        } catch (e) {
+            alert('Save failed: ' + e.message + '\nIs the server running on ' + API + '?');
+            setSaveStatus('');
+        }
+    }
+
+    // ============================================================
+    //  Page tab — load / render / save
+    // ============================================================
+    function updatePagePathBanner() {
+        const link = document.getElementById('f_link').value.trim();
+        const jp = pageJsonPathFromLink(link);
+        const banner = document.getElementById('pagePathBanner');
+        banner.innerHTML = jp
+            ? `Reads &amp; writes: <strong>${escapeHtml(jp)}</strong>`
+            : '⚠ Set a Link on the Archive Entry tab first — it determines the page JSON location.';
+    }
+
+    async function loadPageForRow(p) {
+        const jp = pageJsonPathFromLink(p.link);
+        if (!jp) { resetPageEditor({ author: '', artistdescription: '', projects: [] }); return; }
+        try {
+            const r = await fetch(`${API}/api/projectpage?path=${encodeURIComponent(jp)}`);
+            if (r.ok) { resetPageEditor(await r.json()); return; }
+        } catch (e) { /* fall through */ }
+        // no existing page json — start blank but seed from index
+        resetPageEditor({ author: p.author || '', artistdescription: p.artistdescription || '', projects: [] });
+    }
+
+    function resetPageEditor(data) {
+        document.getElementById('p_author').value = data.author || '';
+        setBio(data.artistdescription || '');
+        pageProjects = [];
+        (data.projects || []).forEach((proj, i) => {
+            pageProjects.push({
+                id: Date.now() + i,
+                title: proj.title || '', startdate: proj.startdate || '', enddate: proj.enddate || '',
+                sections: (proj.sections || []).map((s, j) => ({
+                    id: Date.now() + i * 1000 + j, sectiontype: s.sectiontype, value: s.value
+                }))
+            });
+        });
+        renderProjects();
+    }
+
+    // -- CKEditor helpers --
+    function textToHtml(text) {
+        if (!text) return '';
+        text = text.replace(/\\n/g, '\n');
+        if (/<[^>]+>/.test(text)) return text.replace(/\n/g, '<br>');
+        return text.split('\n\n').map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
+    }
+    function setBio(text) {
+        if (window.ckEditors['editor-artistbio']) window.ckEditors['editor-artistbio'].setData(textToHtml(text));
+        else setTimeout(() => setBio(text), 120);
+    }
+
+    function addProject() {
+        pageProjects.push({ id: Date.now(), title: '', startdate: '', enddate: '', sections: [] });
+        renderProjects();
+    }
+    function removeProject(id) { pageProjects = pageProjects.filter(p => p.id !== id); renderProjects(); }
+    function addSection(pid, type) {
+        const pr = pageProjects.find(p => p.id === pid); if (!pr) return;
+        const value = type === 'image' ? [{ filename: '' }]
+            : (type === 'video' || type === 'audio') ? { source: '', description: '' } : '';
+        pr.sections.push({ id: Date.now(), sectiontype: type, value });
+        renderProjects();
+    }
+    function removeSection(pid, sid) {
+        const pr = pageProjects.find(p => p.id === pid); if (!pr) return;
+        pr.sections = pr.sections.filter(s => s.id !== sid); renderProjects();
+    }
+    function moveSection(pid, sid, dir) {
+        const pr = pageProjects.find(p => p.id === pid); if (!pr) return;
+        const i = pr.sections.findIndex(s => s.id === sid); const ni = i + dir;
+        if (ni < 0 || ni >= pr.sections.length) return;
+        [pr.sections[i], pr.sections[ni]] = [pr.sections[ni], pr.sections[i]]; renderProjects();
+    }
+    function addImage(pid, sid) {
+        const s = sectionOf(pid, sid); if (s && s.sectiontype === 'image') { s.value.push({ filename: '' }); renderProjects(); }
+    }
+    function removeImage(pid, sid, idx) {
+        const s = sectionOf(pid, sid); if (s && s.sectiontype === 'image') { s.value.splice(idx, 1); renderProjects(); }
+    }
+    function sectionOf(pid, sid) {
+        const pr = pageProjects.find(p => p.id === pid); return pr ? pr.sections.find(s => s.id === sid) : null;
+    }
+    function updateValue(pid, sid, field, value, imageIndex = null) {
+        const s = sectionOf(pid, sid); if (!s) return;
+        if (s.sectiontype === 'text') s.value = value;
+        else if (s.sectiontype === 'image' && imageIndex !== null) s.value[imageIndex].filename = value;
+        else if (s.sectiontype === 'video' || s.sectiontype === 'audio') s.value[field] = value;
+    }
+
+    // upload media into the project's folder; fills the image input on success
+    async function uploadImageFor(pid, sid, imageIndex, fileInput) {
+        const file = fileInput.files[0]; if (!file) return;
+        const folder = folderFromLink(document.getElementById('f_link').value.trim());
+        if (!folder) { alert('Set a Link first so I know which folder to upload into.'); return; }
+        try {
+            const fd = new FormData(); fd.append('asset', file);
+            const r = await fetch(`${API}/api/upload-asset?dir=${encodeURIComponent(folder)}`, { method: 'POST', body: fd });
+            const j = await r.json();
+            if (!j.success) throw new Error(j.error || 'upload failed');
+            // store filename relative to folder (matches how the renderer resolves images)
+            updateValue(pid, sid, null, j.filename, imageIndex);
+            renderProjects();
+        } catch (e) { alert('Upload failed: ' + e.message); }
+    }
+
+    function renderProjects() {
+        const container = document.getElementById('projectsList');
+        // destroy section CKEditors (keep bio editor)
+        Object.keys(window.ckEditors).forEach(k => {
+            if (k === 'editor-artistbio') return;
+            try { window.ckEditors[k].destroy().catch(() => {}); } catch (e) {}
+            delete window.ckEditors[k];
+        });
+        container.innerHTML = '';
+
+        pageProjects.forEach((project, pIdx) => {
+            const card = document.createElement('div');
+            card.className = 'pcard';
+            card.innerHTML = `
+                <button class="crud-btn crud-btn--sm crud-btn--danger" style="position:absolute;top:12px;right:12px;"
+                    onclick="removeProject(${project.id})">Remove project</button>
+                <h4>Project ${pIdx + 1}</h4>
+                <div class="fg"><label>Project Title</label>
+                    <input type="text" value="${escapeHtml(project.title)}"
+                        onchange="pageProjects.find(p=>p.id===${project.id}).title=this.value"></div>
+                <div class="fg-row">
+                    <div class="fg"><label>Start Date</label>
+                        <input type="date" value="${escapeHtml(project.startdate)}"
+                            onchange="pageProjects.find(p=>p.id===${project.id}).startdate=this.value"></div>
+                    <div class="fg"><label>End Date</label>
+                        <input type="date" value="${escapeHtml(project.enddate)}"
+                            onchange="pageProjects.find(p=>p.id===${project.id}).enddate=this.value"></div>
+                </div>
+                <div id="sections-${project.id}"></div>
+                <select id="stype-${project.id}" style="padding:6px;border-radius:6px;">
+                    <option value="text">Text</option><option value="image">Image</option>
+                    <option value="video">Video</option><option value="audio">Audio</option>
+                </select>
+                <button class="crud-btn crud-btn--sm" onclick="addSection(${project.id}, document.getElementById('stype-${project.id}').value)">+ Add Section</button>
+            `;
+            container.appendChild(card);
+
+            const sc = document.getElementById(`sections-${project.id}`);
+            project.sections.forEach((section, sIdx) => {
+                const el = document.createElement('div');
+                el.className = 'scard';
+                const moveBtns = `
+                    ${sIdx > 0 ? `<button class="crud-btn crud-btn--sm" onclick="moveSection(${project.id},${section.id},-1)">↑</button>` : ''}
+                    ${sIdx < project.sections.length - 1 ? `<button class="crud-btn crud-btn--sm" onclick="moveSection(${project.id},${section.id},1)">↓</button>` : ''}
+                    <button class="crud-btn crud-btn--sm crud-btn--danger" onclick="removeSection(${project.id},${section.id})">×</button>`;
+
+                if (section.sectiontype === 'text') {
+                    el.innerHTML = `<div class="scard-head"><strong>Text ${sIdx + 1}</strong><div>${moveBtns}</div></div>
+                        <div class="ck-host"><div id="ed-${project.id}-${section.id}" style="min-height:140px;"></div></div>`;
+                    sc.appendChild(el);
+                    const edId = `ed-${project.id}-${section.id}`;
+                    setTimeout(() => {
+                        ClassicEditor.create(document.querySelector('#' + edId), {
+                            toolbar: ['heading', '|', 'bold', 'italic', 'link', 'undo', 'redo']
+                        }).then(ed => {
+                            ed.setData(textToHtml(section.value || ''));
+                            ed.model.document.on('change:data', () => updateValue(project.id, section.id, null, ed.getData()));
+                            window.ckEditors[edId] = ed;
+                        }).catch(() => {});
+                    }, 0);
+                } else if (section.sectiontype === 'image') {
+                    el.innerHTML = `<div class="scard-head"><strong>Image ${sIdx + 1}</strong><div>${moveBtns}</div></div>
+                        <div id="imgs-${section.id}"></div>
+                        <button class="crud-btn crud-btn--sm" onclick="addImage(${project.id},${section.id})">+ Add Image</button>`;
+                    sc.appendChild(el);
+                    const ic = document.getElementById(`imgs-${section.id}`);
+                    section.value.forEach((img, ii) => {
+                        const row = document.createElement('div'); row.className = 'img-item';
+                        row.innerHTML = `
+                            <input type="text" value="${escapeHtml(img.filename)}" placeholder="filename.jpg (relative to folder) or URL"
+                                onchange="updateValue(${project.id},${section.id},null,this.value,${ii})">
+                            <label class="crud-btn crud-btn--sm" style="margin:0;">⬆ Upload
+                                <input type="file" accept="image/*" style="display:none"
+                                    onchange="uploadImageFor(${project.id},${section.id},${ii},this)"></label>
+                            <button class="crud-btn crud-btn--sm crud-btn--danger" onclick="removeImage(${project.id},${section.id},${ii})">×</button>`;
+                        ic.appendChild(row);
+                    });
+                } else if (section.sectiontype === 'video' || section.sectiontype === 'audio') {
+                    const label = section.sectiontype === 'video' ? 'Video' : 'Audio';
+                    el.innerHTML = `<div class="scard-head"><strong>${label} ${sIdx + 1}</strong><div>${moveBtns}</div></div>
+                        <div class="fg"><label>${label} URL / path</label>
+                            <input type="text" value="${escapeHtml(section.value.source || '')}" placeholder="https://… or ../../MEDIA-FILES/file"
+                                onchange="updateValue(${project.id},${section.id},'source',this.value)"></div>
+                        <div class="fg"><label>Description (optional)</label>
+                            <input type="text" value="${escapeHtml(section.value.description || '')}"
+                                onchange="updateValue(${project.id},${section.id},'description',this.value)"></div>`;
+                    sc.appendChild(el);
+                }
+            });
+        });
+    }
+
+    async function savePage() {
+        const link = document.getElementById('f_link').value.trim();
+        const jp = pageJsonPathFromLink(link);
+        if (!jp) { alert('Set a Link on the Archive Entry tab first.'); switchTab('index'); return; }
+        setSaveStatus('Saving project page…');
+
+        let bio = '';
+        if (window.ckEditors['editor-artistbio']) bio = window.ckEditors['editor-artistbio'].getData();
+        const data = {
+            author: document.getElementById('p_author').value,
+            artistdescription: bio,
+            projects: pageProjects.map(p => ({
+                title: p.title, startdate: p.startdate, enddate: p.enddate,
+                sections: p.sections.map(s => ({ sectiontype: s.sectiontype, value: s.value }))
+            }))
+        };
+        try {
+            const r = await fetch(`${API}/api/projectpage`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path: jp, data })
+            });
+            const j = await r.json();
+            if (!j.success) throw new Error(j.error || 'save failed');
+            setSaveStatus('✓ Project page saved to ' + jp);
+            await loadArchive();
+        } catch (e) {
+            alert('Page save failed: ' + e.message + '\nIs the server running on ' + API + '?');
+            setSaveStatus('');
+        }
+    }
+
+    function setSaveStatus(t) { document.getElementById('saveStatus').textContent = t; }
+
+    // ============================================================
+    //  Export
+    // ============================================================
+    function exportIndex() {
+        const clean = archive.map(({ _meta, ...rest }) => rest);
+        const blob = new Blob([JSON.stringify({ projects: clean }, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'projects.json';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+
+    // ============================================================
+    //  Init Artist Bio CKEditor once
+    // ============================================================
+    setTimeout(() => {
+        ClassicEditor.create(document.querySelector('#editor-artistbio'), {
+            toolbar: ['heading', '|', 'bold', 'italic', 'link', 'undo', 'redo']
+        }).then(ed => { window.ckEditors['editor-artistbio'] = ed; }).catch(() => {});
+    }, 150);
+    </script>
+</body>
+</html>
