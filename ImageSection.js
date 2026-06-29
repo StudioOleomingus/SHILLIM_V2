@@ -1040,10 +1040,14 @@ async function initImageSection() {
             if (textureStats.surroundedGroups.length > previousSurroundedGroupsLength) {
 
                 // Remove any existing surrounded group sprites
-                if (gridContainer.surroundedGroupsContainer) {
-                    surroundedGroupsContainer.children.forEach(cell => cell.destroy());
-                    gridContainer.removeChild(gridContainer.surroundedGroupsContainer);
-                }
+// Rescue creature sprites — only destroy tile sprites
+const children = [...surroundedGroupsContainer.children];
+children.forEach(child => {
+    if (!(child instanceof PIXI.AnimatedSprite)) {
+        child.destroy();
+    }
+});
+gridContainer.removeChild(gridContainer.surroundedGroupsContainer);
 
                 gridContainer.surroundedGroupsContainer = surroundedGroupsContainer;
 
@@ -1101,13 +1105,37 @@ async function initImageSection() {
                 });
 
                 if (nearestGroup) {
-                    const cell = nearestGroup[Math.floor(Math.random() * nearestGroup.length)];
-                    // Lizard sprites live in imageContainer space, so add the
-                    // grid's centring offset to land on the actual cell.
+                    // Find border cells
+                    const borderCells = new Set();
+                    nearestGroup.forEach(emptyCell => {
+                        const neighbors = [[-1,0],[1,0],[0,-1],[0,1]];
+                        neighbors.forEach(([dr, dc]) => {
+                            const nr = emptyCell.row + dr;
+                            const nc = emptyCell.col + dc;
+                            if (nr >= 0 && nr < numberOfRows && nc >= 0 && nc < numberOfColumns) {
+                                if (textureStats.grid[nr][nc]) {
+                                    borderCells.add(`${nr},${nc}`);
+                                }
+                            }
+                        });
+                    });
+                
+                    // Enclosure center (in grid-local coords)
+                    let cx = 0, cy = 0;
+                    nearestGroup.forEach(c => { cx += c.col; cy += c.row; });
+                    cx = (cx / nearestGroup.length) * cellSize + cellSize / 2 + gridShiftX;
+                    cy = (cy / nearestGroup.length) * cellSize + cellSize / 2;
+                
+                    // Pick a random border cell
+                    const borderArr = Array.from(borderCells).map(s => {
+                        const [r, c] = s.split(',').map(Number);
+                        return { row: r, col: c };
+                    });
+                    const cell = borderArr[Math.floor(Math.random() * borderArr.length)];
                     const spawnX = cell.col * cellSize + cellSize / 2 + gridShiftX;
                     const spawnY = cell.row * cellSize + cellSize / 2;
                     setSpawnPoint(spawnX, spawnY);
-                    spawnLizard(spawnX, spawnY, nearestGroup.length);
+                    spawnLizard(spawnX, spawnY, nearestGroup.length, surroundedGroupsContainer);
                 }
 
                 // Notify tutorial that an enclosed space was created
