@@ -5,8 +5,6 @@ import { initBottomLayout } from './BottomLayout.js';
 import { startTutorial } from './Tutorial.js';
 import { slidePageInFromRight } from './Transitions.js';
 
-let loadingContainer;
-let continueText;
 let interactiveBgTexture;
 let restartButtonTexture;
 let whitebgTexture;
@@ -15,10 +13,6 @@ let whiteCircleBg;
 let leavesTexture;
 let dragonflyTexture;
 let frogTexture;
-
-// Bird sprite for the landing page
-let birdSprite = null;
-let birdTextures = [];
 
 // Gutter (in source pixels) left between tiles in the atlas so that linear
 // filtering when the tiles are scaled down can't bleed in neighbouring pixels.
@@ -112,260 +106,285 @@ async function LoadTextures() {
         let isLoading = false;
         let texturesLoaded = false;
 
-        const PLAY_GAP = 14;
-        const boxX = interactiveRect.x + PLAY_GAP;
-        const boxY = PLAY_GAP;
-        const boxW = interactiveRect.width - PLAY_GAP * 2;
-        const boxH = stageHeight - PLAY_GAP * 2;
+        // ──────────────────────────────────────────────────────────────
+        // Copy / content
+        // ──────────────────────────────────────────────────────────────
+        const ARCHIVE_DESC =
+            'This website is an interactive repository of projects by the Shillim Institute and other associated organisations. It encompasses work ranging from art residencies and mapping workshops to ecological surveys and reforestation programs, as well as educational and craft initiatives, and other such community outreach.\n\nThe archive invites visitors to draw new associations between these varied works, situating each project within the landscape of the Sahyadris from which they emerge';
 
+        const ABOUT_HEADING = 'The Shillim Institute.';
+        const ABOUT_SUBTITLE = 'Inspiring Commitment to Action through Sustainable art practices\nin the Sahyadri Western Ghats India.';
+        const ABOUT_BODY =
+            'Located in the Western Ghats, The Shillim Institute safeguards approximately 2000 acres of land in the Northern region of this mountain range, which has been declared a UNESCO World Heritage Site and a biodiversity conservation hotspot. The Institute has enlisted local communities as forest guards and introduced thousands of native plant species, resulting in the flourishing of over a million trees comprising 64 diverse species.\n\nThe Pavna Collective is a consortium of conservation, ecology, and art organizations, convened by the Shillim Institute. Among its initiatives, the Pavna Collective sponsors 3-6 art residencies a year, fellowships, Mapping Workshop, Cultural documentation and Skill development programs in the Sayadri ranges.';
+
+        // ──────────────────────────────────────────────────────────────
+        // Geometry
+        // ──────────────────────────────────────────────────────────────
+        const GREEN = 0x86bf9b;
+        const INK = 0x1f1f1f;
+        const BOX_FILL = 0xe8e8e8;
+        const BTN_DARK = 0xcfcfcf;
+        const BTN_LIGHT = 0xe2e2e2;
+        const WHITE_CARD = 0xffffff;
+
+        const PLAY_GAP = 14;
+        const cardX = interactiveRect.x + PLAY_GAP;
+        const cardY = PLAY_GAP;
+        const cardW = interactiveRect.width - PLAY_GAP * 2;
+        const cardH = stageHeight - PLAY_GAP * 2;
+        const cardCX = cardX + cardW / 2;
+        const cardCY = cardY + cardH / 2;
+
+        const BOX_W = 920;
+        const BOX_X = Math.round(cardCX - BOX_W / 2);
+        const PAD = 40;
+        const WRAP = BOX_W - PAD * 2;
+
+        const BTN_H = 58;
+        const BTN_GAP = 18;          // gap between box and button row
+        const BTN_RADIUS = 14;
+        const BTN_PAD_X = 30;
+
+        // ──────────────────────────────────────────────────────────────
+        // Containers
+        // ──────────────────────────────────────────────────────────────
         const intro = new PIXI.Container();
         app.stage.addChild(intro);
 
+        // Big white card
         const whiteBox = new PIXI.Graphics();
-        whiteBox.beginFill(0xFFFFFF);
-        whiteBox.drawRoundedRect(boxX, boxY, boxW, boxH, 28);
+        whiteBox.beginFill(WHITE_CARD);
+        whiteBox.drawRoundedRect(cardX, cardY, cardW, cardH, 28);
         whiteBox.endFill();
         intro.addChild(whiteBox);
 
-        const TEXT_LEFT = boxX + 22;
-        const CONTENT_LEFT = TEXT_LEFT;
-        const CONTENT_WRAP = 760;
+        // The grey description box (redrawn per view)
+        const box = new PIXI.Graphics();
+        intro.addChild(box);
 
-        const WEBSITE_DESC = 'This website is an interactive repository of projects by the Shillim Institute. It encompasses work ranging from art residencies and mapping workshops to ecological surveys and reforestation programs, as well as educational initiatives and community outreach.\n\nThe archive invites visitors to draw new associations between these varied works, situating each project within the landscape of the Sahyadris from which they emerge.';
+        // ---- Archive (default) content ----
+        const archiveContent = new PIXI.Container();
+        intro.addChild(archiveContent);
 
-        const institutes = [
-            {
-                name: 'The Shillim Institute',
-                heading: 'Inspiring Commitment to Action through Sustainable art practices in the Sahyadri Western Ghats India',
-                body: 'Located in the Western Ghats, The Shillim Institute safeguards approximately 2000 acres of land in the Northern region of this mountain range, which has been declared a UNESCO World Heritage Site and a biodiversity conservation hotspot. The Institute has enlisted local communities as forest guards and introduced thousands of native plant species, resulting in the flourishing of over a million trees comprising 64 diverse species.\n\nThe Pavna Collective is a consortium of conservation, ecology, and art organizations, convened by the Shillim Institute. Among its initiatives, the Pavna Collective sponsors 3-6 art residencies a year, fellowships, Mapping Workshop, Cultural documentation and Skill development programs in the Sayadri ranges.'
-            },
-            { name: 'Organisation 01', heading: 'Organisation 01', body: 'Placeholder description for Organisation 01. Replace this with a short overview of the organisation.' },
-            { name: 'Organisation 02', heading: 'Organisation 02', body: 'Placeholder description for Organisation 02. Replace this with a short overview of the organisation.' },
-            { name: 'Organisation 03', heading: 'Organisation 03', body: 'Placeholder description for Organisation 03. Replace this with a short overview of the organisation.' },
-            { name: 'Organisation 04', heading: 'Organisation 04', body: 'Placeholder description for Organisation 04. Replace this with a short overview of the organisation.' },
-            { name: 'Organisation 05', heading: 'Organisation 05', body: 'Placeholder description for Organisation 05. Replace this with a short overview of the organisation.' }
-        ];
+        const descText = new PIXI.Text(ARCHIVE_DESC, {
+            fontFamily: 'Hind Madurai', fontSize: 21, fill: INK,
+            align: 'justify', wordWrap: true, wordWrapWidth: WRAP, lineHeight: 30
+        });
+        archiveContent.addChild(descText);
 
         const bigTitle = new PIXI.Text('THE SHILLIM ARCHIVE', {
-            fontFamily: 'Hind Madurai', fontWeight: '520', fontSize: 120, fill: 0xa4a4a4
+            fontFamily: 'Hind Madurai', fontWeight: '700', fontSize: 76, fill: GREEN, letterSpacing: 1
         });
-        bigTitle.anchor.set(0, 1);
-        bigTitle.x = TEXT_LEFT;
-        bigTitle.y = boxY + boxH - 18;
-        intro.addChild(bigTitle);
+        if (bigTitle.width > WRAP) bigTitle.scale.set(WRAP / bigTitle.width);
+        archiveContent.addChild(bigTitle);
 
-        const BAR_X = TEXT_LEFT;
-        const BAR_W = boxW - (TEXT_LEFT - boxX) * 2;
-        const BAR_Y = bigTitle.y - bigTitle.height - 30;
+        // ---- About content ----
+        const aboutContent = new PIXI.Container();
+        aboutContent.visible = false;
+        intro.addChild(aboutContent);
 
-        const headingText = new PIXI.Text('', {
-            fontFamily: 'Hind Madurai', fontSize: 24, fill: 0x222222,
-            wordWrap: true, wordWrapWidth: CONTENT_WRAP, lineHeight: 32
+        const aboutHeading = new PIXI.Text(ABOUT_HEADING, {
+            fontFamily: 'Gelasio', fontWeight: '700', fontSize: 42, fill: 0x111111
         });
-        headingText.x = CONTENT_LEFT;
-        headingText.visible = false;
-        intro.addChild(headingText);
+        aboutContent.addChild(aboutHeading);
 
-        const bodyText = new PIXI.Text(WEBSITE_DESC, {
-            fontFamily: 'Hind Madurai', fontSize: 20, fill: 0x222222,
-            align: 'justify',
-            wordWrap: true, wordWrapWidth: CONTENT_WRAP, lineHeight: 25.5
+        const aboutSubtitle = new PIXI.Text(ABOUT_SUBTITLE, {
+            fontFamily: 'Hind Madurai', fontWeight: '700', fontSize: 21, fill: 0x1a1a1a,
+            lineHeight: 28, wordWrap: true, wordWrapWidth: WRAP
         });
-        bodyText.x = CONTENT_LEFT;
-        intro.addChild(bodyText);
+        aboutContent.addChild(aboutSubtitle);
 
-        const DESC_TOP = BAR_Y - 28 - bodyText.height;
-
-        function layoutContent() {
-            if (selectedInstitute === -1) {
-                bodyText.y = DESC_TOP;
-            } else {
-                let cy = DESC_TOP;
-                if (headingText.visible && headingText.text) {
-                    headingText.y = cy;
-                    cy += headingText.height + 24;
-                }
-                bodyText.y = cy;
-            }
-        }
-
-        continueText = new PIXI.Text('CONTINUE', {
-            fontFamily: 'Hind Madurai', fontSize: 22, fill: '#4A90E2'
+        const aboutBody = new PIXI.Text(ABOUT_BODY, {
+            fontFamily: 'Hind Madurai', fontSize: 20, fill: 0x1f1f1f,
+            align: 'justify', wordWrap: true, wordWrapWidth: WRAP, lineHeight: 27
         });
-        continueText.anchor.set(1, 0.5);
-        continueText.x = BAR_X + BAR_W - 56;
-        continueText.y = BAR_Y - 18;
-        continueText.eventMode = 'static';
-        continueText.cursor = 'pointer';
-        continueText.visible = false;
-        intro.addChild(continueText);
+        aboutContent.addChild(aboutBody);
 
-        loadingContainer = new PIXI.Container();
-        loadingContainer.visible = true;
-        intro.addChild(loadingContainer);
-
-        const loadingText = new PIXI.Text('LOADING ARCHIVE...', {
-            fontFamily: 'Hind Madurai', fontSize: 20, fill: '#3092cf'
-        });
-        loadingText.anchor.set(0, 1);
-        loadingText.x = BAR_X + BAR_W - 180;
-        loadingText.y = BAR_Y - 18;
-        loadingContainer.addChild(loadingText);
-
-        const loadingBarBg = new PIXI.Graphics();
-        loadingBarBg.beginFill(0xDDDDDD);
-        loadingBarBg.drawRoundedRect(BAR_X, BAR_Y, BAR_W, 20, 10);
-        loadingBarBg.endFill();
-        loadingContainer.addChild(loadingBarBg);
-
-        const loadingBarFill = new PIXI.Graphics();
-        loadingBarFill.beginFill(0x4A90E2);
-        loadingContainer.addChild(loadingBarFill);
-
-        let selectedInstitute = -1;
-        const nameItems = [];
-        const NAME_X = 40;
-        const NAME_GAP = 70;
-        const NAME_PAD_X = 27;
-        const NAME_PAD_Y = 16;
-
-        const sampleLabel = new PIXI.Text('A', { fontFamily: 'Hind Madurai', fontWeight: '200', fontSize: 20 });
-        const NAME_CAP_H = sampleLabel.height + NAME_PAD_Y * 2;
-        sampleLabel.destroy();
-        const NAME_GROUP_H = (institutes.length - 1) * NAME_GAP + NAME_CAP_H;
-        const NAME_Y0 = Math.round(app.screen.height / 2 - NAME_GROUP_H / 2);
-
-        let NAME_MAX_W = 0;
-        institutes.forEach((inst) => {
-            const t = new PIXI.Text(inst.name.toUpperCase(), { fontFamily: 'Hind Madurai', fontWeight: '200', fontSize: 20 });
-            NAME_MAX_W = Math.max(NAME_MAX_W, t.width);
-            t.destroy();
-        });
-        const NAME_CAP_W = Math.ceil(NAME_MAX_W) + NAME_PAD_X * 2;
-
-        function applyNameStyles() {
-            nameItems.forEach(({ label, bg }, i) => {
-                const active = (selectedInstitute === -1 || i === selectedInstitute);
-                label.style.fill = active ? 0x111111 : 0xb8b8b8;
-                bg.tint = (i === selectedInstitute) ? 0xdcdcdc : 0xffffff;
-            });
-        }
-
-        function showDefault() {
-            selectedInstitute = -1;
-            bigTitle.visible = true;
-            headingText.visible = false;
-            headingText.text = '';
-            bodyText.text = WEBSITE_DESC;
-            continueText.visible = texturesLoaded;
-            loadingContainer.visible = !texturesLoaded;
-            applyNameStyles();
-            layoutContent();
-
-            // Reset bird to default (index 2)
-            if (birdSprite && birdTextures[2]) {
-                birdSprite.texture = birdTextures[2];
-            }
-        }
-
-        function selectInstitute(i) {
-            selectedInstitute = i;
-            const inst = institutes[i];
-            bigTitle.visible = false;
-            headingText.visible = true;
-            headingText.text = inst.heading;
-            bodyText.text = inst.body;
-            continueText.visible = false;
-            loadingContainer.visible = false;
-            applyNameStyles();
-            layoutContent();
-
-            // Swap bird to match selected institute
-            if (birdSprite && birdTextures[i % 6]) {
-                birdSprite.texture = birdTextures[i % 6];
-            }
-        }
-
-        institutes.forEach((inst, i) => {
-            const item = new PIXI.Container();
-            item.x = NAME_X;
-            item.y = NAME_Y0 + i * NAME_GAP;
-
-            const label = new PIXI.Text(inst.name.toUpperCase(), {
-                fontFamily: 'Hind Madurai', fontWeight: '200', fontSize: 20, fill: 0x111111
-            });
-            label.x = NAME_PAD_X;
-            label.y = NAME_PAD_Y;
-
-            const capW = NAME_CAP_W;
-            const capH = label.height + NAME_PAD_Y * 2;
+        // ──────────────────────────────────────────────────────────────
+        // Buttons
+        // ──────────────────────────────────────────────────────────────
+        // Generic pill button factory. Returns { container, setWidth, label, bg }.
+        function makeButton({ text, fill, align = 'left', icon = null }) {
+            const c = new PIXI.Container();
+            c.eventMode = 'static';
+            c.cursor = 'pointer';
 
             const bg = new PIXI.Graphics();
-            bg.beginFill(0xf0f0f0);
-            bg.drawRoundedRect(0, 0, capW, capH, 12);
-            bg.endFill();
+            c.addChild(bg);
 
-            item.addChild(bg);
-            item.addChild(label);
-            item.eventMode = 'static';
-            item.cursor = 'pointer';
-            item.hitArea = new PIXI.Rectangle(0, 0, capW, capH);
-
-            item.on('pointerover', () => { if (selectedInstitute !== i) bg.tint = 0xe2e2e2; });
-            item.on('pointerout', () => { applyNameStyles(); });
-            item.on('pointertap', (e) => {
-                if (e && e.stopPropagation) e.stopPropagation();
-                selectInstitute(i);
+            const label = new PIXI.Text(text, {
+                fontFamily: 'Hind Madurai', fontWeight: '500', fontSize: 19, fill: 0x222222, letterSpacing: 1
             });
+            label.anchor.set(0, 0.5);
+            label.y = BTN_H / 2;
+            c.addChild(label);
 
-            intro.addChild(item);
-            nameItems.push({ item, label, bg });
-        });
+            let iconGfx = null;
+            if (icon) {
+                iconGfx = new PIXI.Graphics();
+                c.addChild(iconGfx);
+            }
 
-        // ── Bird sprite (on the white card area) ──
-        birdSprite = new PIXI.Sprite();
-        birdSprite.anchor.set(0.5, 0.5);
-        birdSprite.x = boxX + 200;
-        birdSprite.y = NAME_Y0 + 3 * NAME_GAP + NAME_CAP_H / 2;
-        birdSprite.scale.set(0.3, 0.3);
-        birdSprite.alpha = 1;
-        birdSprite.eventMode = 'none';  // clicks pass through to buttons
-        intro.addChild(birdSprite);
+            let curW = 0;
+            function draw(w) {
+                curW = w;
+                bg.clear();
+                bg.beginFill(fill);
+                bg.drawRoundedRect(0, 0, w, BTN_H, BTN_RADIUS);
+                bg.endFill();
+                c.hitArea = new PIXI.Rectangle(0, 0, w, BTN_H);
 
-        // Load 6 bird images, default to index 2
-        birdTextures = [];
-        for (let i = 0; i < 6; i++) {
-            PIXI.Assets.load(`assets/starting-page/bird/${i}.png`).then(tex => {
-                birdTextures[i] = tex;
-                if (i === 2 && birdSprite) birdSprite.texture = tex;
-            }).catch(() => {
-                birdTextures[i] = null;
-            });
+                if (icon === 'arrow') {
+                    // right-aligned text + triangle
+                    const aSize = 12;
+                    const aX = w - BTN_PAD_X - aSize;
+                    const aCY = BTN_H / 2;
+                    iconGfx.clear();
+                    iconGfx.beginFill(0x222222);
+                    iconGfx.moveTo(aX, aCY - aSize / 2);
+                    iconGfx.lineTo(aX + aSize, aCY);
+                    iconGfx.lineTo(aX, aCY + aSize / 2);
+                    iconGfx.closePath();
+                    iconGfx.endFill();
+                    label.anchor.set(1, 0.5);
+                    label.x = aX - 16;
+                } else if (icon === 'close') {
+                    // left "×" then text
+                    const s = 9;
+                    const cx = BTN_PAD_X + s;
+                    const cy = BTN_H / 2;
+                    iconGfx.clear();
+                    iconGfx.lineStyle(2.4, 0x222222, 1);
+                    iconGfx.moveTo(cx - s, cy - s); iconGfx.lineTo(cx + s, cy + s);
+                    iconGfx.moveTo(cx + s, cy - s); iconGfx.lineTo(cx - s, cy + s);
+                    label.anchor.set(0, 0.5);
+                    label.x = cx + s + 16;
+                } else {
+                    label.anchor.set(align === 'right' ? 1 : 0, 0.5);
+                    label.x = align === 'right' ? w - BTN_PAD_X : BTN_PAD_X;
+                }
+            }
+
+            // intrinsic width for auto-sized buttons (icon adds room)
+            function intrinsicWidth() {
+                let w = label.width + BTN_PAD_X * 2;
+                if (icon === 'close') w = label.width + BTN_PAD_X * 2 + 9 * 2 + 16;
+                return Math.ceil(w);
+            }
+
+            c.on('pointerover', () => { bg.tint = 0xf0f0f0; });
+            c.on('pointerout', () => { bg.tint = 0xffffff; });
+
+            return { container: c, draw, intrinsicWidth, label, bg };
         }
 
-        // Click anywhere outside a name returns to the default title view.
-        app.stage.eventMode = 'static';
-        app.stage.hitArea = new PIXI.Rectangle(0, 0, app.screen.width, app.screen.height);
-        app.stage.on('pointertap', () => {
-            if (selectedInstitute !== -1) showDefault();
+        const aboutBtn = makeButton({ text: 'ABOUT', fill: BTN_DARK, align: 'left' });
+        const goBtn = makeButton({ text: 'GO TO THE ARCHIVE', fill: BTN_LIGHT, icon: 'arrow' });
+        const closeBtn = makeButton({ text: 'ABOUT', fill: BTN_DARK, icon: 'close' });
+
+        intro.addChild(aboutBtn.container);
+        intro.addChild(goBtn.container);
+        intro.addChild(closeBtn.container);
+
+        // ──────────────────────────────────────────────────────────────
+        // Layout
+        // ──────────────────────────────────────────────────────────────
+        let view = 'archive'; // 'archive' | 'about'
+
+        function layout() {
+            const isAbout = view === 'about';
+            archiveContent.visible = !isAbout;
+            aboutContent.visible = isAbout;
+            aboutBtn.container.visible = !isAbout;
+            goBtn.container.visible = !isAbout;
+            closeBtn.container.visible = isAbout;
+
+            // Measure inner content height for the current view
+            let innerH;
+            if (isAbout) {
+                innerH = aboutHeading.height + 18 + aboutSubtitle.height + 22 + aboutBody.height;
+            } else {
+                innerH = descText.height + 30 + bigTitle.height;
+            }
+            const boxH = innerH + PAD * 2;
+
+            // Anchor the box BOTTOM (and therefore the button row) at a fixed
+            // position derived from the default archive view, so toggling to the
+            // taller about view grows the box upward instead of shifting the
+            // button / box-bottom. This keeps the ABOUT/close button and the
+            // bottom edge of the text box in place across views.
+            const archiveInnerH = descText.height + 30 + bigTitle.height;
+            const archiveBoxH = archiveInnerH + PAD * 2;
+            const archiveGroupH = archiveBoxH + BTN_GAP + BTN_H;
+            const ANCHOR_BOTTOM = Math.round(cardCY - archiveGroupH / 2) + archiveBoxH;
+
+            const boxY = ANCHOR_BOTTOM - boxH;
+
+            // Draw box
+            box.clear();
+            box.beginFill(BOX_FILL);
+            box.drawRoundedRect(BOX_X, boxY, BOX_W, boxH, 22);
+            box.endFill();
+
+            // Place content
+            const left = BOX_X + PAD;
+            if (isAbout) {
+                let cy = boxY + PAD;
+                aboutHeading.x = left; aboutHeading.y = cy; cy += aboutHeading.height + 18;
+                aboutSubtitle.x = left; aboutSubtitle.y = cy; cy += aboutSubtitle.height + 22;
+                aboutBody.x = left; aboutBody.y = cy;
+            } else {
+                descText.x = left; descText.y = boxY + PAD;
+                bigTitle.x = left; bigTitle.y = boxY + PAD + descText.height + 30;
+            }
+
+            // Button row sits below the box, spanning the box width
+            const rowY = boxY + boxH + BTN_GAP;
+
+            if (isAbout) {
+                const w = closeBtn.intrinsicWidth();
+                closeBtn.draw(w);
+                closeBtn.container.x = BOX_X;
+                closeBtn.container.y = rowY;
+            } else {
+                const aboutW = aboutBtn.intrinsicWidth();
+                aboutBtn.draw(aboutW);
+                aboutBtn.container.x = BOX_X;
+                aboutBtn.container.y = rowY;
+
+                const goX = BOX_X + aboutW + 12;
+                const goW = (BOX_X + BOX_W) - goX;
+                goBtn.draw(goW);
+                goBtn.container.x = goX;
+                goBtn.container.y = rowY;
+            }
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // Interactions
+        // ──────────────────────────────────────────────────────────────
+        aboutBtn.container.on('pointertap', (e) => {
+            if (e && e.stopPropagation) e.stopPropagation();
+            view = 'about';
+            layout();
         });
 
-        showDefault();
+        closeBtn.container.on('pointertap', (e) => {
+            if (e && e.stopPropagation) e.stopPropagation();
+            view = 'archive';
+            layout();
+        });
 
+        layout();
+
+        // ──────────────────────────────────────────────────────────────
+        // Texture loading (background)
+        // ──────────────────────────────────────────────────────────────
         const textureLoadingPromise = (async () => {
             let index = 0;
-            const totalFolders = folderPaths.length;
-
             for (const folderPath of folderPaths) {
                 const zipUrl = `${folderPath}/textures.zip`;
                 await downloadAndExtractZip(zipUrl, index);
-                
-                const progress = (index + 1) / totalFolders;
-                loadingBarFill.clear();
-                loadingBarFill.beginFill(0x4A90E2);
-                loadingBarFill.drawRoundedRect(BAR_X, BAR_Y, BAR_W * progress, 20, 10);
-                loadingBarFill.endFill();
-                
                 index++;
             }
 
@@ -400,39 +419,30 @@ async function LoadTextures() {
                 ]);
 
                 texturesLoaded = true;
-                if (selectedInstitute === -1) {
-                    continueText.visible = true;
-                    loadingContainer.visible = false;
-                }
             } catch (error) {
                 console.error('Failed to load background textures:', error);
-                bodyText.text = 'Error loading textures. Please refresh the page.';
-                bodyText.style.fill = 0xFF0000;
+                goBtn.label.text = 'ERROR — REFRESH';
             }
         })();
 
-        continueText.on('pointertap', async (e) => {
+        // ──────────────────────────────────────────────────────────────
+        // Launch the archive
+        // ──────────────────────────────────────────────────────────────
+        goBtn.container.on('pointertap', async (e) => {
             if (e && e.stopPropagation) e.stopPropagation();
             if (isLoading) return;
 
-            bigTitle.visible = false;
-            headingText.visible = false;
-            bodyText.visible = false;
-            continueText.visible = false;
-
             if (!texturesLoaded) {
                 isLoading = true;
-                loadingContainer.visible = true;
+                goBtn.label.text = 'LOADING…';
                 try {
                     await textureLoadingPromise;
                 } catch (error) {
                     console.error('Error loading textures:', error);
-                    loadingContainer.visible = false;
+                    isLoading = false;
                     return;
                 }
             }
-
-            loadingContainer.visible = false;
             isLoading = false;
 
             intro.visible = false;
