@@ -398,6 +398,129 @@ async function LoadTextures() {
         layout();
 
         // ──────────────────────────────────────────────────────────────
+        // Random preview image (left gap between container and white card)
+        // ──────────────────────────────────────────────────────────────
+        (async function loadPreviewImage() {
+            // Try loading 0-4 in parallel, keep whichever succeed
+            const attempts = [];
+            for (let i = 0; i < 5; i++) {
+                attempts.push(
+                    PIXI.Assets.load(`assets/previewimages/${i}.png`).catch(() => null)
+                );
+            }
+            const results = await Promise.all(attempts);
+            const previewTextures = results.filter(Boolean);
+
+            if (previewTextures.length === 0) return;
+
+            const tex = previewTextures[Math.floor(Math.random() * previewTextures.length)];
+            const previewSprite = new PIXI.Sprite(tex);
+
+            // Scale to fit the left gap width, maintain aspect ratio
+            const gapWidth = cardX - 20;
+            const nativeW = tex.width;
+            const nativeH = tex.height;
+            const scale = Math.min(gapWidth / nativeW, stageHeight / nativeH);
+            previewSprite.scale.set(scale);
+
+            previewSprite.anchor.set(1, 0.5);
+            previewSprite.x = cardX;
+            previewSprite.y = stageHeight / 2;
+            previewSprite.eventMode = 'static';
+            previewSprite.cursor = 'pointer';
+            // Bottom of the intro stack so the lizard can sit above the image
+            // but still below the white card.
+            intro.addChildAt(previewSprite, 0);
+
+            // Load lizard frames for click-to-spawn
+            const lizardFrames = [];
+            for (let f = 0; f < 11; f++) {
+                try {
+                    lizardFrames.push(await PIXI.Assets.load(`assets/lizard/${f}.png`));
+                } catch (e) {
+                    console.warn(`Preview lizard: could not load frame ${f}`, e);
+                    break;
+                }
+            }
+            console.log(`Preview lizard: loaded ${lizardFrames.length} frames`);
+
+            // Only one lizard runs at a time; hover does nothing while active.
+            let lizardActive = false;
+
+            previewSprite.on('pointerover', (e) => {
+                if (e && e.stopPropagation) e.stopPropagation();
+                if (lizardFrames.length === 0) return;
+                if (lizardActive) return;
+                lizardActive = true;
+
+                const sprite = new PIXI.AnimatedSprite(lizardFrames);
+                sprite.anchor.set(0.5);
+                sprite.animationSpeed = 0.15;
+                sprite.scale.set(1);
+                sprite.play();
+
+                // Insert directly above the decorative image, but below the
+                // white card (which now sits above the image).
+                const previewIdx = intro.getChildIndex(previewSprite);
+                intro.addChildAt(sprite, previewIdx + 1);
+
+                // Gentle path through the gap. The lizard enters above the top
+                // edge and exits below the bottom edge, swaying to one side in a
+                // single soft arc (no sharp turns). Once it completes a pass it
+                // reverses and travels back, alternating direction indefinitely.
+                const gapW = cardX;
+                const xCenter = gapW * (0.4 + Math.random() * 0.2);       // horizontal centre (fixed for the run)
+                let amplitude = gapW * (0.18 + Math.random() * 0.12);     // gentle sideways sway
+                let curveDir = Math.random() < 0.5 ? 1 : -1;              // bulge left or right
+                let yStart = -250;                                        // above the top edge
+                let yEnd = stageHeight + 250;                             // below the bottom edge
+
+                sprite.x = xCenter;
+                sprite.y = yStart;
+
+                let t = 0;
+                const PATH_SPEED = 0.001;
+                let lastX = sprite.x, lastY = sprite.y;
+                let paused = false;
+
+                const onTick = () => {
+                    if (paused) return;
+
+                    t += PATH_SPEED;
+
+                    if (t >= 1) {
+                        // Reverse direction and start a fresh arc back the other way.
+                        t = 0;
+                        const tmp = yStart; yStart = yEnd; yEnd = tmp;
+                        amplitude = gapW * (0.18 + Math.random() * 0.12);
+                        curveDir = Math.random() < 0.5 ? 1 : -1;
+                        lastX = sprite.x;
+                        lastY = sprite.y;
+
+                        // Rest 3–6s off-screen before heading back.
+                        paused = true;
+                        setTimeout(() => { paused = false; }, 12000 + Math.random() * 8000);
+                        return;
+                    }
+
+                    // Single half-sine bulge for a soft curve; linear traverse.
+                    const nx = xCenter + Math.sin(t * Math.PI) * amplitude * curveDir;
+                    const ny = yStart + (yEnd - yStart) * t;
+
+                    const angle = Math.atan2(ny - lastY, nx - lastX);
+                    sprite.rotation = angle + Math.PI / 2;
+
+                    sprite.x = nx;
+                    sprite.y = ny;
+                    lastX = nx;
+                    lastY = ny;
+                };
+
+                app.ticker.add(onTick);
+            });
+        })();
+
+        // ──────────────────────────────────────────────────────────────
         // Texture loading (background)
         // ──────────────────────────────────────────────────────────────
         const textureLoadingPromise = (async () => {
@@ -434,6 +557,12 @@ async function LoadTextures() {
                     loadTextureWithRetry('assets/LEAVES2.png'),
                     loadTextureWithRetry('assets/DRAGONFLY3.png'),
                     loadTextureWithRetry('assets/FROG1.png'),
+                ]);
+
+                // Warm the Assets cache for sprites used later in InfoSection
+                // (loaded there via PIXI.Sprite.from). Not captured into the
+                // exported texture variables — just preloaded so they're ready.
+                await Promise.all([
                     loadTextureWithRetry('assets/PLUS.png'),
                     loadTextureWithRetry('assets/HELP.png'),
                 ]);

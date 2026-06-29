@@ -1,5 +1,4 @@
 // ArchivePanel.js
-import { initCaterpillar, spawnCaterpillar } from './CaterpillarAnimator.js';
 
 let panelEl = null;
 let backdropEl = null;
@@ -7,7 +6,6 @@ let projectsData = [];
 let dataLoaded = false;
 let selectedIndex = -1;
 let built = false;
-let currentCaterpillar = null;
 
 const CATEGORIES = ['ART', 'COMMUNITY', 'ECOLOGY', 'RESEARCH', 'HEALTH', 'EDUCATION'];
 
@@ -265,24 +263,12 @@ async function openArchivePanel() {
     void panelEl.offsetWidth;
     backdropEl.classList.add('open');
     panelEl.classList.add('open');
-
-    // Spawn caterpillar after panel slides in (1s delay)
-    await initCaterpillar();
-    setTimeout(() => {
-        currentCaterpillar = spawnCaterpillar();
-    }, 1000);
 }
 
 function closeArchivePanel() {
     if (!panelEl) return;
     panelEl.classList.remove('open');
     backdropEl.classList.remove('open');
-
-    // Drop caterpillar — stays in place if settled, then crawls off
-    if (currentCaterpillar) {
-        currentCaterpillar.drop();
-        currentCaterpillar = null;
-    }
 }
 
 window.openArchivePanel = openArchivePanel;
