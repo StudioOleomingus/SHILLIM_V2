@@ -242,14 +242,24 @@ async function initInfoSection() {
             const projectIndex = projects.indexOf(project);
             usedProjectIndices.add(projectIndex);
 
-            const card = createProjectCard(
-                project.title,
-                project.author,
-                project.date,
-                project.link,
-                project.details,
-                project.artistdescription || ''
-            );
+         const card = createProjectCard(
+    project.title,
+    project.author,
+    project.date,
+    project.link,
+    project.details,
+    project.artistdescription || '',
+    0, 0,
+    [
+        parseFloat(artPercent) || 0,
+        parseFloat(communityPercent) || 0,
+        parseFloat(ecologyPercent) || 0,
+        parseFloat(researchPercent) || 0,
+        parseFloat(healthPercent) || 0,
+        parseFloat(educationPercent) || 0
+    ]
+);
+
             card.y = currentY;
             scrollContainer.addChild(card);
             currentY += card.height + cardSpacing;

@@ -184,7 +184,7 @@
             const section = {
                 id: Date.now(),
                 sectiontype: type,
-                value: type === 'image' ? [{ filename: '' }] : (type === 'video' ? { source: '', description: '' } : '')
+                value: type === 'image' ? [{ filename: '' }] : ((type === 'video' || type === 'audio') ? { source: '', description: '' } : '')
             };
             project.sections.push(section);
             renderProjects();
@@ -246,7 +246,7 @@
                 section.value = value;
             } else if (section.sectiontype === 'image' && imageIndex !== null) {
                 section.value[imageIndex].filename = value;
-            } else if (section.sectiontype === 'video') {
+            } else if (section.sectiontype === 'video' || section.sectiontype === 'audio') {
                 section.value[field] = value;
             }
         }
@@ -299,6 +299,7 @@
                         <option value="text">Text</option>
                         <option value="image">Image</option>
                         <option value="video">Video</option>
+                        <option value="audio">Audio</option>
                     </select>
                     <button class="btn btn-primary" onclick="addSection(${project.id}, document.getElementById('sectionType-${project.id}').value)">+ Add Section</button>
                 `;
@@ -389,6 +390,28 @@
                             <div class="form-group">
                                 <label>Description (Optional)</label>
                                 <input type="text" value="${section.value.description || ''}" placeholder="Video description"
+                                    onchange="updateValue(${project.id}, ${section.id}, 'description', this.value)">
+                            </div>
+                        `;
+                        sectionsContainer.appendChild(sectionCard);
+                    } else if (section.sectiontype === 'audio') {
+                        sectionCard.innerHTML = `
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <label style="margin: 0;"><strong>Audio Section ${sectionIndex + 1}</strong></label>
+                                <div style="display: flex; gap: 5px;">
+                                    ${sectionIndex > 0 ? `<button class="btn btn-secondary" onclick="moveSection(${project.id}, ${section.id}, -1)" title="Move up">↑</button>` : ''}
+                                    ${sectionIndex < project.sections.length - 1 ? `<button class="btn btn-secondary" onclick="moveSection(${project.id}, ${section.id}, 1)" title="Move down">↓</button>` : ''}
+                                    <button class="btn btn-danger btn-circle" onclick="removeSection(${project.id}, ${section.id})" title="Remove section">×</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Audio file path or URL</label>
+                                <input type="text" value="${section.value.source || ''}" placeholder="../../MEDIA-FILES/filename.mp4"
+                                    onchange="updateValue(${project.id}, ${section.id}, 'source', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label>Description (Optional)</label>
+                                <input type="text" value="${section.value.description || ''}" placeholder="Audio description"
                                     onchange="updateValue(${project.id}, ${section.id}, 'description', this.value)">
                             </div>
                         `;

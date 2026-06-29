@@ -1,5 +1,4 @@
 import { app, interactiveRect } from './Config.js';
-import { whiteCircleBg } from './Resources.js';
 import { slideInFromLeft, slideOutToLeft } from './Transitions.js';
 import { initLadybugAnimator, spawnLadybug } from './LadybugAnimator.js';
 
@@ -195,7 +194,7 @@ function createDetailWindow(artistDetails, details, link, cardBackground, x, y) 
     return detailContainer;
 }
 
-export function createProjectCard(title, author, date, link, details, artistDetails = '', x = 0, y = 0) {
+export function createProjectCard(title, author, date, link, details, artistDetails = '', x = 0, y = 0, percentages = null) {
     const cardContainer = new PIXI.Container();
     cardContainer.x = x;
     cardContainer.y = y;
@@ -225,7 +224,12 @@ export function createProjectCard(title, author, date, link, details, artistDeta
     dateText.x = padding;
     dateText.y = authorText.y + authorText.height + 8;
 
-    const contentHeight = dateText.y + dateText.height + padding;
+    // Mini percentage bar
+    const BAR_H = 6;
+    const BAR_GAP = 10;
+    const barY = dateText.y + dateText.height + BAR_GAP;
+
+    const contentHeight = barY + BAR_H + padding;
     cardHeight = Math.max(cardHeight, contentHeight);
 
     const background = new PIXI.Graphics();
@@ -237,6 +241,34 @@ export function createProjectCard(title, author, date, link, details, artistDeta
     cardContainer.addChild(titleText);
     cardContainer.addChild(authorText);
     cardContainer.addChild(dateText);
+
+    // Draw mini percentage bar if percentages provided
+    if (percentages && percentages.some(p => p > 0)) {
+        const BAR_COLORS = [0xb1c6c9, 0xBCAB99, 0x97a266, 0x445768, 0x9b6b9e, 0xd4915d];
+        const barWidth = cardWidth - padding * 2;
+        const total = percentages.reduce((sum, p) => sum + p, 0);
+        const miniBar = new PIXI.Graphics();
+        let bx = padding;
+
+        percentages.forEach((p, i) => {
+            if (p > 0 && total > 0) {
+                const w = (p / total) * barWidth;
+                miniBar.beginFill(BAR_COLORS[i]);
+                miniBar.drawRect(bx, barY, w, BAR_H);
+                miniBar.endFill();
+                bx += w;
+            }
+        });
+
+        // Round the ends with a mask
+        const barMask = new PIXI.Graphics();
+        barMask.beginFill(0xFFFFFF);
+        barMask.drawRoundedRect(padding, barY, barWidth, BAR_H, BAR_H / 2);
+        barMask.endFill();
+        miniBar.mask = barMask;
+        cardContainer.addChild(barMask);
+        cardContainer.addChild(miniBar);
+    }
 
     cardContainer.eventMode = 'static';
     cardContainer.cursor = 'pointer';

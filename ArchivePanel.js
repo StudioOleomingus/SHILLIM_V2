@@ -1,4 +1,5 @@
 // ArchivePanel.js
+import { initBeeAnimator, spawnBee } from './BeeAnimator.js';
 
 let panelEl = null;
 let backdropEl = null;
@@ -6,6 +7,7 @@ let projectsData = [];
 let dataLoaded = false;
 let selectedIndex = -1;
 let built = false;
+let bee = null;
 
 const CATEGORIES = ['ART', 'COMMUNITY', 'ECOLOGY', 'RESEARCH', 'HEALTH', 'EDUCATION'];
 
@@ -82,6 +84,9 @@ function buildPanel() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && panelEl.classList.contains('open')) closeArchivePanel();
     });
+
+    // Trigger the bee's flutter animation while browsing the panel
+    panelEl.addEventListener('wheel', () => { if (bee) bee.onScroll(); }, { passive: true });
 
     built = true;
 }
@@ -263,12 +268,29 @@ async function openArchivePanel() {
     void panelEl.offsetWidth;
     backdropEl.classList.add('open');
     panelEl.classList.add('open');
+
+    // Spawn the bee from the close button's on-screen position
+    await initBeeAnimator();
+    const closeBtn = panelEl.querySelector('#archiveCloseBtn');
+    let spawnX = 1300, spawnY = 60;
+    if (closeBtn) {
+        const r = closeBtn.getBoundingClientRect();
+        spawnX = r.left + r.width / 2;
+        spawnY = r.top + r.height / 2;
+    }
+    bee = spawnBee(spawnX, spawnY);
 }
 
 function closeArchivePanel() {
     if (!panelEl) return;
     panelEl.classList.remove('open');
     backdropEl.classList.remove('open');
+
+    // Bee crawls off-screen and stays behind
+    if (bee) {
+        bee.drop();
+        bee = null;
+    }
 }
 
 window.openArchivePanel = openArchivePanel;

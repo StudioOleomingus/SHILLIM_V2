@@ -1,15 +1,14 @@
-// FrogAnimator.js — frog burst-crawls: quick hop → freeze → turn → hop → freeze → exit
+// FrogAnimator.js — frog waits under card, moves only after drop() is called
 import { app } from './Config.js';
 
 const FRAME_COUNT = 7;
-const FROG_SCALE = 0.3;
-const BURST_SPEED = 5.0;
+const FROG_SCALE = 0.6;
+const BURST_SPEED = 8.0;
 const ANIM_SPEED = 0.18;
-const PAUSE_MS = 300;
-const ROTATION_LERP = 0.12;
+const PAUSE_MS = 1500;
+const ROTATION_LERP = 0.04;
 const HOP_DISTANCE_MIN = 80;
 const HOP_DISTANCE_MAX = 160;
-const HOP_COUNT = 2;          // number of burst-hops before exiting
 
 let frames = null;
 let loaded = false;
@@ -43,36 +42,19 @@ export function spawnFrog(spawnX, spawnY) {
     sprite.scale.set(FROG_SCALE);
     sprite.x = spawnX;
     sprite.y = spawnY;
-    sprite.play();
+    sprite.gotoAndStop(0); // frozen — waiting under card
     app.stage.addChild(sprite);
 
-    // Build hop waypoints: random direction changes
-    const waypoints = [];
-    let angle = Math.random() * Math.PI * 2;
-    let wx = spawnX;
-    let wy = spawnY;
+    // State: 'waiting' → 'hopping' → 'paused' → 'exiting'
+    let state = 'waiting';
 
-    for (let i = 0; i < HOP_COUNT; i++) {
-        // Each hop turns slightly from the previous direction
-        angle += (Math.random() - 0.5) * 1.2;
-        const dist = HOP_DISTANCE_MIN + Math.random() * (HOP_DISTANCE_MAX - HOP_DISTANCE_MIN);
-        wx += Math.cos(angle) * dist;
-        wy += Math.sin(angle) * dist;
-        waypoints.push({ x: wx, y: wy });
-    }
-
-    // Final hop: long burst off screen in the current direction
-    wx += Math.cos(angle) * 700;
-    wy += Math.sin(angle) * 700;
-    waypoints.push({ x: wx, y: wy });
-
+    // Build path on drop: hop1 → pause → exit off screen
+    let waypoints = [];
     let wpIndex = 0;
     let prevX = spawnX;
     let prevY = spawnY;
     let progress = 0;
-    let paused = false;
-    let targetRotation = angleTo(spawnX, spawnY, waypoints[0].x, waypoints[0].y) + Math.PI / 2;
-    sprite.rotation = targetRotation;
+    let targetRotation = 0;
 
     function smoothRotate() {
         let diff = targetRotation - sprite.rotation;
@@ -82,8 +64,8 @@ export function spawnFrog(spawnX, spawnY) {
     }
 
     const onTick = () => {
-        if (paused) {
-            smoothRotate(); // still turning during pause
+        if (state === 'waiting' || state === 'paused') {
+            if (state === 'paused') smoothRotate();
             return;
         }
 
@@ -113,16 +95,16 @@ export function spawnFrog(spawnX, spawnY) {
 
             const isLastHop = wpIndex >= waypoints.length;
 
-            if (!isLastHop) {
-                // Pause on a frame, then turn toward next waypoint
-                paused = true;
+            if (!isLastHop && state === 'hopping') {
+                // First hop done — pause, turn toward exit
+                state = 'paused';
                 sprite.stop();
 
                 const next = waypoints[wpIndex];
                 targetRotation = angleTo(prevX, prevY, next.x, next.y) + Math.PI / 2;
 
                 setTimeout(() => {
-                    paused = false;
+                    state = 'exiting';
                     sprite.play();
                 }, PAUSE_MS);
             }
@@ -143,5 +125,34 @@ export function spawnFrog(spawnX, spawnY) {
 
     app.ticker.add(onTick);
 
-    return { drop() {} };
+    return {
+        drop() {
+            if (state !== 'waiting') return;
+
+            // Build path: hop to nearby spot, then exit off screen
+            let angle = Math.random() * Math.PI * 2;
+            const hopDist = HOP_DISTANCE_MIN + Math.random() * (HOP_DISTANCE_MAX - HOP_DISTANCE_MIN);
+            const hop1X = spawnX + Math.cos(angle) * hopDist;
+            const hop1Y = spawnY + Math.sin(angle) * hopDist;
+
+            // Exit: continue in a slightly different direction
+            angle += (Math.random() - 0.5) * 0.1;
+            const exitX = hop1X + Math.cos(angle) * 700;
+            const exitY = hop1Y + Math.sin(angle) * 700;
+
+            waypoints = [
+                { x: hop1X, y: hop1Y },
+                { x: exitX, y: exitY }
+            ];
+            wpIndex = 0;
+            prevX = sprite.x;
+            prevY = sprite.y;
+            progress = 0;
+
+            targetRotation = angleTo(prevX, prevY, hop1X, hop1Y) + Math.PI / 2;
+            sprite.rotation = targetRotation;
+            sprite.play();
+            state = 'hopping';
+        }
+    };
 }

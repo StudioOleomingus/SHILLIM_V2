@@ -354,6 +354,22 @@
             color: #ccc;
         }
         
+        .audio-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+
+        .audio-player {
+            width: 100%;
+        }
+
+        .audio-description {
+            margin-top: 10px;
+            color: #666;
+            font-style: italic;
+        }
+
         .video-container {
             position: relative;
             width: 100%;
@@ -611,6 +627,11 @@
                     createVideoPlayer(section.value, sectionDiv);
                     projectContent.appendChild(sectionDiv);
                 }
+
+                if (section.sectiontype === 'audio' && section.value) {
+                    createAudioPlayer(section.value, sectionDiv);
+                    projectContent.appendChild(sectionDiv);
+                }
             });
         }
 
@@ -738,6 +759,20 @@
             }
 
             container.innerHTML = videoHTML;
+        }
+
+        function createAudioPlayer(audioData, container) {
+            const audioSource = audioData.source || audioData;
+            const description = audioData.description || '';
+
+            container.innerHTML = `
+                <div class="audio-container">
+                    <audio class="audio-player" controls preload="metadata" src="${audioSource}">
+                        Your browser does not support the audio element.
+                    </audio>
+                    ${description ? `<div class="audio-description">${description}</div>` : ''}
+                </div>
+            `;
         }
 
         function extractYouTubeId(url) {

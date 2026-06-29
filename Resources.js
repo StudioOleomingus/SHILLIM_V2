@@ -455,8 +455,8 @@ async function LoadTextures() {
 
                 const sprite = new PIXI.AnimatedSprite(lizardFrames);
                 sprite.anchor.set(0.5);
-                sprite.animationSpeed = 0.15;
-                sprite.scale.set(1);
+                sprite.animationSpeed = 0.16;
+                sprite.scale.set(0.8);
                 sprite.play();
 
                 // Insert directly above the decorative image, but below the
