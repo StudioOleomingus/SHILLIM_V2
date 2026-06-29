@@ -44,7 +44,6 @@ function buildPanel() {
     panelEl.innerHTML = `
         <div class="archive-header">
             <div class="archive-titlerow">
-                <h2>Archive Index</h2>
                 <span id="archiveCountText" hidden>0</span>
                 <div class="archive-search">
                     <input type="text" id="archiveSearchInput" placeholder="Search projects...">
