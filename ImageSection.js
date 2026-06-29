@@ -261,7 +261,7 @@ async function initImageSection() {
         // Create instance of TextureStats
         let textureStats = new TextureStats();
 
-        // The grid is laid out in the fixed 1550x1000 logical space and scaled
+        // The grid is laid out in the fixed 1650x1000 logical space and scaled
         // to the window via CSS, so interactiveRect must stay at its design
         // dimensions. (Previously this mutated interactiveRect.height from the
         // live container height on every resize, which shifted/cropped the grid
@@ -667,9 +667,18 @@ async function initImageSection() {
 
         imageContainer.addChild(bgContainer);
 
-        // Create a container for the grid
+        // Create a container for the grid.
+        // The grid is a fixed 1240px square (numberOfColumns * cellSize) so the
+        // illustration tiles never stretch. The play card is wider than that, so
+        // centre the grid inside it — the leftover width becomes even white
+        // padding on the left and right. All grid contents (cells, surrounded
+        // groups, selection, etc.) live inside this container and use its local
+        // coordinates, and painting reads getLocalPosition(gridContainer), so
+        // this single offset keeps everything pixel-aligned.
+        const GRID_W = numberOfColumns * cellSize;            // 1240, square cells
+        const gridShiftX = playX + (playW - GRID_W) / 2;      // centre grid in card
         const gridContainer = new PIXI.Container();
-        gridContainer.x = 0;
+        gridContainer.x = gridShiftX;
         gridContainer.y = 0;
 
         // Create selection rectangle
@@ -684,9 +693,12 @@ async function initImageSection() {
         let endX = 0;
         let endY = 0;
 
-        // Make grid container interactive (limited to the visible rounded play card)
+        // Make grid container interactive. The hit area is the grid's own extent
+        // (in gridContainer-local space, so x starts at 0), clipped to the card's
+        // visible height. This keeps the white padding around the centred grid
+        // non-interactive, so clicks always map onto a real cell.
         gridContainer.eventMode = 'static';
-        gridContainer.hitArea = new PIXI.Rectangle(playX, playY, playW, playH);
+        gridContainer.hitArea = new PIXI.Rectangle(0, playY, GRID_W, playH);
         gridContainer.mask = playMask;
 
         // Mouse down event
@@ -1028,10 +1040,14 @@ async function initImageSection() {
             if (textureStats.surroundedGroups.length > previousSurroundedGroupsLength) {
 
                 // Remove any existing surrounded group sprites
-                if (gridContainer.surroundedGroupsContainer) {
-                    surroundedGroupsContainer.children.forEach(cell => cell.destroy());
-                    gridContainer.removeChild(gridContainer.surroundedGroupsContainer);
-                }
+// Rescue creature sprites — only destroy tile sprites
+const children = [...surroundedGroupsContainer.children];
+children.forEach(child => {
+    if (!(child instanceof PIXI.AnimatedSprite)) {
+        child.destroy();
+    }
+});
+gridContainer.removeChild(gridContainer.surroundedGroupsContainer);
 
                 gridContainer.surroundedGroupsContainer = surroundedGroupsContainer;
 
@@ -1089,11 +1105,37 @@ async function initImageSection() {
                 });
 
                 if (nearestGroup) {
-                    const cell = nearestGroup[Math.floor(Math.random() * nearestGroup.length)];
-                    const spawnX = cell.col * cellSize + cellSize / 2;
+                    // Find border cells
+                    const borderCells = new Set();
+                    nearestGroup.forEach(emptyCell => {
+                        const neighbors = [[-1,0],[1,0],[0,-1],[0,1]];
+                        neighbors.forEach(([dr, dc]) => {
+                            const nr = emptyCell.row + dr;
+                            const nc = emptyCell.col + dc;
+                            if (nr >= 0 && nr < numberOfRows && nc >= 0 && nc < numberOfColumns) {
+                                if (textureStats.grid[nr][nc]) {
+                                    borderCells.add(`${nr},${nc}`);
+                                }
+                            }
+                        });
+                    });
+                
+                    // Enclosure center (in grid-local coords)
+                    let cx = 0, cy = 0;
+                    nearestGroup.forEach(c => { cx += c.col; cy += c.row; });
+                    cx = (cx / nearestGroup.length) * cellSize + cellSize / 2 + gridShiftX;
+                    cy = (cy / nearestGroup.length) * cellSize + cellSize / 2;
+                
+                    // Pick a random border cell
+                    const borderArr = Array.from(borderCells).map(s => {
+                        const [r, c] = s.split(',').map(Number);
+                        return { row: r, col: c };
+                    });
+                    const cell = borderArr[Math.floor(Math.random() * borderArr.length)];
+                    const spawnX = cell.col * cellSize + cellSize / 2 + gridShiftX;
                     const spawnY = cell.row * cellSize + cellSize / 2;
                     setSpawnPoint(spawnX, spawnY);
-                    spawnLizard(spawnX, spawnY, nearestGroup.length);
+                    spawnLizard(spawnX, spawnY, nearestGroup.length, surroundedGroupsContainer);
                 }
 
                 // Notify tutorial that an enclosed space was created
@@ -1125,14 +1167,15 @@ async function initImageSection() {
         // A row of small circular buttons that select which category you are
         // drawing with. Replaces the old "drag direction decides the category"
         // mechanic — now the direction of the drag no longer matters.
-        // Order matches Config.js (TextureArray / projectType / DIRECTION_COLORS).
+        // Order matches Config.js (TextureArray / projectType) and the colours
+        // used by the category bar in BottomLayout.js so the dots and the bar agree.
         const categoryOptions = [
-            { dir: DragDirection.Top,         label: projectType[0], color: parseInt(DIRECTION_COLORS.Top.replace('#', '0x')) },
-            { dir: DragDirection.TopRight,    label: projectType[1], color: parseInt(DIRECTION_COLORS.TopRight.replace('#', '0x')) },
-            { dir: DragDirection.BottomRight, label: projectType[2], color: parseInt(DIRECTION_COLORS.BottomRight.replace('#', '0x')) },
-            { dir: DragDirection.Bottom,      label: projectType[3], color: parseInt(DIRECTION_COLORS.Bottom.replace('#', '0x')) },
-            { dir: DragDirection.BottomLeft,  label: projectType[4], color: parseInt(DIRECTION_COLORS.BottomLeft.replace('#', '0x')) },
-            { dir: DragDirection.TopLeft,     label: projectType[5], color: parseInt(DIRECTION_COLORS.TopLeft.replace('#', '0x')) },
+            { dir: DragDirection.Top,         label: projectType[0], color: 0xb1c6c9 },  // ART
+            { dir: DragDirection.TopRight,    label: projectType[1], color: 0xBCAB99 },  // COMMUNITY
+            { dir: DragDirection.BottomRight, label: projectType[2], color: 0x97a266 },  // ECOLOGY
+            { dir: DragDirection.Bottom,      label: projectType[3], color: 0x445768 },  // RESEARCH
+            { dir: DragDirection.BottomLeft,  label: projectType[4], color: 0x9b6b9e },  // HEALTH
+            { dir: DragDirection.TopLeft,     label: projectType[5], color: 0xd4915d },  // EDUCATION
         ];
 
         const pickerRadius = 15;
@@ -1179,7 +1222,7 @@ async function initImageSection() {
 
             // Selection ring (only visible for the active category).
             const ring = new PIXI.Graphics();
-            ring.lineStyle(3, 0x2b2b2b, 1);
+            ring.lineStyle(1.5, 0x999999, 1);
             ring.drawCircle(0, 0, pickerRadius + 4);
             ring.visible = false;
             btn.addChild(ring);

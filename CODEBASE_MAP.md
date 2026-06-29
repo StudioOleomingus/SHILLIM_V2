@@ -1,8 +1,12 @@
 # Shillim Institute Archive — Codebase Map
 
+> Last updated: 2026-06-29. Reflects the hexagonal 6-category system, the
+> animator/creature modules, the tutorial + archive-panel overlays, the shared
+> `shilim.css`, and the per-artist project pages under `assets/artists/`.
+
 ## Overview
 
-This is an interactive archive website for the **Shillim Institute**, an organization in the Western Ghats (India) that sponsors art residencies, conservation fellowships, mapping workshops, and community programs. The website is built with **PixiJS** (WebGL-based 2D rendering) and uses a novel interaction model: users draw rectangular selections on a grid, the direction of their drag determines which project category is selected, and when enclosed regions form on the grid, matching projects appear in a sidebar panel. It also has a standard searchable project index, individual project pages, and admin CRUD interfaces.
+This is an interactive archive website for the **Shillim Institute**, an organization in the Western Ghats (India) that sponsors art residencies, conservation fellowships, mapping workshops, and community programs. The website is built with **PixiJS v8** (WebGL-based 2D rendering) and uses a novel interaction model: users draw rectangular selections on a grid, the direction of their drag determines which project category is selected, and when enclosed regions form on the grid, matching projects appear in a sidebar panel. Animated creatures (ants, beetles, lizards, frogs, ladybugs, caterpillars) wander the canvas as the user paints. The site also has a standard searchable project index, individual per-artist project pages, and admin CRUD interfaces.
 
 The site deploys to **Netlify** (with serverless functions) and also has a local Express dev server.
 
@@ -13,60 +17,45 @@ The site deploys to **Netlify** (with serverless functions) and also has a local
 ```
 index.html (Landing Page / PixiJS App)
   |
-  |-- Config.js .............. Global constants, PIXI app instance, grid config, project data loader
+  |-- shilim.css ............. Shared stylesheet for ALL HTML pages (fonts, layout, mobile overlay)
+  |-- MobileCreatures.js ..... Standalone (non-module) creature spawner for the mobile redirect card
+  |
+  |-- Config.js ............. Global constants, PIXI app instance, grid config, project data loader
   |-- App.js ................. Initializes the PIXI renderer, attaches canvas to DOM
   |-- Resources.js ........... Loading screen, downloads 6 zip texture packs, loads UI textures
-  |     |                      Shows "SHILLIM INSTITUTE" intro → loading bar → "CONTINUE" button
-  |     |                      On continue: inits InfoSection, ImageSection, BottomLayout
+  |     |                      Shows intro → loading bar → "CONTINUE" → inits sections + tutorial
   |     |
   |-- ImageSection.js ........ Core interactive grid — drag-to-paint mechanic
   |     |                      Determines category by drag direction (6 hexagonal directions)
   |     |                      Detects "surrounded" empty cell groups → triggers project reveals
-  |     |
-  |-- InfoSection.js ......... Left sidebar — "ARCHIVE INDEX" button + scrollable project card list
-  |     |                      Receives project additions from ImageSection via window.addRandomProject()
-  |     |
-  |-- ProjectCard.js ......... Creates individual card components (title, author, date)
-  |     |                      Opens a detail window with artist/project description + link
-  |     |
-  |-- BottomLayout.js ........ Category proportion bar at bottom + text description box
-  |     |                      6 colored sections resize to reflect grid fill percentages
-  |     |
-  |-- Utils.js ............... Helper: getRandomSelectionRect() — places selections randomly
+  |     |-- Tutorial.js ....... Floating onboarding overlay (messages + GIF demos), gates early steps
+  |     |-- LizardAnimator.js . Spawns ant/beetle/lizard sprites from enclosed groups
+  |     |-- Transitions.js .... Shared GSAP slide-in/out cascade helpers (also used elsewhere)
+  |     |-- Utils.js .......... getRandomSelectionRect()
   |
-projectindex.html ............ Standalone searchable/filterable index page
+  |-- InfoSection.js ......... Left sidebar — "ARCHIVE INDEX" + scrollable project card list
+  |     |-- ProjectCard.js .... Card factory + detail window
+  |     |     |-- Transitions.js
+  |     |     |-- LadybugAnimator.js . Ladybug that crawls a card on hover/open
+  |     |-- ArchivePanel.js ... Full-screen in-app archive browser overlay
+  |     |     |-- CaterpillarAnimator.js . Canvas-overlay caterpillar inside the panel
+  |     |-- FrogAnimator.js ... Frog burst-crawl animation
+  |
+  |-- BottomLayout.js ........ Category proportion bar + text description box
+  |
+projectindex.html ............ Standalone searchable/filterable index page (uses shilim.css)
   |                            Fetches data/projects.json, renders cards with thumbnails
   |                            Filter by category (ART/COMMUNITY/ECOLOGY/RESEARCH/HEALTH/EDUCATION)
-  |                            Search by title, author, description
-  |                            Links to project pages
   |
-projectpage.html ............. Individual project detail page
-  |                            Loads from data/projectpage.json (currently only sample data)
-  |                            Left panel: image gallery with navigation
-  |                            Right panel: title, dates, description, category tags
+projectpage.html ............. Generic individual project detail page (fallback template)
+  |                            Per-artist copies live in assets/artists/<Name>/projectpage.html
   |
 admin.html ................... Admin panel (Netlify serverless backend)
-  |                            CRUD for projects in data/projects.json
-  |                            Calls /.netlify/functions/projects API
-  |                            Thumbnail upload, category selection (primary + secondary)
-  |
 admin-local.html ............. Admin panel (local Express backend)
-  |                            Same UI as admin.html but calls localhost:3001/api/projects
-  |                            Supports thumbnail upload via /api/upload-thumbnail
-  |
 admin-projectpage.html ....... Admin panel for per-project page content
-  |                            Manages data/projectpage.json
-  |                            Edits gallery images, project details, description sections
   |
 server.js .................... Local Express dev server (port 3001)
-  |                            GET/POST/DELETE /api/projects
-  |                            POST /api/upload-thumbnail (multer)
-  |                            Serves static files
-  |
 netlify/functions/projects.js  Netlify serverless equivalent of server.js
-  |                            GET/POST/DELETE for data/projects.json
-  |                            No thumbnail upload support (limitation)
-  |
 netlify.toml ................. Netlify deploy config — redirects /api/projects → function
 ```
 
@@ -78,123 +67,131 @@ netlify.toml ................. Netlify deploy config — redirects /api/projects
 
 | File | Purpose | Key Exports |
 |---|---|---|
-| **Config.js** | Central configuration. Creates the PIXI.Application (1550x1000). Defines grid params (50 rows x 62 cols, 20px cells), 6 categories (ART, COMMUNITY, ECOLOGY, RESEARCH, HEALTH, EDUCATION), drag direction enums, color palettes, folder paths for textures. Loads `data/projects.json` on init. | `app`, `TextureArray`, `GridCell`, `gridCells`, `projects`, `DragDirection`, `PLAIN_COLORS`, `interactiveRect`, `projectType`, etc. |
+| **Config.js** | Central configuration. Creates the PIXI.Application. Defines grid params, 6 categories (ART, COMMUNITY, ECOLOGY, RESEARCH, HEALTH, EDUCATION), drag-direction enums, color palettes, folder paths for the 6 texture packs. Loads `data/projects.json` on init. | `app`, `TextureArray`, `GridCell`, `gridCells`, `projects`, `DragDirection`, `PLAIN_COLORS`, `interactiveRect`, `projectType`, `projectDescriptionTexts`, etc. |
 | **App.js** | Initializes the PIXI renderer with antialiasing, appends the canvas to `#app-container`, handles window resize. | `initApp()` |
-| **Resources.js** | The loading/intro sequence. Shows institute title, subtitle, and a long description paragraph. Downloads 6 ZIP files (one per category) containing pre-sliced tile PNGs (`tile_ROW_COL.png`) using JSZip. Each ZIP is extracted into `TextureArray[categoryIndex][row][col]`. Also loads 8 UI textures (background, restart button, decorative leaves/dragonfly/frog, etc.). Shows a loading progress bar, then a "CONTINUE" button. On click, initializes the three main sections. | `LoadTextures()`, texture variables |
-| **ImageSection.js** | The core interactive canvas (right side, 1240x1000px). Users drag rectangles on a 50x62 grid. Drag direction (360° mapped to 6 hexagonal sectors) determines which category texture is painted. Features: TextureStats class tracks fill percentages and detects "surrounded" empty cell groups using flood fill. When a new surrounded region forms, a random matching project card is added to InfoSection. Includes restart button, decorative fauna animations, keyboard-triggered audio (keys 1/2/3), rounded-corner sprite masking. | `initImageSection()` |
-| **InfoSection.js** | Left sidebar panel (300px wide). Displays an "ARCHIVE INDEX" label that links to `projectindex.html`. Contains a scrollable container of project cards. `addRandomProject()` selects a project matching the current category percentages (primary + secondary category filtering). Supports wheel and drag scrolling with GSAP momentum. | `initInfoSection()`, `archiveIndexValueLabelText` |
-| **BottomLayout.js** | Bottom bar showing 6 colored sections proportional to each category's grid fill percentage. Each section is labeled (ART, COMMUNITY, etc.) with rounded ends. Also renders a text box that shows random project descriptions when surrounded groups are found. | `initBottomLayout()`, `updateSectionSizes()`, `updateTextBox()` |
-| **ProjectCard.js** | Factory function for creating PIXI-rendered project cards. Each card shows title, author, date, and a detail-expand button. Clicking opens a detail window with scrollable artist/project description and a URL button linking to the project page. Manages single-open-at-a-time behavior. | `createProjectCard()` |
-| **Utils.js** | Single utility: `getRandomSelectionRect()` generates a random position for a rectangle within bounds. Used by ImageSection to place grid selections at random positions. | `getRandomSelectionRect()` |
+| **Resources.js** | Loading/intro sequence. Downloads 6 ZIP files (one per category) of pre-sliced tile PNGs via JSZip into `TextureArray[cat][row][col]`. Loads UI textures (background, RESET, HELP, PLUS, decorative leaves/dragonfly/frog, etc.). Shows progress bar then "CONTINUE", which inits the three sections, Transitions, and the Tutorial. | `LoadTextures()`, texture vars |
+| **ImageSection.js** | The core interactive canvas. Users drag rectangles on the grid; drag angle (360° → 6 hexagonal sectors) selects which category texture is painted. `TextureStats` tracks per-direction fill percentages and flood-fills to detect "surrounded" empty groups; a new group adds a matching project card (via `window.addRandomProject(...)` with the 6 hexagonal percentages) and spawns a creature near the enclosure. Restart button, keyboard audio (keys 1/2/3), rounded-corner masking. | `initImageSection()` |
+| **InfoSection.js** | Left sidebar (300px). "ARCHIVE INDEX" button opens the in-app `ArchivePanel`. Scrollable project-card container with GSAP momentum. `addRandomProject()` matches projects against current category percentages (primary + secondary). Hosts a FrogAnimator. | `initInfoSection()`, `archiveIndexValueLabelText` |
+| **BottomLayout.js** | Bottom bar of 6 colored sections sized to each category's grid fill percentage, plus a text box showing project/category descriptions when groups are found. | `initBottomLayout()`, `updateSectionSizes()`, `updateTextBox()` |
+| **ProjectCard.js** | Factory for PIXI project cards (title, author, date, expand button). Detail window with scrollable description + project-page link. Single-open-at-a-time. Uses Transitions and a hover ladybug. | `createProjectCard()` |
+| **ArchivePanel.js** | Full-screen in-app archive overlay opened from the sidebar's "ARCHIVE INDEX". Builds a DOM panel + backdrop, renders projects, and runs a canvas caterpillar. An in-page alternative to navigating to `projectindex.html`. | `openArchivePanel()`, `closeArchivePanel()` |
+| **Tutorial.js** | Floating onboarding overlay. Sequenced instructional messages each with an optional GIF (`assets/tutorial/*.gif`). Gates early interaction until the user picks a category, paints, and encloses a region. | `startTutorial()`, `tutorialDragDone()`, `tutorialSurroundDone()`, `isTutorialBlocking()` |
+| **Transitions.js** | Shared GSAP cascade motions for PixiJS containers (slide in/out from left/right, page-in) with common easing/duration constants. | `slideInFromRight/Left`, `slideOutToRight/Left`, `slidePageInFromRight`, `EASE_OUT`, `EASE_IN`, `DURATION` |
+| **Utils.js** | `getRandomSelectionRect()` — random rectangle placement within bounds. | `getRandomSelectionRect()` |
+
+### Creature Animators (ES Modules)
+
+| File | Purpose | Key Exports |
+|---|---|---|
+| **LizardAnimator.js** | Loads ant / beetle / lizard frame sequences (`assets/ant/`, `assets/beetle/`, `assets/lizard/`) and spawns one near a newly enclosed group. Uses masked (under) and unmasked (over) layers so creatures vanish at card edges. | `initLizardAnimator()`, `setSpawnPoint()`, `spawnLizard()` |
+| **LadybugAnimator.js** | Loads idle / walk / idle-to-active ladybug frames (`assets/ladybug/...`) and spawns a ladybug that crawls along a project card. | `initLadybugAnimator()`, `spawnLadybug()` |
+| **FrogAnimator.js** | Burst-crawl frog animation (`assets/Frog/Frogcycle_*.png`): hop → freeze → turn → hop → exit. | `initFrogAnimator()`, `spawnFrog()` |
+| **CaterpillarAnimator.js** | Canvas-overlay segmented caterpillar (`assets/caterpillar/`) used inside the ArchivePanel. | `initCaterpillar()`, `spawnCaterpillar()` |
+| **MobileCreatures.js** | Standalone, NON-module script (loaded via plain `<script defer>`). Spawns ant/beetle/lizard creatures on the `.mobile-redirect` card when tapped. Self-contained; does not import Config. | (global `<script>`) |
 
 ### HTML Pages
 
 | File | Purpose |
 |---|---|
-| **index.html** | Main entry point. Loads pixi.min.js, gsap.min.js, jszip.min.js. Imports Config → App → Resources as ES modules. Fixed 1550x1000 canvas with rounded corners and box shadow. |
-| **projectindex.html** | Standalone searchable archive index. Pure HTML/CSS/JS (no PixiJS). Fetches `data/projects.json`. Grid of cards with thumbnails, category color-coding, search bar, category filter chips. Styled to match the 1550x1000 container aesthetic. Links to individual project pages. |
-| **projectpage.html** | Individual project detail page. Reads `projectId` from URL params, fetches `data/projectpage.json`. Two-column layout: left image gallery with prev/next navigation, right panel with title, dates, description, and category tags. |
-| **admin.html** | Admin dashboard for managing the project index (Netlify backend). Table view of all projects with edit/delete. Form for adding/editing projects with fields: title, author, dates, categories, descriptions, link, thumbnail upload. Calls `/.netlify/functions/projects`. |
-| **admin-local.html** | Identical admin UI but configured for local Express server at `localhost:3001`. Uses `/api/projects` and `/api/upload-thumbnail` endpoints. |
-| **admin-projectpage.html** | Admin for individual project page content. Manages `data/projectpage.json`. Form to edit gallery images (up to 5), title, subtitle, description sections. Separate from the main project index admin. |
+| **index.html** | Main entry point. Loads jszip/gsap/pixi + `shilim.css`, the standalone `MobileCreatures.js`, and a module block that imports App + Resources, pre-loads self-hosted fonts (Hind Madurai, Gelasio, IBM Plex Mono), then runs `initApp()` → `LoadTextures()`. Includes a `.mobile-redirect` overlay steering small screens to the index. |
+| **projectindex.html** | Standalone searchable archive index (no PixiJS). Fetches `data/projects.json`; card grid with thumbnails, category color-coding, search, and filter chips. Uses `shilim.css`. Links to per-project pages. |
+| **projectpage.html** | Generic project detail page (fallback/template). Reads `projectId` from URL params, falls back to `data/sampleprojectpage.json`. Two-column: left gallery, right details/tags. Per-artist copies live under `assets/artists/<Name>/projectpage.html`. |
+| **admin.html** | Admin dashboard (Netlify backend). CRUD over the project index via `/.netlify/functions/projects`, with thumbnail upload + category selection. Uses `shilim.css`. Direct-access tool (not linked from the site). |
+| **admin-local.html** | Identical admin UI configured for the local Express server (`localhost:3001`, `/api/projects`, `/api/upload-thumbnail`). |
+| **admin-projectpage.html** | Admin for per-project page content (`data/projectpage.json`), with a CKEditor rich-text field. Edits gallery images, title, subtitle, description sections. |
 
 ### Backend
 
 | File | Purpose |
 |---|---|
-| **server.js** | Express server on port 3001. Serves static files from root. REST API: `GET/POST/DELETE /api/projects` (reads/writes `data/projects.json`). Thumbnail upload via multer to `assets/thumbnail/`. |
-| **netlify/functions/projects.js** | Netlify serverless function. Same GET/POST/DELETE for projects.json. No file upload support. CORS headers included. |
+| **server.js** | Express server on port 3001. Serves static files. REST: `GET/POST/DELETE /api/projects` (reads/writes `data/projects.json`). Thumbnail upload via multer to `assets/thumbnail/`. |
+| **netlify/functions/projects.js** | Netlify serverless function. Same GET/POST/DELETE for projects.json. No file-upload support. CORS headers included. |
 | **netlify.toml** | Deployment config. Redirects `/api/projects` and `/api/projects/:splat` to the serverless function. Publish directory is root. |
 
 ### Data Files
 
 | File | Purpose |
 |---|---|
-| **data/projects.json** | Main project database. Array of project objects with: title, author, startdate, enddate, date (display string), primarycategory, secondarycategory, link, shortdescription, artistdescription, details, thumbnail path. Currently contains ~16 projects. |
-| **data/projectpage.json** | Per-project page data. Contains gallery images, detailed descriptions, and section content for projectpage.html. Structure: `{ projects: [{ id, title, subtitle, images: [], sections: [] }] }` |
-| **data/sampleprojectpage.json** | Example/template data for how a project page entry should look. |
+| **data/projects.json** | Main project database. Array of project objects: title, author, startdate, enddate, date, primarycategory, secondarycategory, link, shortdescription, artistdescription, details, thumbnail. |
+| **data/projectpage.json** | Per-project page data: gallery images, descriptions, section content for `projectpage.html`. |
+| **data/sampleprojectpage.json** | Template/fallback used by `projectpage.html` and per-artist pages when no entry is found. Keep — actively referenced. |
+
+### Styling
+
+| File | Purpose |
+|---|---|
+| **shilim.css** | Shared stylesheet for every HTML page (index, project index, project pages, admin pages). Defines self-hosted font faces, the 1550×1000 container aesthetic, the `.mobile-redirect` overlay, project-index/grid styles, and admin form styling. Replaces the previously inline-per-page CSS. |
 
 ### Assets
 
 | Folder/File | Purpose |
 |---|---|
-| **assets/illustration1/ through illustration6/** | Each contains a `textures.zip` file. Each ZIP holds pre-sliced 20x20px PNG tiles named `tile_ROW_COL.png` (50 rows x 62 cols = 3,100 tiles per category). These are the images painted onto the interactive grid. illustration1=ART, 2=COMMUNITY, 3=ECOLOGY, 4=RESEARCH, 5=HEALTH, 6=EDUCATION. |
-| **assets/interactive_bg.png** | Background image for the interactive grid area |
-| **assets/restart_bg.png** | Restart/clear button icon |
-| **assets/bg_white.png** | White background fill texture (used for surrounded region coloring) |
-| **assets/index_bg.png** | Background for the "ARCHIVE INDEX" label |
-| **assets/white_circle_bg.png** | Circular button background texture |
-| **assets/LEAVES2.png, DRAGONFLY3.png, FROG1.png** | Decorative nature illustrations that fade in when surrounded groups are detected |
-| **assets/*.mp4, *.m4v** | Audio clips playable via keyboard shortcuts (1, 2, 3) |
-| **assets/thumbnail/** | Uploaded project thumbnail images |
-| **assets/button.png** | UI button asset |
-| **assets/bg_blue.png, bg_red.png, bg_yellow.png** | Colored background textures (currently unused in main app) |
+| **assets/illustration1/ – illustration6/** | Each holds a `textures.zip` of pre-sliced 20×20px PNG tiles (`tile_ROW_COL.png`) painted onto the grid. 1=ART, 2=COMMUNITY, 3=ECOLOGY, 4=RESEARCH, 5=HEALTH, 6=EDUCATION. (All six are now populated — HEALTH/EDUCATION are no longer empty.) |
+| **assets/ant/, beetle/, lizard/** | Frame sequences for the ground creatures (used by LizardAnimator + MobileCreatures). |
+| **assets/ladybug/** (idle, walk, idle-to-active) | Ladybug frame sequences (LadybugAnimator). |
+| **assets/Frog/** | Frog cycle frames (`Frogcycle_*.png`, FrogAnimator). |
+| **assets/caterpillar/** | Caterpillar segment art (CaterpillarAnimator). |
+| **assets/tutorial/** | GIF demos shown by Tutorial.js (pick-category, drag-paint, enclose, switch-category). |
+| **assets/artists/<Name>/** | Per-artist `projectpage.html` + media (21 artist folders, plus `_template/`). These are the real destinations linked from the index. |
+| **assets/fonts/** | Self-hosted Hind Madurai, Gelasio, IBM Plex Mono faces. |
+| **assets/thumbnail/** | Project thumbnails (uploaded via the admin tools). |
+| **assets/interactive_bg.png, index_bg.png, bg_white.png** | Grid background, archive-index label background, surrounded-region fill. |
+| **assets/RESET.png, HELP.png, PLUS.png, white_circle_bg.png** | Active UI icons (restart, help/tutorial, add, circular button bg). |
+| **assets/LEAVES2.png, DRAGONFLY3.png, FROG1.png** | Decorative illustrations that fade in on surrounded-group detection. |
+| **assets/*.mp4, *.m4v** | Audio clips played via keyboard shortcuts (1/2/3) in ImageSection. |
 
 ### Third-Party Libraries (vendored)
 
 | File | Purpose |
 |---|---|
-| **pixi.min.js** | PixiJS v8 — WebGL 2D rendering engine |
-| **gsap.min.js** | GreenSock Animation Platform — smooth animations and tweens |
-| **jszip.min.js** | JSZip — client-side ZIP extraction for texture packs |
+| **pixi.min.js** | PixiJS v8 — WebGL 2D rendering engine. |
+| **gsap.min.js** | GreenSock — animations/tweens. |
+| **jszip.min.js** | JSZip — client-side ZIP extraction for texture packs. |
+| *(pixi.min.js.map)* | Source map, now git-ignored. |
 
-### Utility
+### Tooling / Docs
 
 | File | Purpose |
 |---|---|
-| **gridsplit/** | Standalone HTML tool for splitting a source image into the 50x62 grid of 20x20px tiles. Uses HTML5 Canvas. Outputs individual PNG tiles with naming `tile_ROW_COL.png`. This is the production tool for generating the texture ZIP content. |
-| **HEXAGONAL_CATEGORIES_UPDATE.md** | Documentation describing the migration from 4-category (cardinal directions) to 6-category (hexagonal directions) system. |
-| **package.json** | Node.js project config for the Express dev server. Dependencies: express, cors, multer. |
-| **.gitignore** | Ignores node_modules. |
+| **gridsplit/** | Standalone HTML/Canvas tool that slices a source image into the grid of `tile_ROW_COL.png` tiles (the input to each `textures.zip`). |
+| **HEXAGONAL_CATEGORIES_UPDATE.md** | Historical note on the 4-category (cardinal) → 6-category (hexagonal) migration, now complete. |
+| **package.json** | Node config for the Express dev server (express, cors, multer). `npm start` → `node server.js`. |
+| **.gitignore** | Ignores `node_modules/`, `.DS_Store`, and `*.min.js.map`. |
 
 ---
 
 ## How the Interactive Grid Works (Core Mechanic)
 
-1. **Landing**: User sees the Shillim Institute introduction text. Textures load in background (6 ZIP files, ~4MB each). A "CONTINUE" button appears when ready.
+1. **Landing**: The Shillim Institute intro shows while 6 texture ZIPs (~4MB each) download. Fonts pre-load so PixiJS text rasterises correctly. A "CONTINUE" button appears when ready. The Tutorial overlay then guides first interactions.
 
-2. **Grid Painting**: The right panel (1240x1000px) is a 62x50 grid of 20px cells. The user drags to create a rectangular selection. The **angle of the drag** (360° divided into 6 sectors of 60° each) determines which category's illustration tiles fill the selection. The visual result is patches of different illustrated textures building up on the canvas.
+2. **Grid Painting**: The right panel is a grid of 20px cells. Dragging creates a rectangular selection; the **angle of the drag** (360° split into 6 sectors of 60°) chooses which category's illustration tiles fill it.
 
-3. **Surrounded Detection**: After each drag, `TextureStats.updateSurroundedEmptyCells()` runs a flood-fill algorithm to find groups of empty cells completely surrounded by filled cells (8-connected adjacency). When a new surrounded group appears, a **project card** matching the current category proportions is added to the left sidebar.
+3. **Surrounded Detection**: After each drag, `TextureStats.updateSurroundedEmptyCells()` flood-fills to find empty cell groups fully enclosed by filled cells. A newly enclosed group adds a matching project card to the sidebar and spawns a creature near it.
 
-4. **Category Bar**: The bottom bar dynamically reflects the proportion of each category's cells on the grid.
+4. **Category Bar**: The bottom bar reflects the proportion of each category's cells.
 
-5. **Project Discovery**: Projects are matched by comparing the grid's category percentages against each project's `primarycategory` and `secondarycategory`. The system tries to find projects that match both the dominant and secondary category, falling back to either one.
+5. **Project Discovery**: Projects are matched by comparing grid category percentages against each project's `primarycategory` / `secondarycategory`, preferring matches on both.
 
 ---
 
-## Missing Parts and Issues
+## Open Issues / Notes
 
-### Critical Missing Pieces
+### Still open
+1. **`projectDescriptionTexts` in Config.js are placeholders** — still literally `'Description 1'`–`'Description 6'`. These show in the bottom text box for category descriptions and should be replaced with real copy.
+2. **No authentication on admin pages** — `admin*.html` have no login; anyone with the URL can edit/delete.
+3. **Netlify function can't handle thumbnail uploads** — the serverless function does JSON CRUD only; the Express `/api/upload-thumbnail` (multer) has no serverless equivalent, so uploads via the Netlify admin will fail in production.
+4. **gridsplit lacks ZIP packaging** — it emits individual tiles; zipping them into `textures.zip` is a manual, undocumented step.
+5. **Desktop-first** — the PixiJS experience is fixed-size; small screens get the `.mobile-redirect` overlay to `projectindex.html` rather than a responsive grid.
+6. **Audio uses `.mp4`/`.m4v`** for short clips — works but unconventional; `.mp3`/`.ogg` would be clearer.
 
-1. **illustration5/ and illustration6/ folders are EMPTY** — These correspond to HEALTH and EDUCATION categories. The folders exist but contain no `textures.zip` files. Dragging in the BottomLeft (HEALTH) or TopLeft (EDUCATION) directions will fail silently or show nothing. The grid painting mechanic is broken for 2 out of 6 categories.
+### Resolved since the previous map
+- **illustration5/6 now populated** — HEALTH and EDUCATION texture packs exist; painting works for all 6 categories.
+- **`addRandomProject()` call fixed** — ImageSection now passes the correct 6 hexagonal percentage props (`topPercentage`, `topRightPercentage`, `bottomRightPercentage`, `bottomPercentage`, `bottomLeftPercentage`, `topLeftPercentage`).
+- **Shared CSS** — styling consolidated into `shilim.css` instead of per-page inline blocks.
+- **Per-artist project pages** — real destinations now live under `assets/artists/<Name>/projectpage.html` (21 artists + `_template/`).
 
-2. **projectpage.html links are mostly placeholder** — Most projects in `projects.json` have `"link": "projectpage.html"` without a `projectId` query parameter. Only the first project (Elvira) has a unique project page path (`assets/artists/Elvira/projectpage.html`). The `projectpage.html` file reads `projectId` from URL params, but no projects provide one, so most project links will show a "Project not found" state.
-
-3. **projectpage.json is minimal** — The `data/projectpage.json` contains very little data. Most projects don't have corresponding entries. The project page gallery and sections system exists in the HTML but has almost no content to display.
-
-4. **projectDescriptionTexts in Config.js are placeholder** — The 6 description strings are literally `'Description 1'` through `'Description 6'`. These show in the bottom text box when surrounded groups are found. They should contain real category descriptions.
-
-### Functional Issues
-
-5. **addRandomProject() called with wrong property names** — In ImageSection.js line ~1037, the function is called with `textureStats.topToBottomRightPercentage` and similar properties, but `TextureStats` only defines `topPercentage`, `topRightPercentage`, `bottomRightPercentage`, etc. These old 4-direction property names don't exist, so `undefined` values are passed. Projects still get added but category matching is likely broken.
-
-6. **No authentication on admin pages** — The admin.html and admin-local.html pages have no login or authentication. Anyone with the URL can add, edit, or delete projects.
-
-7. **Netlify function can't handle thumbnail uploads** — The Netlify serverless function (`netlify/functions/projects.js`) only handles JSON CRUD. There's no equivalent of the Express multer endpoint for file uploads. The admin.html (Netlify version) references file upload but it will fail in production.
-
-8. **gridsplit tool lacks ZIP packaging** — The `gridsplit/index.html` tool outputs individual PNG tiles but doesn't create the `textures.zip` files that Resources.js expects. There's a manual step to ZIP the tiles that isn't documented.
-
-### Polish/Minor Issues
-
-9. **Title tag says "PixiJS Game"** — The `index.html` title should be "Shillim Institute" or similar.
-
-10. **Audio files have inconsistent formats** — `.mp4` and `.m4v` files are used for audio, which is unusual. These should ideally be `.mp3` or `.ogg` for broader compatibility and to make intent clear.
-
-11. **No mobile/responsive support for the PixiJS app** — The main canvas is fixed at 1550x1000 with `max-width: 95vw`. On mobile devices, the drag interaction would be very difficult. The `projectindex.html` and `projectpage.html` have somewhat responsive layouts but the core experience is desktop-only.
-
-12. **No 404 or error handling for missing texture ZIPs** — If a texture ZIP fails to download, the error is caught but the UI doesn't gracefully degrade.
-
-13. **Unused assets** — `bg_blue.png`, `bg_red.png`, `bg_yellow.png`, `button.png` appear to be unused by any current code.
-
-14. **No CSS file** — All styling is inline in each HTML file. A shared stylesheet would reduce duplication across the 5+ HTML pages.
+### Cleanup performed (2026-06-29)
+- Removed stray draft `Untitled` (an early duplicate of LizardAnimator).
+- Removed unreferenced images: `bg_blue/red/yellow.png`, `BASE Button.png`, `restart_bg.png`, `CLOSE.png`, `OPEN.png`, `lizard_spritesheet.png`, `lizard_spritesheet300.png`.
+- Removed leftover folders: `assets/NewThumbnails/`, `assets/starting-page/`. (`assets/testartist/` was kept — it backs the `data/sampleprojectpage.json` fallback gallery.)
+- Added `.gitignore` and untracked `node_modules/` (2,647 files) and 59 `.DS_Store` files from version control (files remain on disk).

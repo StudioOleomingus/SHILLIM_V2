@@ -5,8 +5,6 @@ import { initBottomLayout } from './BottomLayout.js';
 import { startTutorial } from './Tutorial.js';
 import { slidePageInFromRight } from './Transitions.js';
 
-let loadingContainer;
-let continueText;
 let interactiveBgTexture;
 let restartButtonTexture;
 let whitebgTexture;
@@ -22,26 +20,19 @@ const ATLAS_PADDING = 2;
 
 async function downloadAndExtractZip(zipUrl, index) {
     try {
-        // Check if JSZip is available
         if (typeof JSZip === 'undefined') {
             throw new Error('JSZip library is not loaded. Please check your script includes.');
         }
 
-        // Download the zip file
         const response = await fetch(zipUrl);
         if (!response.ok) {
             throw new Error(`Failed to download zip file: ${response.status} ${response.statusText}`);
         }
         const zipData = await response.arrayBuffer();
 
-        // Load zip data
         const zip = new JSZip();
         await zip.loadAsync(zipData);
 
-        // Collect the real tile entries. macOS zips also contain resource-fork
-        // junk (e.g. "__MACOSX/textures/._tile_0_0.png") whose name matches the
-        // tile pattern but is not a valid PNG — skip those so we don't waste
-        // time decoding ~3000 images that only ever fail.
         const tileEntries = [];
         for (const [filename, file] of Object.entries(zip.files)) {
             if (file.dir) continue;
@@ -56,7 +47,6 @@ async function downloadAndExtractZip(zipUrl, index) {
             });
         }
 
-        // Decode every tile PNG into an Image element.
         const decoded = await Promise.all(tileEntries.map(async (entry) => {
             const blob = await entry.file.async('blob');
             const objectUrl = URL.createObjectURL(blob);
@@ -69,8 +59,6 @@ async function downloadAndExtractZip(zipUrl, index) {
                 });
                 return { row: entry.row, col: entry.col, img };
             } catch (error) {
-                // Skip individual tiles that fail to decode rather than aborting
-                // the whole illustration.
                 return null;
             } finally {
                 URL.revokeObjectURL(objectUrl);
@@ -83,18 +71,11 @@ async function downloadAndExtractZip(zipUrl, index) {
             return true;
         }
 
-        // Determine tile size from the first decoded tile (all tiles are the
-        // same size in practice).
         const tileW = tiles[0].img.naturalWidth || tiles[0].img.width;
         const tileH = tiles[0].img.naturalHeight || tiles[0].img.height;
         const cellW = tileW + ATLAS_PADDING;
         const cellH = tileH + ATLAS_PADDING;
 
-        // Pack every tile of this illustration into ONE atlas canvas, so the GPU
-        // only has to allocate a single texture per illustration (6 total)
-        // instead of thousands. Chrome's WebGL backend loses the rendering
-        // context when too many individual textures are uploaded, which left the
-        // interactive page blank.
         const atlas = document.createElement('canvas');
         atlas.width = numberOfColumns * cellW;
         atlas.height = numberOfRows * cellH;
@@ -104,9 +85,6 @@ async function downloadAndExtractZip(zipUrl, index) {
             atlasCtx.drawImage(tile.img, tile.col * cellW, tile.row * cellH, tileW, tileH);
         }
 
-        // Upload the atlas as a single shared texture source, then give each grid
-        // cell a lightweight sub-texture (a frame into the atlas). Downstream code
-        // only ever reads `.texture` off the stored entry.
         const atlasSource = PIXI.Texture.from(atlas).source;
         atlasSource.update();
 
@@ -125,269 +103,313 @@ async function downloadAndExtractZip(zipUrl, index) {
 
 async function LoadTextures() {
     try {
-        // ===================================================================
-        // LANDING / INTRO SCREEN
-        // White content box matches the game page's play-card geometry.
-        // ===================================================================
         let isLoading = false;
         let texturesLoaded = false;
 
-        const PLAY_GAP = 14;
-        const boxX = interactiveRect.x + PLAY_GAP;                 // 324
-        const boxY = PLAY_GAP;                                      // 14
-        const boxW = interactiveRect.width - PLAY_GAP * 2;          // 1212
-        // Lay the intro box out in the fixed 1550x1000 logical space; the canvas
-        // is scaled to the window via CSS, so the design height keeps the box
-        // matching the game-page play card at any window size.
-        const boxH = stageHeight - PLAY_GAP * 2;
+        // ──────────────────────────────────────────────────────────────
+        // Copy / content
+        // ──────────────────────────────────────────────────────────────
+        const ARCHIVE_DESC =
+            'This website is an interactive repository of projects by the Shillim Institute and other associated organisations. It encompasses work ranging from art residencies and mapping workshops to ecological surveys and reforestation programs, as well as educational and craft initiatives, and other such community outreach.\n\nThe archive invites visitors to draw new associations between these varied works, situating each project within the landscape of the Sahyadris from which they emerge';
 
+        const ABOUT_HEADING = 'The Shillim Institute.';
+        const ABOUT_SUBTITLE = 'Inspiring Commitment to Action through Sustainable art practices\nin the Sahyadri Western Ghats India.';
+        const ABOUT_BODY =
+            'Located in the Western Ghats, The Shillim Institute safeguards approximately 2000 acres of land in the Northern region of this mountain range, which has been declared a UNESCO World Heritage Site and a biodiversity conservation hotspot. The Institute has enlisted local communities as forest guards and introduced thousands of native plant species, resulting in the flourishing of over a million trees comprising 64 diverse species.\n\nThe Pavna Collective is a consortium of conservation, ecology, and art organizations, convened by the Shillim Institute. Among its initiatives, the Pavna Collective sponsors 3-6 art residencies a year, fellowships, Mapping Workshop, Cultural documentation and Skill development programs in the Sayadri ranges.';
+
+        // ──────────────────────────────────────────────────────────────
+        // Geometry
+        // ──────────────────────────────────────────────────────────────
+        const GREEN = 0x86bf9b;
+        const INK = 0x1f1f1f;
+        const BOX_FILL = 0xe8e8e8;
+        const BTN_DARK = 0xcfcfcf;
+        const BTN_LIGHT = 0xe2e2e2;
+        const WHITE_CARD = 0xffffff;
+
+        const PLAY_GAP = 14;
+        const cardX = interactiveRect.x + PLAY_GAP;
+        const cardY = PLAY_GAP;
+        const cardW = interactiveRect.width - PLAY_GAP * 2;
+        const cardH = stageHeight - PLAY_GAP * 2;
+        const cardCX = cardX + cardW / 2;
+        const cardCY = cardY + cardH / 2;
+
+        const BOX_W = 920;
+        const BOX_X = Math.round(cardCX - BOX_W / 2);
+        const PAD = 40;
+        const WRAP = BOX_W - PAD * 2;
+
+        const BTN_H = 58;
+        const BTN_GAP = 18;          // gap between box and button row
+        const BTN_RADIUS = 14;
+        const BTN_PAD_X = 30;
+
+        // ──────────────────────────────────────────────────────────────
+        // Containers
+        // ──────────────────────────────────────────────────────────────
         const intro = new PIXI.Container();
         app.stage.addChild(intro);
 
-        // White rounded inner box (same size/feel as the game page).
+        // Big white card
         const whiteBox = new PIXI.Graphics();
-        whiteBox.beginFill(0xFFFFFF);
-        whiteBox.drawRoundedRect(boxX, boxY, boxW, boxH, 28);
+        whiteBox.beginFill(WHITE_CARD);
+        whiteBox.drawRoundedRect(cardX, cardY, cardW, cardH, 28);
         whiteBox.endFill();
+        whiteBox.eventMode = 'static';
+        whiteBox.hitArea = new PIXI.Rectangle(cardX, cardY, cardW, cardH);
         intro.addChild(whiteBox);
 
-        // Content anchors inside the white box (left-aligned with the title).
-        const TEXT_LEFT = boxX + 22;
-        const CONTENT_LEFT = TEXT_LEFT;
-        const CONTENT_WRAP = 760;
+        // The grey description box (redrawn per view). It captures its own
+        // clicks so that tapping inside the box never triggers the
+        // click-outside-to-return behaviour.
+        const box = new PIXI.Graphics();
+        box.eventMode = 'static';
+        box.on('pointertap', (e) => { if (e && e.stopPropagation) e.stopPropagation(); });
+        intro.addChild(box);
 
-        const WEBSITE_DESC = 'This website is an interactive repository of projects by the Shillim Institute. It encompasses work ranging from art residencies and mapping workshops to ecological surveys and reforestation programs, as well as educational initiatives and community outreach.\n\nThe archive invites visitors to draw new associations between these varied works, situating each project within the landscape of the Sahyadris from which they emerge.';
+        // ---- Archive (default) content ----
+        const archiveContent = new PIXI.Container();
+        intro.addChild(archiveContent);
 
-        // First institute is real; the remaining seven are placeholders.
-        const institutes = [
-            {
-                name: 'The Shillim Institute',
-                heading: 'Inspiring Commitment to Action through Sustainable art practices in the Sahyadri Western Ghats India',
-                body: 'Located in the Western Ghats, The Shillim Institute safeguards approximately 2000 acres of land in the Northern region of this mountain range, which has been declared a UNESCO World Heritage Site and a biodiversity conservation hotspot. The Institute has enlisted local communities as forest guards and introduced thousands of native plant species, resulting in the flourishing of over a million trees comprising 64 diverse species.\n\nThe Pavna Collective is a consortium of conservation, ecology, and art organizations, convened by the Shillim Institute. Among its initiatives, the Pavna Collective sponsors 3-6 art residencies a year, fellowships, Mapping Workshop, Cultural documentation and Skill development programs in the Sayadri ranges.'
-            },
-            { name: 'Organisation 01', heading: 'Organisation 01', body: 'Placeholder description for Organisation 01. Replace this with a short overview of the organisation.' },
-            { name: 'Organisation 02', heading: 'Organisation 02', body: 'Placeholder description for Organisation 02. Replace this with a short overview of the organisation.' },
-            { name: 'Organisation 03', heading: 'Organisation 03', body: 'Placeholder description for Organisation 03. Replace this with a short overview of the organisation.' },
-            { name: 'Organisation 04', heading: 'Organisation 04', body: 'Placeholder description for Organisation 04. Replace this with a short overview of the organisation.' },
-            { name: 'Organisation 05', heading: 'Organisation 05', body: 'Placeholder description for Organisation 05. Replace this with a short overview of the organisation.' },
-            { name: 'Organisation 06', heading: 'Organisation 06', body: 'Placeholder description for Organisation 06. Replace this with a short overview of the organisation.' },
-            { name: 'Organisation 07', heading: 'Organisation 07', body: 'Placeholder description for Organisation 07. Replace this with a short overview of the organisation.' }
-        ];
+        const descText = new PIXI.Text(ARCHIVE_DESC, {
+            fontFamily: 'Hind Madurai', fontWeight: '63', fontSize: 21, fill: INK,
+            align: 'justify', wordWrap: true, wordWrapWidth: WRAP, lineHeight: 30
+        });
+        archiveContent.addChild(descText);
 
-        // Big title — lighter weight, large enough to span the box width,
-        // pushed up from the very bottom.
         const bigTitle = new PIXI.Text('THE SHILLIM ARCHIVE', {
-            fontFamily: 'Hind Madurai', fontWeight: '520', fontSize: 120, fill: 0xa4a4a4
+            fontFamily: 'Hind Madurai', fontWeight: '630', fontSize: 82, fill: GREEN, letterSpacing: 1
         });
-        bigTitle.anchor.set(0, 1);
-        bigTitle.x = TEXT_LEFT;
-        bigTitle.y = boxY + boxH - 18;
-        intro.addChild(bigTitle);
+        if (bigTitle.width > WRAP) bigTitle.scale.set(WRAP / bigTitle.width);
+        archiveContent.addChild(bigTitle);
 
-        // Full-width loading-bar / continue row, just above the title.
-        const BAR_X = TEXT_LEFT;
-        const BAR_W = boxW - (TEXT_LEFT - boxX) * 2;     // even left/right inset
-        const BAR_Y = bigTitle.y - bigTitle.height - 30;
+        // ---- About content ----
+        const aboutContent = new PIXI.Container();
+        aboutContent.visible = false;
+        intro.addChild(aboutContent);
 
-        // Heading line (shown only when an institute is selected).
-        const headingText = new PIXI.Text('', {
-            fontFamily: 'Hind Madurai', fontSize: 24, fill: 0x222222,
-            wordWrap: true, wordWrapWidth: CONTENT_WRAP, lineHeight: 32
+        const aboutHeading = new PIXI.Text(ABOUT_HEADING, {
+            fontFamily: 'Gelasio', fontWeight: '700', fontSize: 42,  fill: GREEN
         });
-        headingText.x = CONTENT_LEFT;
-        headingText.visible = false;
-        intro.addChild(headingText);
+        aboutContent.addChild(aboutHeading);
 
-        // Body / description text (swaps between website and institute copy).
-        const bodyText = new PIXI.Text(WEBSITE_DESC, {
-            fontFamily: 'Hind Madurai', fontSize: 20, fill: 0x222222,
-            align: 'justify',
-            wordWrap: true, wordWrapWidth: CONTENT_WRAP, lineHeight: 25.5
+        const aboutSubtitle = new PIXI.Text(ABOUT_SUBTITLE, {
+            fontFamily: 'Hind Madurai', fontWeight: '100', fontSize: 21, fill: 0x1a1a1a,
+            lineHeight: 28, wordWrap: true, wordWrapWidth: WRAP
         });
-        bodyText.x = CONTENT_LEFT;
-        intro.addChild(bodyText);
+        aboutContent.addChild(aboutSubtitle);
 
-        // Top of the website description (measured at creation). Institute text
-        // is shown at this exact same height.
-        const DESC_TOP = BAR_Y - 28 - bodyText.height;
+        const aboutBody = new PIXI.Text(ABOUT_BODY, {
+            fontFamily: 'Hind Madurai', fontSize: 20, fill: 0x1f1f1f,
+            align: 'justify', wordWrap: true, wordWrapWidth: WRAP, lineHeight: 27
+        });
+        aboutContent.addChild(aboutBody);
 
-        function layoutContent() {
-            if (selectedInstitute === -1) {
-                // Default: website description sits low, just above the loading bar.
-                bodyText.y = DESC_TOP;
-            } else {
-                // Institute: body shown at the same height as the website description.
-                let cy = DESC_TOP;
-                if (headingText.visible && headingText.text) {
-                    headingText.y = cy;
-                    cy += headingText.height + 24;
+        // ──────────────────────────────────────────────────────────────
+        // Buttons
+        // ──────────────────────────────────────────────────────────────
+        // Generic pill button factory. Returns { container, setWidth, label, bg }.
+        function makeButton({ text, fill, align = 'left', icon = null }) {
+            const c = new PIXI.Container();
+            c.eventMode = 'static';
+            c.cursor = 'pointer';
+
+            const bg = new PIXI.Graphics();
+            c.addChild(bg);
+
+            const label = new PIXI.Text(text, {
+                fontFamily: 'Hind Madurai', fontWeight: '200', fontSize: 19, fill: 0x222222, letterSpacing: 1
+            });
+            label.anchor.set(0, 0.5);
+            label.y = BTN_H / 2;
+            c.addChild(label);
+
+            let iconGfx = null;
+            if (icon) {
+                iconGfx = new PIXI.Graphics();
+                c.addChild(iconGfx);
+            }
+
+            let curW = 0;
+            function draw(w) {
+                curW = w;
+                bg.clear();
+                bg.beginFill(fill);
+                bg.drawRoundedRect(0, 0, w, BTN_H, BTN_RADIUS);
+                bg.endFill();
+                c.hitArea = new PIXI.Rectangle(0, 0, w, BTN_H);
+
+                if (icon === 'arrow') {
+                    // right-aligned text + triangle
+                    const aSize = 12;
+                    const aX = w - BTN_PAD_X - aSize;
+                    const aCY = BTN_H / 2;
+                    iconGfx.clear();
+                    iconGfx.beginFill(0x222222);
+                    iconGfx.moveTo(aX, aCY - aSize / 2);
+                    iconGfx.lineTo(aX + aSize, aCY);
+                    iconGfx.lineTo(aX, aCY + aSize / 2);
+                    iconGfx.closePath();
+                    iconGfx.endFill();
+                    label.anchor.set(1, 0.5);
+                    label.x = aX - 16;
+                } else if (icon === 'back') {
+                    // left-pointing triangle then text
+                    const aSize = 12;
+                    const aX = BTN_PAD_X;
+                    const aCY = BTN_H / 2;
+                    iconGfx.clear();
+                    iconGfx.beginFill(0x222222);
+                    iconGfx.moveTo(aX + aSize, aCY - aSize / 2);
+                    iconGfx.lineTo(aX, aCY);
+                    iconGfx.lineTo(aX + aSize, aCY + aSize / 2);
+                    iconGfx.closePath();
+                    iconGfx.endFill();
+                    label.anchor.set(0, 0.5);
+                    label.x = aX + aSize + 16;
+                } else {
+                    label.anchor.set(align === 'right' ? 1 : 0, 0.5);
+                    label.x = align === 'right' ? w - BTN_PAD_X : BTN_PAD_X;
                 }
-                bodyText.y = cy;
+            }
+
+            // intrinsic width for auto-sized buttons (icon adds room)
+            function intrinsicWidth() {
+                let w = label.width + BTN_PAD_X * 2;
+                if (icon === 'back') w = label.width + BTN_PAD_X * 2 + 12 + 16;
+                return Math.ceil(w);
+            }
+
+            c.on('pointerover', () => { bg.tint = 0xf0f0f0; });
+            c.on('pointerout', () => { bg.tint = 0xffffff; });
+
+            return { container: c, draw, intrinsicWidth, label, bg };
+        }
+
+        const aboutBtn = makeButton({ text: 'ABOUT', fill: BTN_DARK, align: 'left' });
+        const goBtn = makeButton({ text: 'GO TO THE ARCHIVE', fill: BTN_LIGHT, icon: 'arrow' });
+        const closeBtn = makeButton({ text: 'Return', fill: BTN_DARK, icon: 'back' });
+
+        intro.addChild(aboutBtn.container);
+        intro.addChild(goBtn.container);
+        intro.addChild(closeBtn.container);
+
+        // ──────────────────────────────────────────────────────────────
+        // Layout
+        // ──────────────────────────────────────────────────────────────
+        let view = 'archive'; // 'archive' | 'about'
+
+        function layout() {
+            const isAbout = view === 'about';
+            archiveContent.visible = !isAbout;
+            aboutContent.visible = isAbout;
+            aboutBtn.container.visible = !isAbout;
+            goBtn.container.visible = !isAbout;
+            closeBtn.container.visible = isAbout;
+
+            // Measure inner content height for the current view
+            let innerH;
+            if (isAbout) {
+                innerH = aboutHeading.height + 18 + aboutSubtitle.height + 22 + aboutBody.height;
+            } else {
+                innerH = descText.height + 30 + bigTitle.height;
+            }
+            const boxH = innerH + PAD * 2;
+
+            // Anchor the box BOTTOM (and therefore the button row) at a fixed
+            // position derived from the default archive view, so toggling to the
+            // taller about view grows the box upward instead of shifting the
+            // button / box-bottom. This keeps the ABOUT/close button and the
+            // bottom edge of the text box in place across views.
+            const archiveInnerH = descText.height + 30 + bigTitle.height;
+            const archiveBoxH = archiveInnerH + PAD * 2;
+            const archiveGroupH = archiveBoxH + BTN_GAP + BTN_H;
+            const ANCHOR_BOTTOM = Math.round(cardCY - archiveGroupH / 2) + archiveBoxH;
+
+            const boxY = ANCHOR_BOTTOM - boxH;
+
+            // Draw box
+            box.clear();
+            box.beginFill(BOX_FILL);
+            box.drawRoundedRect(BOX_X, boxY, BOX_W, boxH, 22);
+            box.endFill();
+            box.hitArea = new PIXI.Rectangle(BOX_X, boxY, BOX_W, boxH);
+
+            // Place content
+            const left = BOX_X + PAD;
+            if (isAbout) {
+                let cy = boxY + PAD;
+                aboutHeading.x = left; aboutHeading.y = cy; cy += aboutHeading.height + 18;
+                aboutSubtitle.x = left; aboutSubtitle.y = cy; cy += aboutSubtitle.height + 22;
+                aboutBody.x = left; aboutBody.y = cy;
+            } else {
+                descText.x = left; descText.y = boxY + PAD;
+                bigTitle.x = left; bigTitle.y = boxY + PAD + descText.height + 30;
+            }
+
+            // Button row sits below the box, spanning the box width
+            const rowY = boxY + boxH + BTN_GAP;
+
+            if (isAbout) {
+                const w = closeBtn.intrinsicWidth();
+                closeBtn.draw(w);
+                closeBtn.container.x = BOX_X;
+                closeBtn.container.y = rowY;
+            } else {
+                const aboutW = aboutBtn.intrinsicWidth();
+                aboutBtn.draw(aboutW);
+                aboutBtn.container.x = BOX_X;
+                aboutBtn.container.y = rowY;
+
+                const goX = BOX_X + aboutW + 12;
+                const goW = (BOX_X + BOX_W) - goX;
+                goBtn.draw(goW);
+                goBtn.container.x = goX;
+                goBtn.container.y = rowY;
             }
         }
 
-        // ----- Continue button (right end of the loading-bar row) -----
-        continueText = new PIXI.Text('CONTINUE', {
-            fontFamily: 'Hind Madurai', fontSize: 22, fill: '#4A90E2'
-        });
-        continueText.anchor.set(1, 0.5);
-        continueText.x = BAR_X + BAR_W - 56;
-        continueText.y = BAR_Y - 18;
-        continueText.eventMode = 'static';
-        continueText.cursor = 'pointer';
-        continueText.visible = false;
-        intro.addChild(continueText);
-
-        // ----- Loading bar (full width of the box, above the title) -----
-        loadingContainer = new PIXI.Container();
-        loadingContainer.visible = true;
-        intro.addChild(loadingContainer);
-
-        const loadingText = new PIXI.Text('LOADING ARCHIVE...', {
-            fontFamily: 'Hind Madurai', fontSize: 20, fill: '#3092cf'
-        });
-        loadingText.anchor.set(0, 1);
-        loadingText.x = BAR_X + BAR_W - 180;
-        loadingText.y = BAR_Y - 18;
-        loadingContainer.addChild(loadingText);
-
-        const loadingBarBg = new PIXI.Graphics();
-        loadingBarBg.beginFill(0xDDDDDD);
-        loadingBarBg.drawRoundedRect(BAR_X, BAR_Y, BAR_W, 20, 10);
-        loadingBarBg.endFill();
-        loadingContainer.addChild(loadingBarBg);
-
-        const loadingBarFill = new PIXI.Graphics();
-        loadingBarFill.beginFill(0x4A90E2);
-        loadingContainer.addChild(loadingBarFill);
-
-        // ----- Institute name list (left column, light-grey capsule buttons) -----
-        let selectedInstitute = -1;
-        const nameItems = [];
-        const NAME_X = 40;
-        const NAME_GAP = 70;            // tighter spacing
-        const NAME_PAD_X = 27;          // capsule grown by ~10px each dimension
-        const NAME_PAD_Y = 16;
-
-        // Vertically centre the whole stack of buttons in the box.
-        const sampleLabel = new PIXI.Text('A', { fontFamily: 'Hind Madurai', fontWeight: '200', fontSize: 20 });
-        const NAME_CAP_H = sampleLabel.height + NAME_PAD_Y * 2;
-        sampleLabel.destroy();
-        const NAME_GROUP_H = (institutes.length - 1) * NAME_GAP + NAME_CAP_H;
-        const NAME_Y0 = Math.round(app.screen.height / 2 - NAME_GROUP_H / 2);
-
-        // Uniform button width — sized to the widest name so all capsules match.
-        let NAME_MAX_W = 0;
-        institutes.forEach((inst) => {
-            const t = new PIXI.Text(inst.name.toUpperCase(), { fontFamily: 'Hind Madurai', fontWeight: '200', fontSize: 20 });
-            NAME_MAX_W = Math.max(NAME_MAX_W, t.width);
-            t.destroy();
-        });
-        const NAME_CAP_W = Math.ceil(NAME_MAX_W) + NAME_PAD_X * 2;
-
-        function applyNameStyles() {
-            nameItems.forEach(({ label, bg }, i) => {
-                const active = (selectedInstitute === -1 || i === selectedInstitute);
-                label.style.fill = active ? 0x111111 : 0xb8b8b8;
-                // selected capsule reads slightly darker; others sit at base grey
-                bg.tint = (i === selectedInstitute) ? 0xdcdcdc : 0xffffff;
-            });
-        }
-
-        function showDefault() {
-            selectedInstitute = -1;
-            bigTitle.visible = true;
-            headingText.visible = false;
-            headingText.text = '';
-            bodyText.text = WEBSITE_DESC;
-            continueText.visible = texturesLoaded;
-            loadingContainer.visible = !texturesLoaded;
-            applyNameStyles();
-            layoutContent();
-        }
-
-        function selectInstitute(i) {
-            selectedInstitute = i;
-            const inst = institutes[i];
-            bigTitle.visible = false;
-            headingText.visible = true;
-            headingText.text = inst.heading;
-            bodyText.text = inst.body;
-            continueText.visible = false;
-            loadingContainer.visible = false;
-            applyNameStyles();
-            layoutContent();
-        }
-
-        institutes.forEach((inst, i) => {
-            const item = new PIXI.Container();
-            item.x = NAME_X;
-            item.y = NAME_Y0 + i * NAME_GAP;
-
-            const label = new PIXI.Text(inst.name.toUpperCase(), {
-                fontFamily: 'Hind Madurai', fontWeight: '200', fontSize: 20, fill: 0x111111
-            });
-            label.x = NAME_PAD_X;
-            label.y = NAME_PAD_Y;
-
-            const capW = NAME_CAP_W;            // uniform width for every button
-            const capH = label.height + NAME_PAD_Y * 2;
-
-            const bg = new PIXI.Graphics();
-            bg.beginFill(0xf0f0f0);
-            bg.drawRoundedRect(0, 0, capW, capH, 12);
-            bg.endFill();
-
-            item.addChild(bg);
-            item.addChild(label);
-            item.eventMode = 'static';
-            item.cursor = 'pointer';
-            item.hitArea = new PIXI.Rectangle(0, 0, capW, capH);
-
-            // Hover: darken the capsule unless it's the selected one.
-            item.on('pointerover', () => { if (selectedInstitute !== i) bg.tint = 0xe2e2e2; });
-            item.on('pointerout', () => { applyNameStyles(); });
-            item.on('pointertap', (e) => {
-                if (e && e.stopPropagation) e.stopPropagation();
-                selectInstitute(i);
-            });
-
-            intro.addChild(item);
-            nameItems.push({ item, label, bg });
+        // ──────────────────────────────────────────────────────────────
+        // Interactions
+        // ──────────────────────────────────────────────────────────────
+        aboutBtn.container.on('pointertap', (e) => {
+            if (e && e.stopPropagation) e.stopPropagation();
+            view = 'about';
+            layout();
         });
 
-        // Click anywhere outside a name returns to the default title view.
-        app.stage.eventMode = 'static';
-        app.stage.hitArea = new PIXI.Rectangle(0, 0, app.screen.width, app.screen.height);
-        app.stage.on('pointertap', () => {
-            if (selectedInstitute !== -1) showDefault();
+        closeBtn.container.on('pointertap', (e) => {
+            if (e && e.stopPropagation) e.stopPropagation();
+            view = 'archive';
+            layout();
         });
 
-        // Set the initial (default) state.
-        showDefault();
+        // Click anywhere outside the box (on the white card) returns from the
+        // about view. Taps on the box / buttons stop propagation, so only
+        // outside clicks reach here.
+        whiteBox.on('pointertap', () => {
+            if (view === 'about') {
+                view = 'archive';
+                layout();
+            }
+        });
 
-        // Start loading textures immediately in the background
+        layout();
+
+        // ──────────────────────────────────────────────────────────────
+        // Texture loading (background)
+        // ──────────────────────────────────────────────────────────────
         const textureLoadingPromise = (async () => {
             let index = 0;
-            const totalFolders = folderPaths.length;
-
             for (const folderPath of folderPaths) {
                 const zipUrl = `${folderPath}/textures.zip`;
                 await downloadAndExtractZip(zipUrl, index);
-                
-                // Update loading bar
-                const progress = (index + 1) / totalFolders;
-                loadingBarFill.clear();
-                loadingBarFill.beginFill(0x4A90E2);
-                loadingBarFill.drawRoundedRect(BAR_X, BAR_Y, BAR_W * progress, 20, 10);
-                loadingBarFill.endFill();
-                
                 index++;
             }
 
-            // Load the background textures with retry logic
             const maxRetries = 3;
-            const retryDelay = 1000; // 1 second delay between retries
+            const retryDelay = 1000;
 
             async function loadTextureWithRetry(path, retries = 0) {
                 try {
@@ -403,7 +425,6 @@ async function LoadTextures() {
             }
 
             try {
-                // Load all textures with retry logic
                 [interactiveBgTexture, restartButtonTexture, whitebgTexture, indexBg, whiteCircleBg, leavesTexture, dragonflyTexture, frogTexture] = await Promise.all([
                     loadTextureWithRetry('assets/interactive_bg.png'),
                     loadTextureWithRetry('assets/RESET.png'),
@@ -418,60 +439,40 @@ async function LoadTextures() {
                 ]);
 
                 texturesLoaded = true;
-                // Reveal the continue button only if we're on the default view.
-                if (selectedInstitute === -1) {
-                    continueText.visible = true;
-                    loadingContainer.visible = false;
-                }
             } catch (error) {
                 console.error('Failed to load background textures:', error);
-                // Surface the error in the body text.
-                bodyText.text = 'Error loading textures. Please refresh the page.';
-                bodyText.style.fill = 0xFF0000; // Red color for error
+                goBtn.label.text = 'ERROR — REFRESH';
             }
         })();
 
-        // Handle continue button click
-        continueText.on('pointertap', async (e) => {
+        // ──────────────────────────────────────────────────────────────
+        // Launch the archive
+        // ──────────────────────────────────────────────────────────────
+        goBtn.container.on('pointertap', async (e) => {
             if (e && e.stopPropagation) e.stopPropagation();
             if (isLoading) return;
 
-            // Hide the landing content.
-            bigTitle.visible = false;
-            headingText.visible = false;
-            bodyText.visible = false;
-            continueText.visible = false;
-
-            // Show loading container while waiting for textures
             if (!texturesLoaded) {
                 isLoading = true;
-                loadingContainer.visible = true;
+                goBtn.label.text = 'LOADING…';
                 try {
                     await textureLoadingPromise;
                 } catch (error) {
                     console.error('Error loading textures:', error);
-                    loadingContainer.visible = false;
+                    isLoading = false;
                     return;
                 }
             }
-
-            loadingContainer.visible = false;
             isLoading = false;
 
-            // Remove the whole landing screen before the game cascades in.
             intro.visible = false;
 
-            // Push the whole stage off to the right BEFORE building the
-            // interactive sections, so they're created off-screen and can
-            // cascade in cleanly (same motion as the Archive Index panel).
             app.stage.x = app.screen.width;
 
-            // Initialize sections
             await initInfoSection();
             await initImageSection();
             await initBottomLayout();
 
-            // Cascade the interactive page in from the right, then start the tutorial.
             slidePageInFromRight(app.stage, app.screen.width, {
                 duration: 0.75,
                 onComplete: () => startTutorial()

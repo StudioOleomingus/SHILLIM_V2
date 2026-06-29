@@ -1,0 +1,9 @@
+# Dependencies
+node_modules/
+
+# OS / editor cruft
+.DS_Store
+**/.DS_Store
+
+# Source maps for vendored libs
+*.min.js.map

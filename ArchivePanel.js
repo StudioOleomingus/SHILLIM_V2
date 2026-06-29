@@ -1,15 +1,13 @@
 // ArchivePanel.js
-// In-page "Archive Index" panel that cascades out from the right side of the
-// interactive canvas (#app-container), occupying ~3/4 of the width, instead of
-// opening projectindex.html in a new tab. Searchable / filterable, with an
-// inline detail pane. Pure DOM (no PixiJS) layered above the canvas.
+import { initCaterpillar, spawnCaterpillar } from './CaterpillarAnimator.js';
 
-let panelEl = null;        // the sliding panel
-let backdropEl = null;     // dim/click-to-close layer
-let projectsData = [];     // loaded from data/projects.json
+let panelEl = null;
+let backdropEl = null;
+let projectsData = [];
 let dataLoaded = false;
 let selectedIndex = -1;
 let built = false;
+let currentCaterpillar = null;
 
 const CATEGORIES = ['ART', 'COMMUNITY', 'ECOLOGY', 'RESEARCH', 'HEALTH', 'EDUCATION'];
 
@@ -29,17 +27,14 @@ function buildPanel() {
         return;
     }
 
-    // Backdrop (covers the whole container; clicking the exposed area closes)
     backdropEl = document.createElement('div');
     backdropEl.className = 'archive-backdrop';
     backdropEl.addEventListener('click', closeArchivePanel);
 
-    // Panel
     panelEl = document.createElement('div');
     panelEl.className = 'archive-panel';
     panelEl.setAttribute('role', 'dialog');
     panelEl.setAttribute('aria-label', 'Project Index');
-    // Prevent backdrop click from firing when interacting inside the panel
     panelEl.addEventListener('click', (e) => e.stopPropagation());
 
     const categoryOptions = CATEGORIES
@@ -49,21 +44,20 @@ function buildPanel() {
     panelEl.innerHTML = `
         <div class="archive-header">
             <div class="archive-titlerow">
-                <h2>Project Index</h2>
-                <div class="archive-count"><span id="archiveCountText">0</span></div>
+                <span id="archiveCountText" hidden>0</span>
+                <div class="archive-search">
+                    <input type="text" id="archiveSearchInput" placeholder="Search projects...">
+                    <select id="archiveYearFilter"><option value="">All Years</option></select>
+                    <select id="archivePrimaryFilter">
+                        <option value="">All Primary Categories</option>
+                        ${categoryOptions}
+                    </select>
+                    <select id="archiveSecondaryFilter">
+                        <option value="">All Secondary Categories</option>
+                        ${categoryOptions}
+                    </select>
+                </div>
                 <button class="archive-close" id="archiveCloseBtn" title="Close">&times;</button>
-            </div>
-            <div class="archive-search">
-                <input type="text" id="archiveSearchInput" placeholder="Search projects...">
-                <select id="archiveYearFilter"><option value="">All Years</option></select>
-                <select id="archivePrimaryFilter">
-                    <option value="">All Primary Categories</option>
-                    ${categoryOptions}
-                </select>
-                <select id="archiveSecondaryFilter">
-                    <option value="">All Secondary Categories</option>
-                    ${categoryOptions}
-                </select>
             </div>
         </div>
         <div class="archive-content">
@@ -80,7 +74,6 @@ function buildPanel() {
     container.appendChild(backdropEl);
     container.appendChild(panelEl);
 
-    // Wire controls
     panelEl.querySelector('#archiveCloseBtn').addEventListener('click', closeArchivePanel);
     panelEl.querySelector('#archiveDetailClose').addEventListener('click', closeDetails);
     panelEl.querySelector('#archiveSearchInput').addEventListener('input', refreshGrid);
@@ -88,7 +81,6 @@ function buildPanel() {
     panelEl.querySelector('#archivePrimaryFilter').addEventListener('change', refreshGrid);
     panelEl.querySelector('#archiveSecondaryFilter').addEventListener('change', refreshGrid);
 
-    // Esc closes
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && panelEl.classList.contains('open')) closeArchivePanel();
     });
@@ -183,16 +175,11 @@ function refreshGrid() {
             ? `${project.startdate} to ${project.enddate}`
             : (project.date || '');
 
-        const thumb = project.thumbnail
-            ? `<img src="${escapeHtml(project.thumbnail)}" alt="${escapeHtml(project.title)}" onerror="this.style.display='none'">`
-            : '';
-
         card.innerHTML = `
-            ${thumb}
             <h3>${escapeHtml(project.title)}</h3>
-            <p><strong>Author:</strong> ${escapeHtml(project.author)}</p>
-            <p><strong>Date:</strong> ${escapeHtml(dateDisplay)}</p>
-            <p>${escapeHtml(displayText)}</p>
+            <p class="archive-card-meta">${escapeHtml(project.author)}</p>
+            <p class="archive-card-meta">${escapeHtml(dateDisplay)}</p>
+            <p class="archive-card-desc">${escapeHtml(displayText)}</p>
         `;
         grid.appendChild(card);
     });
@@ -209,7 +196,6 @@ function selectProject(index) {
     right.classList.add('visible');
 
     panelEl.querySelectorAll('.archive-card').forEach((c) => c.classList.remove('selected'));
-    // re-mark selected (grid order may differ from index, so match by content)
     refreshSelectedHighlight();
 
     const dateDisplay = project.startdate && project.enddate
@@ -255,9 +241,6 @@ function selectProject(index) {
 function refreshSelectedHighlight() {
     const grid = panelEl.querySelector('#archiveGrid');
     const cards = grid.querySelectorAll('.archive-card');
-    // Rebuild mapping: order of cards matches current filtered order; simplest is
-    // to re-run refreshGrid which honors selectedIndex. To avoid losing scroll,
-    // just toggle by comparing title text.
     const selTitle = selectedIndex >= 0 ? projectsData[selectedIndex].title : null;
     cards.forEach((card) => {
         const h3 = card.querySelector('h3');
@@ -279,16 +262,27 @@ async function openArchivePanel() {
     buildPanel();
     await loadData();
     refreshGrid();
-    // Force reflow so the transition runs from the off-screen state
     void panelEl.offsetWidth;
     backdropEl.classList.add('open');
     panelEl.classList.add('open');
+
+    // Spawn caterpillar after panel slides in (1s delay)
+    await initCaterpillar();
+    setTimeout(() => {
+        currentCaterpillar = spawnCaterpillar();
+    }, 1000);
 }
 
 function closeArchivePanel() {
     if (!panelEl) return;
     panelEl.classList.remove('open');
     backdropEl.classList.remove('open');
+
+    // Drop caterpillar — stays in place if settled, then crawls off
+    if (currentCaterpillar) {
+        currentCaterpillar.drop();
+        currentCaterpillar = null;
+    }
 }
 
 window.openArchivePanel = openArchivePanel;

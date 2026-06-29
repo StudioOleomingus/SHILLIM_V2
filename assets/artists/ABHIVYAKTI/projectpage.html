@@ -10,7 +10,7 @@
             font-family: 'Hind Madurai', 'Lucida Grande', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f0f2f5;
+            background-color: #e0e0e0;
             color: #333;
             min-height: 100vh;
             display: flex;
@@ -34,14 +34,13 @@
         }
         .side-menu {
             width: 430px;
-            background: white;
+            background: #ececec;
             padding: 40px 40px;
             padding-right: 140px;
             overflow-y: scroll;
             box-sizing: border-box;
             height: 100%;
             border-radius: 30px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
             z-index: 1;
         }
         
@@ -60,7 +59,6 @@
             overflow-y: scroll;
             background: white;
             border-radius: 30px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
             margin-left: -120px;
             z-index: 2;
         }
@@ -101,21 +99,21 @@
             color: #666;
             margin-bottom: 10px;
             font-style: italic;
-            font-family: Georgia, 'Times New Roman', serif;
+            font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
         }
         .project-title {
             font-size: 18px;
             margin-bottom: 8px;
             font-weight: normal;
             font-style: italic;
-            font-family: Georgia, 'Times New Roman', serif;
+            font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
             color: #333;
         }
         .bio-section {
             margin-top: 20px;
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #ddd;
         }
         .bio-heading {
             font-size: 13px;
@@ -133,9 +131,9 @@
             padding: 15px 20px;
             margin-bottom: 10px;
             position: relative;
-            background-color: #f8f8f8;
+            background-color: white;
             border-radius: 15px;
-            border: 1px solid #e5e5e5;
+            border: none;
             transition: background-color 0.2s ease;
         }
          .project-circle {
@@ -157,7 +155,7 @@
         }
 
         .project-item:hover {
-            background-color: #efefef;
+            background-color: #f5f5f5;
         }
         .project-meta {
             font-size: 10px;
@@ -200,16 +198,28 @@
 
         /* Project heading — full width, not split by columns */
         .project-heading {
-            font-family: Georgia, 'Times New Roman', serif;
+            font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
             font-style: italic;
             font-size: 24px;
             font-weight: normal;
             color: #333;
-            margin: 0 0 30px 0;
+            margin: 0;
             padding: 0;
+            flex: 1;
+            line-height: 1.2;
+        }
+        .heading-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
         }
         .content-section {
             margin-bottom: 40px;
+        }
+        .content-section--text + .content-section--text {
+            border-top: 1px solid #ddd;
+            padding-top: 40px;
         }
         
         .text-content {
@@ -219,7 +229,7 @@
             margin-top: 30px;
             margin-left: 0;
             margin-right: 0;
-            padding: 0 40px;
+            padding: 0;
             text-align: justify;
             column-count: 2;
             column-gap: 40px;
@@ -236,7 +246,7 @@
         .carousel-wrapper {
             position: relative;
             overflow: hidden;
-            border-radius: 8px;
+            border-radius: 30px;
         }
         
         .carousel-images {
@@ -250,7 +260,7 @@
             width: 100%;
             cursor: pointer;
             flex-shrink: 0;
-            border-radius: 8px;
+            border-radius: 30px;
             object-fit: cover;
             height: auto;
         }
@@ -364,7 +374,7 @@
             column-count: 2;
             column-gap: 40px;
             column-rule: 1px solid #eee;
-            padding: 0 40px;
+            padding: 0;
             text-align: justify;
         }
         
@@ -377,47 +387,51 @@
 
         /* Page action buttons */
         .page-buttons {
-            position: fixed;
+            position: absolute;
             bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 1550px;
-            max-width: 95vw;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 20px;
+            left: 20px;
             pointer-events: none;
             z-index: 100;
-            box-sizing: border-box;
         }
         .page-btn {
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: white;
+            background: #f0f0f0;
             border: none;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+            box-shadow: none;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             pointer-events: auto;
             transition: background 0.2s ease, transform 0.2s ease;
-            color: #888;
+            color: #555;
             font-size: 18px;
         }
         .page-btn:hover {
-            background: #f5f5f5;
+            background: #e0e0e0;
             transform: scale(1.08);
         }
         .page-btn svg {
             width: 20px;
             height: 20px;
             fill: none;
-            stroke: #888;
+            stroke: #555;
             stroke-width: 2;
             stroke-linecap: round;
             stroke-linejoin: round;
+        }
+        .home-btn {
+            flex-shrink: 0;
+            background: #e0e0e0;
+            color: #333;
+        }
+        .home-btn svg {
+            stroke: #333;
+        }
+        .home-btn:hover {
+            background: #d0d0d0;
         }
         .help-popup {
             position: fixed;
@@ -444,7 +458,7 @@
         }
         .help-popup h4 {
             margin: 0 0 10px;
-            font-family: Georgia, 'Times New Roman', serif;
+            font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
             font-style: italic;
             font-size: 16px;
             color: #333;
@@ -476,21 +490,23 @@
         </div>
 
         <div class="main-content" id="mainContent">
-            <h2 class="project-heading" id="projectHeading">Project Title</h2>
+            <div class="heading-row">
+                <h2 class="project-heading" id="projectHeading">Project Title</h2>
+                <button class="page-btn home-btn" onclick="window.location.href='../../index.html'" title="Home">
+                    <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
+                </button>
+            </div>
             <div id="projectContent">
                 <!-- Project content will be loaded here -->
             </div>
         </div>
-    </div>
 
-    <!-- Page buttons -->
-    <div class="page-buttons">
-        <button class="page-btn help-btn" onclick="toggleHelp()" title="Help">
-            <span style="font-family: Georgia, serif; font-size: 20px; font-style: italic; color: #888;">?</span>
-        </button>
-        <button class="page-btn home-btn" onclick="window.location.href='../../index.html'" title="Home">
-            <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
-        </button>
+        <!-- Help button -->
+        <div class="page-buttons">
+            <button class="page-btn help-btn" onclick="toggleHelp()" title="Help">
+                <span style="font-family: Georgia, serif; font-size: 20px; font-style: italic; color: #555;">?</span>
+            </button>
+        </div>
     </div>
 
     <!-- Help popup -->
@@ -579,6 +595,7 @@
                 sectionDiv.className = 'content-section';
 
                 if (section.sectiontype === 'text' && section.value) {
+                    sectionDiv.classList.add('content-section--text');
                     sectionDiv.innerHTML = `
                         <div class="text-content">${section.value}</div>
                     `;
@@ -775,5 +792,6 @@
         // Load data when page loads
         document.addEventListener('DOMContentLoaded', loadProjectData);
     </script>
+<script src="../../../CaterpillarAnimator.js"></script>
 </body>
 </html>

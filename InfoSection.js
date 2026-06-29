@@ -1,7 +1,8 @@
-import { app, projects, PLAIN_COLORS, stageHeight } from './Config.js';
+import { app, projects, PLAIN_COLORS, stageHeight, interactiveRect } from './Config.js';
 import { createProjectCard } from './ProjectCard.js';
 import { indexBg, whiteCircleBg } from './Resources.js';
 import { openArchivePanel } from './ArchivePanel.js';
+import { initFrogAnimator, spawnFrog } from './FrogAnimator.js';
 
 const container = document.getElementById('app-container');
 
@@ -10,6 +11,8 @@ let viewportHeight = 900;
 
 // ---- Help dialog (DOM overlay above the canvas) ----
 let helpBackdropEl = null;
+let currentFrog = null;
+
 function buildHelpDialog() {
     if (helpBackdropEl) return;
     helpBackdropEl = document.createElement('div');
@@ -32,39 +35,43 @@ function buildHelpDialog() {
         if (e.key === 'Escape') hideHelpDialog();
     });
 }
-function showHelpDialog() {
+
+async function showHelpDialog() {
     buildHelpDialog();
     helpBackdropEl.classList.add('open');
+
+    // Spawn frog from center of the main content box (underneath the DOM dialog)
+    await initFrogAnimator();
+    const frogX = interactiveRect.x + interactiveRect.width / 2;
+    const frogY = stageHeight / 2;
+    currentFrog = spawnFrog(frogX, frogY);
 }
+
 function hideHelpDialog() {
     if (helpBackdropEl) helpBackdropEl.classList.remove('open');
+
+    if (currentFrog) {
+        currentFrog.drop();
+        currentFrog = null;
+    }
 }
 
 async function initInfoSection() {
     try {
 
-        // The card list is clipped: it starts below the archive button and
-        // ends the same distance from the bottom of the panel.
         const LIST_TOP = 100;
         const LIST_BOTTOM_MARGIN = 100;
 
-        // Lay the scrollable card viewport out in the fixed 1550x1000 logical
-        // space; CSS scales the canvas to the window, so we use the design
-        // height (not the live, scaled container height).
         viewportHeight = stageHeight - LIST_TOP - LIST_BOTTOM_MARGIN;
 
-        // Create a container for the image section
         const imageContainer = new PIXI.Container();
-        imageContainer.x = 10;  // Position from left
-        imageContainer.y = 10;    // Position from top
+        imageContainer.x = 10;
+        imageContainer.y = 10;
         imageContainer.eventMode = 'static';
 
-        // Create a container for the background with effects
         const bgContainer = new PIXI.Container();
 
         //archiveIndex -- circular button (flat, no shadow) -----------------
-        // Tucked into the top-left corner (imageContainer is offset +10,+10,
-        // so this leaves ~14px from the canvas edges).
         const archiveBtnRadius = 30;
         const archiveIndexButton = new PIXI.Container();
         archiveIndexButton.x = 4 + archiveBtnRadius;
@@ -79,19 +86,16 @@ async function initInfoSection() {
         archiveBtnBg.endFill();
         archiveIndexButton.addChild(archiveBtnBg);
 
-        // Plus icon (PNG) inside the button.
         const archivePlus = PIXI.Sprite.from('assets/PLUS.png');
         archivePlus.anchor.set(0.5);
-        archivePlus.scale.set(34 / 512);   // PLUS.png is 512x512
+        archivePlus.scale.set(34 / 512);
         archivePlus.eventMode = 'none';
         archiveIndexButton.addChild(archivePlus);
 
-        // Count value is still tracked (updated elsewhere) but no longer shown.
         archiveIndexValueLabelText = new PIXI.Text('0', { fontFamily: 'Gelasio', fontSize: 22, fill: 0x808080 });
         archiveIndexValueLabelText.visible = false;
         archiveIndexValueLabelText.eventMode = 'none';
 
-        // Hover label that reveals "Archive Index" to the right of the button.
         const archiveHoverLabel = new PIXI.Text('Archive Index', {
             fontFamily: 'Gelasio', fontStyle: 'italic', fontSize: 20, fill: 0x808080
         });
@@ -112,7 +116,6 @@ async function initInfoSection() {
             gsap.to(archiveHoverLabel, { alpha: 0, duration: 0.2, ease: 'power2.out' });
         });
         archiveIndexButton.on('pointerdown', () => {
-            // Cascade the project index out from the right as an in-page panel.
             openArchivePanel();
         });
 
@@ -122,8 +125,8 @@ async function initInfoSection() {
         //help -- circular button at the bottom-left corner -----------------
         const helpBtnRadius = 30;
         const helpButton = new PIXI.Container();
-        helpButton.x = 4 + helpBtnRadius;                              // mirror archive button (left margin)
-        helpButton.y = stageHeight - 14 - helpBtnRadius - 10;          // ~14px from the bottom (imageContainer +10)
+        helpButton.x = 4 + helpBtnRadius;
+        helpButton.y = stageHeight - 14 - helpBtnRadius - 10;
         helpButton.eventMode = 'static';
         helpButton.cursor = 'pointer';
         helpButton.hitArea = new PIXI.Circle(0, 0, helpBtnRadius);
@@ -136,14 +139,10 @@ async function initInfoSection() {
 
         const helpMark = PIXI.Sprite.from('assets/HELP.png');
         helpMark.anchor.set(0.5);
-        helpMark.scale.set(58 / 512);   // HELP.png is 512x512
+        helpMark.scale.set(58 / 512);
         helpMark.y = 1;
         helpMark.eventMode = 'none';
         helpButton.addChild(helpMark);
-
-        // Help button is pinned to the bottom of the fixed-size canvas; the CSS
-        // scale keeps it correctly placed at any window size, so no resize
-        // handler is needed.
 
         helpButton.on('pointerover', () => { helpBtnBg.tint = 0xf0f0f0; });
         helpButton.on('pointerout', () => { helpBtnBg.tint = 0xffffff; });
@@ -159,14 +158,11 @@ async function initInfoSection() {
         scrollContainer.height = 900;
         scrollContainer.eventMode = 'static';
 
-        // (No filled background here — the #ececec frame shows behind the white cards.)
         let currentY = 0;
         const cardSpacing = 10;
         let usedProjectIndices = new Set();
 
-        // Function to clear all projects
         function clearAllProjects() {
-            // Clear all project cards and their detail windows
             scrollContainer.children.forEach(card => {
                 if (card.detailContainer) {
                     app.stage.removeChild(card.detailContainer);
@@ -179,14 +175,12 @@ async function initInfoSection() {
         }
         window.clearAllProjects = clearAllProjects;
 
-        // Function to add a project based on percentages
         function addRandomProject(artPercent, communityPercent, ecologyPercent, researchPercent, healthPercent, educationPercent) {
             if (usedProjectIndices.size >= projects.length) {
                 console.log('All projects have been shown');
                 return;
             }
 
-            // Convert percentages to numbers and find the highest
             const percentages = [
                 { category: 'ART', value: parseFloat(artPercent) || 0 },
                 { category: 'COMMUNITY', value: parseFloat(communityPercent) || 0 },
@@ -196,12 +190,10 @@ async function initInfoSection() {
                 { category: 'EDUCATION', value: parseFloat(educationPercent) || 0 }
             ].sort((a, b) => b.value - a.value);
 
-            // Find available projects that match the highest percentage category
             let primaryProjects = [];
             let secondaryProjects = [];
             let finalProjects = [];
 
-            // First try primary category
             primaryProjects = projects.filter((project, index) => 
                 !usedProjectIndices.has(index) && 
                 project.primarycategory === percentages[0].category
@@ -214,7 +206,6 @@ async function initInfoSection() {
                 );
             }
 
-            // If still no matches, return
             if (primaryProjects.length === 0 && secondaryProjects.length === 0) {
                 return;
             }
@@ -229,17 +220,14 @@ async function initInfoSection() {
                 console.log(project.title);
             });
 
-            // Find common projects if both arrays are non-empty
             if (primaryProjects.length > 0 && secondaryProjects.length > 0) {
                 finalProjects = primaryProjects.filter(primaryProject =>
                     secondaryProjects.some(secondaryProject => secondaryProject.title === primaryProject.title)
                 );
-                // If no common projects, combine both arrays
                 if (finalProjects.length === 0) {
                     finalProjects = primaryProjects.concat(secondaryProjects);
                 }
             } else {
-                // If either array is empty, use the non-empty one
                 finalProjects = primaryProjects.length > 0 ? primaryProjects : secondaryProjects;
             }
 
@@ -248,11 +236,9 @@ async function initInfoSection() {
                 console.log(project.title);
             });
 
-            // Select random project from final projects
             const randomIndex = Math.floor(Math.random() * finalProjects.length);
             const project = finalProjects[randomIndex];
             
-            // Mark this project as used
             const projectIndex = projects.indexOf(project);
             usedProjectIndices.add(projectIndex);
 
@@ -268,7 +254,6 @@ async function initInfoSection() {
             scrollContainer.addChild(card);
             currentY += card.height + cardSpacing;
 
-            // Auto-scroll to reveal the newest card if the list overflows.
             const autoTargetY = LIST_TOP - Math.max(0, currentY - viewportHeight);
             gsap.killTweensOf(scrollContainer);
             gsap.to(scrollContainer, { y: autoTargetY, duration: 0.3, ease: 'power2.out' });
@@ -276,10 +261,8 @@ async function initInfoSection() {
             return card;
         }
 
-        // Export the function globally
         window.addRandomProject = addRandomProject;
 
-        // Create and apply mask for scrolling
         const scrollMask = new PIXI.Graphics();
         scrollMask.beginFill(0xFFFFFF);
         scrollMask.drawRect(0, LIST_TOP, 300, viewportHeight);
@@ -290,7 +273,6 @@ async function initInfoSection() {
         bgContainer.addChild(scrollMask);
 
         // ===== Scrolling (no visible scrollbar) =====
-        // Content height grows as cards are added, so compute the scroll range live.
         scrollContainer.eventMode = 'static';
         scrollContainer.cursor = 'grab';
 
@@ -302,7 +284,6 @@ async function initInfoSection() {
             return Math.max(minY, Math.min(LIST_TOP, y));
         }
 
-        // Mouse wheel (faster response)
         scrollContainer.on('wheel', (event) => {
             event.preventDefault();
             event.stopPropagation();
@@ -311,7 +292,6 @@ async function initInfoSection() {
             gsap.to(scrollContainer, { y: target, duration: 0.18, ease: 'power2.out' });
         }, { passive: false });
 
-        // Drag scrolling with momentum
         let isDragging = false;
         let lastDragY = 0;
         let dragVelocity = 0;

@@ -268,14 +268,14 @@ body.page-index {
 
 #app-container {
     position: relative;
-    aspect-ratio: 1550 / 1000;
-    /* Fit the largest 1550:1000 box that fits within 95vw x 95vh. Using min()
+    aspect-ratio: 1650 / 1000;
+    /* Fit the largest 1650:1000 box that fits within 95vw x 95vh. Using min()
        on a single dimension (and deriving the other from aspect-ratio) keeps the
        proportions exact at every window size — the canvas scales as a whole and
-       the bottom control bar / text never get cropped. 1.55 = 1550 / 1000. */
-    width: min(95vw, calc(95vh * 1.55));
+       the bottom control bar / text never get cropped. 1.65 = 1650 / 1000. */
+    width: min(95vw, calc(95vh * 1.65));
     height: auto;
-    max-width: 1550px;
+    max-width: 1650px;
     max-height: 1000px;
 }
 
@@ -286,30 +286,58 @@ body.page-index {
     height: 100% !important;
 }
 
-/* Mobile overlay — shown on small screens to redirect */
+/* Mobile overlay — shown on small screens to redirect.
+   Matches the site's design language: grey #ececec card with rounded
+   corners on the #e0e0e0 page background, Gelasio title + Hind Madurai body. */
 .mobile-redirect {
     display: none;
     position: fixed;
     inset: 0;
     z-index: 9999;
-    background: white;
-    flex-direction: column;
+    background-color: #e0e0e0;
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding: 40px;
+    padding: 24px;
+}
+/* Full-bleed canvas where spawned creatures crawl. Sits above the card so
+   they walk over everything; pointer-events:none lets clicks reach the card. */
+.mobile-redirect__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+}
+.mobile-redirect__content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 460px;
+    background-color: #ececec;
+    border-radius: 40px;
+    padding: 48px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
 }
 .mobile-redirect h1 {
-    font-size: 24px;
+    font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
+    font-size: 30px;
+    font-weight: 400;
     margin: 0;
     color: #333;
 }
 .mobile-redirect p {
+    font-family: 'Hind Madurai', sans-serif;
     font-size: 16px;
     color: #666;
-    line-height: 1.5;
+    line-height: 1.6;
     max-width: 400px;
+    margin: 0;
 }
 .mobile-redirect a {
     display: inline-block;
@@ -318,6 +346,7 @@ body.page-index {
     color: white;
     text-decoration: none;
     border-radius: 40px;
+    font-family: 'Hind Madurai', sans-serif;
     font-size: 16px;
     font-weight: 600;
     transition: background-color 0.2s;
@@ -603,6 +632,201 @@ body.page-index {
         aspect-ratio: auto;
         border-radius: 0;
         box-shadow: none;
+    }
+}
+
+/* ==========================================================================
+   PAGE-SPECIFIC: projectindex.html (small-screen single-column index)
+   Mirrors the in-game Archive panel's design language: grey #ececec card,
+   white rounded project cards, Gelasio italic titles, uppercase meta, a pill
+   search field. Single column; details open above the list; one search bar
+   pinned to the bottom.
+   ========================================================================== */
+.pindex {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    padding: 24px;
+    gap: 16px;
+    overflow: hidden;          /* the list scrolls internally */
+}
+
+/* Details pane — opens above the list */
+.pindex-details {
+    position: relative;
+    flex-shrink: 0;
+    max-height: 55%;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 20px;
+    padding: 24px;
+}
+.pindex-details[hidden] {
+    display: none;
+}
+.pindex-details h2 {
+    margin: 0 36px 18px 0;
+    font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: normal;
+    font-size: 24px;
+    color: #333;
+}
+.pindex-detail-section {
+    margin-bottom: 16px;
+}
+.pindex-detail-section h3 {
+    margin: 0 0 6px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #333;
+}
+.pindex-detail-section p {
+    margin: 0;
+    line-height: 1.5;
+    color: #888;
+    font-size: 15px;
+}
+.pindex-detail-section a {
+    color: #2196F3;
+    text-decoration: none;
+}
+.pindex-detail-section a:hover {
+    text-decoration: underline;
+}
+.pindex-detail-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #f2f2f2;
+    border: 1px solid #e2e2e2;
+    color: #666;
+    font-size: 20px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 5;
+}
+.pindex-detail-close:hover {
+    background: #2196F3;
+    color: #fff;
+    border-color: #2196F3;
+}
+
+/* Single-column scrolling list */
+.pindex-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 2px;
+    /* hide scrollbar, keep scrollable */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.pindex-list::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+.pindex-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: background 0.25s ease;
+}
+.pindex-card:hover {
+    background: #e3f2fd;
+}
+.pindex-card.selected {
+    background: #d6ebfb;
+}
+.pindex-card h3 {
+    margin: 0 0 8px;
+    font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: normal;
+    font-size: 22px;
+    color: #333;
+}
+.pindex-card p {
+    margin: 3px 0;
+    font-size: 14px;
+    color: #666;
+    line-height: 1.4;
+}
+.pindex-card-meta {
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+.pindex-card-desc {
+    margin-top: 8px !important;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Search bar pinned at the bottom */
+.pindex-searchbar {
+    flex-shrink: 0;
+}
+.pindex-searchbar input {
+    width: 100%;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 40px;
+    font-family: inherit;
+    font-size: 15px;
+    background: #f2f2f2;
+    color: #333;
+    text-transform: uppercase;
+}
+.pindex-searchbar input::placeholder {
+    text-transform: uppercase;
+    color: #999;
+}
+.pindex-searchbar input:focus {
+    outline: none;
+}
+
+.pindex-no-results {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    background: #fff;
+    border-radius: 20px;
+}
+.pindex-no-results h3 { margin: 0 0 8px; color: #333; }
+.pindex-no-results p  { margin: 0; }
+
+/* On phones make the index fill the screen so the list scrolls internally
+   and the search bar stays reachable at the bottom. */
+@media (max-width: 768px) {
+    .container--index {
+        width: 100vw;
+        height: 100vh;
+        max-width: 100vw;
+        max-height: 100vh;
+        aspect-ratio: auto;
+        border-radius: 0;
+    }
+    .pindex {
+        padding: 16px;
     }
 }
 
@@ -1217,7 +1441,7 @@ body.page-admin-projectpage {
     display: flex;
     flex-direction: column;
     padding: 28px 32px;
-    transform: translateX(110%);
+    transform: translateX(130%);
     transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
     overflow: hidden;
 }
@@ -1242,22 +1466,6 @@ body.page-admin-projectpage {
     font-style: italic;
     font-weight: normal;
     font-size: 26px;
-    color: #333;
-}
-.archive-count {
-    background-image: url('assets/white_circle_bg.png');
-    background-size: cover;
-    background-position: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.archive-count span {
-    font-size: 14px;
-    font-weight: 600;
     color: #333;
 }
 .archive-close {
@@ -1287,33 +1495,35 @@ body.page-admin-projectpage {
     display: flex;
     gap: 12px;
     align-items: center;
-    margin-top: 16px;
+    flex: 1;
+    min-width: 0;
 }
 .archive-search input {
     flex: 1;
+    min-width: 0;
     padding: 9px 14px;
-    border: 1px solid #ddd;
+    border: none;
     border-radius: 40px;
     font-size: 14px;
     font-family: inherit;
-    transition: border-color 0.25s ease;
+    background: #f2f2f2;
+    text-transform: uppercase;
+}
+.archive-search input::placeholder {
+    text-transform: uppercase;
 }
 .archive-search select {
     padding: 9px 14px;
-    border: 1px solid #ddd;
+    border: none;
     border-radius: 40px;
     font-size: 13px;
-    background: #fff;
+    background: #f2f2f2;
     cursor: pointer;
-    transition: border-color 0.25s ease;
+    text-transform: uppercase;
 }
 .archive-search input:focus,
 .archive-search select:focus {
     outline: none;
-    border-color: #2196F3;
-}
-.archive-search select:hover {
-    border-color: #2196F3;
 }
 
 /* Content: grid + detail */
@@ -1353,37 +1563,52 @@ body.page-admin-projectpage {
 .archive-card {
     background: #fff;
     border: none;
-    border-radius: 10px;
+    border-radius: 20px;
     padding: 16px;
     cursor: pointer;
     transition: background 0.25s ease;
-    height: fit-content;
+    height: 210px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
-.archive-card img {
-    width: 100%;
-    height: 130px;
-    object-fit: cover;
-    border-radius: 6px;
-    margin-bottom: 10px;
-    filter: grayscale(100%);
-    transition: filter 0.3s ease;
-}
-.archive-card:hover img {
-    filter: grayscale(0%);
+.archive-card:hover {
+    background: #e3f2fd;
 }
 .archive-card.selected {
-    background: #e3f2fd;
+    background: #d6ebfb;
 }
 .archive-card h3 {
     margin: 0 0 8px;
-    font-size: 16px;
+    font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: normal;
+    font-size: 22px;
     color: #333;
+    flex-shrink: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 .archive-card p {
     margin: 4px 0;
-    font-size: 13px;
+    font-size: 14px;
     color: #666;
     line-height: 1.4;
+}
+.archive-card-meta {
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+.archive-card-desc {
+    flex: 1;
+    min-height: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 3;
 }
 
 .archive-right {
