@@ -156,10 +156,16 @@ async function LoadTextures() {
         whiteBox.beginFill(WHITE_CARD);
         whiteBox.drawRoundedRect(cardX, cardY, cardW, cardH, 28);
         whiteBox.endFill();
+        whiteBox.eventMode = 'static';
+        whiteBox.hitArea = new PIXI.Rectangle(cardX, cardY, cardW, cardH);
         intro.addChild(whiteBox);
 
-        // The grey description box (redrawn per view)
+        // The grey description box (redrawn per view). It captures its own
+        // clicks so that tapping inside the box never triggers the
+        // click-outside-to-return behaviour.
         const box = new PIXI.Graphics();
+        box.eventMode = 'static';
+        box.on('pointertap', (e) => { if (e && e.stopPropagation) e.stopPropagation(); });
         intro.addChild(box);
 
         // ---- Archive (default) content ----
@@ -167,13 +173,13 @@ async function LoadTextures() {
         intro.addChild(archiveContent);
 
         const descText = new PIXI.Text(ARCHIVE_DESC, {
-            fontFamily: 'Hind Madurai', fontSize: 21, fill: INK,
+            fontFamily: 'Hind Madurai', fontWeight: '63', fontSize: 21, fill: INK,
             align: 'justify', wordWrap: true, wordWrapWidth: WRAP, lineHeight: 30
         });
         archiveContent.addChild(descText);
 
         const bigTitle = new PIXI.Text('THE SHILLIM ARCHIVE', {
-            fontFamily: 'Hind Madurai', fontWeight: '700', fontSize: 76, fill: GREEN, letterSpacing: 1
+            fontFamily: 'Hind Madurai', fontWeight: '630', fontSize: 82, fill: GREEN, letterSpacing: 1
         });
         if (bigTitle.width > WRAP) bigTitle.scale.set(WRAP / bigTitle.width);
         archiveContent.addChild(bigTitle);
@@ -184,12 +190,12 @@ async function LoadTextures() {
         intro.addChild(aboutContent);
 
         const aboutHeading = new PIXI.Text(ABOUT_HEADING, {
-            fontFamily: 'Gelasio', fontWeight: '700', fontSize: 42, fill: 0x111111
+            fontFamily: 'Gelasio', fontWeight: '700', fontSize: 42,  fill: GREEN
         });
         aboutContent.addChild(aboutHeading);
 
         const aboutSubtitle = new PIXI.Text(ABOUT_SUBTITLE, {
-            fontFamily: 'Hind Madurai', fontWeight: '700', fontSize: 21, fill: 0x1a1a1a,
+            fontFamily: 'Hind Madurai', fontWeight: '100', fontSize: 21, fill: 0x1a1a1a,
             lineHeight: 28, wordWrap: true, wordWrapWidth: WRAP
         });
         aboutContent.addChild(aboutSubtitle);
@@ -213,7 +219,7 @@ async function LoadTextures() {
             c.addChild(bg);
 
             const label = new PIXI.Text(text, {
-                fontFamily: 'Hind Madurai', fontWeight: '500', fontSize: 19, fill: 0x222222, letterSpacing: 1
+                fontFamily: 'Hind Madurai', fontWeight: '200', fontSize: 19, fill: 0x222222, letterSpacing: 1
             });
             label.anchor.set(0, 0.5);
             label.y = BTN_H / 2;
@@ -248,17 +254,20 @@ async function LoadTextures() {
                     iconGfx.endFill();
                     label.anchor.set(1, 0.5);
                     label.x = aX - 16;
-                } else if (icon === 'close') {
-                    // left "×" then text
-                    const s = 9;
-                    const cx = BTN_PAD_X + s;
-                    const cy = BTN_H / 2;
+                } else if (icon === 'back') {
+                    // left-pointing triangle then text
+                    const aSize = 12;
+                    const aX = BTN_PAD_X;
+                    const aCY = BTN_H / 2;
                     iconGfx.clear();
-                    iconGfx.lineStyle(2.4, 0x222222, 1);
-                    iconGfx.moveTo(cx - s, cy - s); iconGfx.lineTo(cx + s, cy + s);
-                    iconGfx.moveTo(cx + s, cy - s); iconGfx.lineTo(cx - s, cy + s);
+                    iconGfx.beginFill(0x222222);
+                    iconGfx.moveTo(aX + aSize, aCY - aSize / 2);
+                    iconGfx.lineTo(aX, aCY);
+                    iconGfx.lineTo(aX + aSize, aCY + aSize / 2);
+                    iconGfx.closePath();
+                    iconGfx.endFill();
                     label.anchor.set(0, 0.5);
-                    label.x = cx + s + 16;
+                    label.x = aX + aSize + 16;
                 } else {
                     label.anchor.set(align === 'right' ? 1 : 0, 0.5);
                     label.x = align === 'right' ? w - BTN_PAD_X : BTN_PAD_X;
@@ -268,7 +277,7 @@ async function LoadTextures() {
             // intrinsic width for auto-sized buttons (icon adds room)
             function intrinsicWidth() {
                 let w = label.width + BTN_PAD_X * 2;
-                if (icon === 'close') w = label.width + BTN_PAD_X * 2 + 9 * 2 + 16;
+                if (icon === 'back') w = label.width + BTN_PAD_X * 2 + 12 + 16;
                 return Math.ceil(w);
             }
 
@@ -280,7 +289,7 @@ async function LoadTextures() {
 
         const aboutBtn = makeButton({ text: 'ABOUT', fill: BTN_DARK, align: 'left' });
         const goBtn = makeButton({ text: 'GO TO THE ARCHIVE', fill: BTN_LIGHT, icon: 'arrow' });
-        const closeBtn = makeButton({ text: 'ABOUT', fill: BTN_DARK, icon: 'close' });
+        const closeBtn = makeButton({ text: 'Return', fill: BTN_DARK, icon: 'back' });
 
         intro.addChild(aboutBtn.container);
         intro.addChild(goBtn.container);
@@ -325,6 +334,7 @@ async function LoadTextures() {
             box.beginFill(BOX_FILL);
             box.drawRoundedRect(BOX_X, boxY, BOX_W, boxH, 22);
             box.endFill();
+            box.hitArea = new PIXI.Rectangle(BOX_X, boxY, BOX_W, boxH);
 
             // Place content
             const left = BOX_X + PAD;
@@ -373,6 +383,16 @@ async function LoadTextures() {
             if (e && e.stopPropagation) e.stopPropagation();
             view = 'archive';
             layout();
+        });
+
+        // Click anywhere outside the box (on the white card) returns from the
+        // about view. Taps on the box / buttons stop propagation, so only
+        // outside clicks reach here.
+        whiteBox.on('pointertap', () => {
+            if (view === 'about') {
+                view = 'archive';
+                layout();
+            }
         });
 
         layout();
