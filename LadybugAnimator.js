@@ -82,6 +82,7 @@ export function spawnLadybug(parent, targetX) {
 
     let wpIndex = 0;
     let settled = false;
+    let exitAfterSettle = false;
     let exiting = false;
     let exitWaypoints = null;
     let exitWpIndex = 0;
@@ -119,6 +120,8 @@ export function spawnLadybug(parent, targetX) {
             sprite.animationSpeed = 0.08;
             sprite.play();
             container.rotation = settleRotation;
+            // If the detail box was closed mid-walk, crawl out after a pause
+            if (exitAfterSettle) scheduleExit(4000);
             return;
         }
 
@@ -161,47 +164,61 @@ export function spawnLadybug(parent, targetX) {
 
     app.ticker.add(onTick);
 
+    // Detach from the (sliding) card onto the stage, keeping the same on-screen
+    // position. Returns the local→global offset so any in-flight path can be
+    // converted into stage coordinates.
+    function reparentToStage() {
+        const globalPos = container.getGlobalPosition();
+        const offsetX = globalPos.x - container.x;
+        const offsetY = globalPos.y - container.y;
+        if (container.parent) container.parent.removeChild(container);
+        container.x = globalPos.x;
+        container.y = globalPos.y;
+        app.stage.addChild(container);
+        return { offsetX, offsetY };
+    }
+
+    function scheduleExit(delay) {
+        setTimeout(() => {
+            if (exiting) return;
+            exiting = true;
+            settled = false;
+
+            sprite.textures = walkFrames;
+            sprite.animationSpeed = 0.15;
+            sprite.play();
+
+            exitWaypoints = buildExitPath(container.x, container.y);
+            exitWpIndex = 0;
+            prevX = container.x;
+            prevY = container.y;
+            progress = 0;
+
+            if (exitWaypoints.length > 0) {
+                faceTarget(exitWaypoints[0].x, exitWaypoints[0].y);
+            }
+        }, delay);
+    }
+
     return {
         drop() {
             if (exiting) return;
 
-            // If still walking, let it ride back with the card — destroy after card is hidden
+            // Still walking in: detach onto the stage so it stays on screen
+            // instead of riding back with the card. Convert the remaining path
+            // into stage coordinates, then let it finish walking and settle.
             if (!settled) {
-                app.ticker.remove(onTick);
-                setTimeout(() => {
-                    if (container.parent) container.parent.removeChild(container);
-                    container.destroy({ children: true });
-                }, 500);
+                const { offsetX, offsetY } = reparentToStage();
+                for (const wp of waypoints) { wp.x += offsetX; wp.y += offsetY; }
+                prevX += offsetX;
+                prevY += offsetY;
+                exitAfterSettle = true;
                 return;
             }
 
-            // Already idle — reparent to stage so it stays in place
-            const globalPos = container.getGlobalPosition();
-            if (container.parent) container.parent.removeChild(container);
-            container.x = globalPos.x;
-            container.y = globalPos.y;
-            app.stage.addChild(container);
-
-            // Delay before crawling out
-            setTimeout(() => {
-                if (exiting) return;
-                exiting = true;
-                settled = false;
-
-                sprite.textures = walkFrames;
-                sprite.animationSpeed = 0.15;
-                sprite.play();
-
-                exitWaypoints = buildExitPath(container.x, container.y);
-                exitWpIndex = 0;
-                prevX = container.x;
-                prevY = container.y;
-                progress = 0;
-
-                if (exitWaypoints.length > 0) {
-                    faceTarget(exitWaypoints[0].x, exitWaypoints[0].y);
-                }
-            }, 4000);
+            // Already idle — reparent to stage so it stays in place, then crawl out
+            reparentToStage();
+            scheduleExit(4000);
         }
     };
 }

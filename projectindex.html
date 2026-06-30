@@ -114,6 +114,10 @@
                 ? `${project.startdate} to ${project.enddate}`
                 : (project.date || '');
 
+            const thumbHtml = project.thumbnail
+                ? `<img class="pindex-detail-thumb" src="${escapeHtml(project.thumbnail)}" alt="${escapeHtml(project.title)}" onerror="this.style.display='none'">`
+                : '';
+
             const shortDescHtml = project.shortdescription
                 ? `<div class="pindex-detail-section"><h3>Summary</h3><p>${escapeHtml(project.shortdescription)}</p></div>`
                 : '';
@@ -125,29 +129,53 @@
                 .map(c => `<span class="tag">${escapeHtml(c)}</span>`)
                 .join('');
 
-            const linkHtml = project.link
-                ? `<div class="pindex-detail-section"><h3>Project Page</h3>
-                       <p><a href="${escapeHtml(project.link)}" target="_blank" rel="noopener">Open project page &rarr;</a></p>
-                   </div>`
+            // Author / Duration / Categories — collapsed (hidden) by default
+            const metaHtml = `
+                <button type="button" class="pindex-meta-toggle" aria-expanded="false" onclick="toggleMeta(this)">
+                    <span>Project info</span>
+                    <span class="pindex-meta-chevron" aria-hidden="true">&rsaquo;</span>
+                </button>
+                <div class="pindex-meta" hidden>
+                    <div class="pindex-detail-section"><h3>Author</h3><p>${escapeHtml(project.author)}</p></div>
+                    <div class="pindex-detail-section"><h3>Duration</h3><p>${escapeHtml(dateDisplay)}</p></div>
+                    <div class="pindex-detail-section">
+                        <h3>Categories</h3>
+                        <p><span class="tag">${escapeHtml(project.primarycategory)}</span>${secondaryTags}</p>
+                    </div>
+                </div>`;
+
+            const btnHtml = project.link
+                ? `<a class="pindex-project-btn" href="${escapeHtml(project.link)}" target="_blank" rel="noopener">Open project page &rarr;</a>`
                 : '';
 
             document.getElementById('projectDetailsBody').innerHTML = `
                 <h2>${escapeHtml(project.title)}</h2>
-                <div class="pindex-detail-section"><h3>Author</h3><p>${escapeHtml(project.author)}</p></div>
-                <div class="pindex-detail-section"><h3>Duration</h3><p>${escapeHtml(dateDisplay)}</p></div>
-                <div class="pindex-detail-section">
-                    <h3>Categories</h3>
-                    <p><span class="tag">${escapeHtml(project.primarycategory)}</span>${secondaryTags}</p>
-                </div>
+                ${thumbHtml}
+                ${metaHtml}
                 ${shortDescHtml}
                 <div class="pindex-detail-section"><h3>Description</h3><p>${escapeHtml(project.details)}</p></div>
-                ${linkHtml}
+                ${btnHtml}
             `;
 
             const details = document.getElementById('projectDetails');
             details.hidden = false;
             details.scrollTop = 0;
             details.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function toggleMeta(btn) {
+            const meta = document.querySelector('.pindex-meta');
+            if (!meta) return;
+            const willOpen = meta.hasAttribute('hidden');
+            if (willOpen) {
+                meta.removeAttribute('hidden');
+                btn.setAttribute('aria-expanded', 'true');
+                btn.classList.add('open');
+            } else {
+                meta.setAttribute('hidden', '');
+                btn.setAttribute('aria-expanded', 'false');
+                btn.classList.remove('open');
+            }
         }
 
         function closeDetails() {

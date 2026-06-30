@@ -1,3 +1,5 @@
+import { preloadProjectImages } from './ProjectThumbs.js';
+
 const stageWidth = 1650;
 const stageHeight = 1000;
 
@@ -146,6 +148,9 @@ async function loadProjects() {
         if (!response.ok) throw new Error('Failed to load projects');
         const data = await response.json();
         projects = data.projects;
+        // Preload each project's accompanying images so thumbnails can be
+        // picked at random (see ProjectThumbs.js).
+        await preloadProjectImages(projects);
         return data.projects;
     } catch (error) {
         console.error('Error loading projects:', error);

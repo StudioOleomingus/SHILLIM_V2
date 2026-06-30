@@ -1,5 +1,6 @@
 import { app, projects, PLAIN_COLORS, stageHeight, interactiveRect } from './Config.js';
 import { createProjectCard } from './ProjectCard.js';
+import { pickThumb } from './ProjectThumbs.js';
 import { indexBg, whiteCircleBg } from './Resources.js';
 import { openArchivePanel } from './ArchivePanel.js';
 import { initFrogAnimator, spawnFrog } from './FrogAnimator.js';
@@ -97,7 +98,7 @@ async function initInfoSection() {
         archiveIndexValueLabelText.eventMode = 'none';
 
         const archiveHoverLabel = new PIXI.Text('Archive Index', {
-            fontFamily: 'Gelasio', fontStyle: 'italic', fontSize: 20, fill: 0x808080
+            fontFamily: 'Gelasio', fontSize: 22, fill: 0x808080
         });
         archiveHoverLabel.anchor.set(0, 0.5);
         archiveHoverLabel.x = archiveIndexButton.x + archiveBtnRadius + 14;
@@ -105,15 +106,31 @@ async function initInfoSection() {
         archiveHoverLabel.eventMode = 'none';
         archiveHoverLabel.alpha = 0;
 
+        // Outline capsule wrapping the button + label, revealed on hover
+        const capsulePadX = 18;
+        const capsuleX = archiveIndexButton.x - archiveBtnRadius;
+        const capsuleY = archiveIndexButton.y - archiveBtnRadius;
+        const capsuleH = archiveBtnRadius * 2;
+        const capsuleW = (archiveHoverLabel.x + archiveHoverLabel.width + capsulePadX) - capsuleX;
+        const archiveHoverCapsule = new PIXI.Graphics();
+        archiveHoverCapsule.roundRect(capsuleX, capsuleY, capsuleW, capsuleH, archiveBtnRadius);
+        archiveHoverCapsule.stroke({ width: 2, color: 0x808080 });
+        archiveHoverCapsule.eventMode = 'none';
+        archiveHoverCapsule.alpha = 0;
+
         archiveIndexButton.on('pointerover', () => {
             archiveBtnBg.tint = 0xf0f0f0;
             gsap.killTweensOf(archiveHoverLabel);
+            gsap.killTweensOf(archiveHoverCapsule);
             gsap.to(archiveHoverLabel, { alpha: 1, duration: 0.2, ease: 'power2.out' });
+            gsap.to(archiveHoverCapsule, { alpha: 1, duration: 0.2, ease: 'power2.out' });
         });
         archiveIndexButton.on('pointerout', () => {
             archiveBtnBg.tint = 0xffffff;
             gsap.killTweensOf(archiveHoverLabel);
+            gsap.killTweensOf(archiveHoverCapsule);
             gsap.to(archiveHoverLabel, { alpha: 0, duration: 0.2, ease: 'power2.out' });
+            gsap.to(archiveHoverCapsule, { alpha: 0, duration: 0.2, ease: 'power2.out' });
         });
         archiveIndexButton.on('pointerdown', () => {
             openArchivePanel();
@@ -121,6 +138,7 @@ async function initInfoSection() {
 
         bgContainer.addChild(archiveIndexButton);
         bgContainer.addChild(archiveHoverLabel);
+        bgContainer.addChild(archiveHoverCapsule);
 
         //help -- circular button at the bottom-left corner -----------------
         const helpBtnRadius = 30;
@@ -257,7 +275,8 @@ async function initInfoSection() {
         parseFloat(researchPercent) || 0,
         parseFloat(healthPercent) || 0,
         parseFloat(educationPercent) || 0
-    ]
+    ],
+    pickThumb(project)
 );
 
             card.y = currentY;

@@ -84,7 +84,7 @@ function makeCircleButton(kind) {
     return btn;
 }
 
-function createDetailWindow(artistDetails, details, link, cardBackground, x, y) {
+function createDetailWindow(artistDetails, details, link, cardBackground, x, y, thumbnail = '') {
     const detailContainer = new PIXI.Container();
     detailContainer.x = x;
     detailContainer.y = y;
@@ -144,11 +144,56 @@ function createDetailWindow(artistDetails, details, link, cardBackground, x, y) 
         return box;
     }
 
+    // Thumbnail image — cover-fit into a rounded box at the top of the panel
+    function buildThumbnail(src) {
+        const thumbH = 200;
+        const box = new PIXI.Container();
+
+        const bg = new PIXI.Graphics();
+        bg.beginFill(0xE8E8E8);
+        bg.drawRoundedRect(0, 0, contentWidth, thumbH, boxRadius);
+        bg.endFill();
+        box.addChild(bg);
+
+        const sprite = new PIXI.Sprite();
+        sprite.eventMode = 'none';
+        sprite.visible = false;
+
+        const mask = new PIXI.Graphics();
+        mask.beginFill(0xFFFFFF);
+        mask.drawRoundedRect(0, 0, contentWidth, thumbH, boxRadius);
+        mask.endFill();
+        box.addChild(mask);
+        sprite.mask = mask;
+        box.addChild(sprite);
+
+        // PIXI v8: load the texture via Assets, then cover-fit it
+        PIXI.Assets.load(src).then((tex) => {
+            const tw = tex.width, th = tex.height;
+            if (!tw || !th) return;
+            sprite.texture = tex;
+            const scale = Math.max(contentWidth / tw, thumbH / th);
+            sprite.scale.set(scale);
+            sprite.x = (contentWidth - tw * scale) / 2;
+            sprite.y = (thumbH - th * scale) / 2;
+            sprite.visible = true;
+        }).catch(() => {});
+
+        box.boxHeight = thumbH;
+        return box;
+    }
+
     const scrollContainer = new PIXI.Container();
     scrollContainer.x = padding;
     scrollContainer.y = contentTop;
 
     let cy = 0;
+    if (thumbnail) {
+        const thumbBox = buildThumbnail(thumbnail);
+        thumbBox.y = cy;
+        scrollContainer.addChild(thumbBox);
+        cy += thumbBox.boxHeight + 14;
+    }
     if (artistDetails) {
         const artistBox = buildInfoBox('Artist Details', artistDetails);
         artistBox.y = cy;
@@ -194,7 +239,7 @@ function createDetailWindow(artistDetails, details, link, cardBackground, x, y) 
     return detailContainer;
 }
 
-export function createProjectCard(title, author, date, link, details, artistDetails = '', x = 0, y = 0, percentages = null) {
+export function createProjectCard(title, author, date, link, details, artistDetails = '', x = 0, y = 0, percentages = null, thumbnail = '') {
     const cardContainer = new PIXI.Container();
     cardContainer.x = x;
     cardContainer.y = y;
@@ -288,7 +333,7 @@ export function createProjectCard(title, author, date, link, details, artistDeta
     app.stage.addChild(drawerMask);
     detailContainer.mask = drawerMask;
 
-    const detailWindow = createDetailWindow(artistDetails, details, link, background, cardContainer.x + cardWidth + 60, 80);
+    const detailWindow = createDetailWindow(artistDetails, details, link, background, cardContainer.x + cardWidth + 60, 80, thumbnail);
     detailContainer.addChild(detailWindow);
 
     const TINT_OPEN = 0xE6F3FF;

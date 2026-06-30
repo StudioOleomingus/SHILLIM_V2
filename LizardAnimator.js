@@ -15,7 +15,7 @@ const CREATURES = [
         maxCells: 12,
         scale: 0.2,
         animSpeed: 0.25,
-        spawnCount: [4, 8],
+        spawnCount: [2, 5],
         speed: 2.0,
         pathBuilder: buildAntPath
     },
@@ -222,21 +222,27 @@ function buildAntPath(startX, startY, exitAngle) {
         points.push({ x, y });
     }
 
-    const wanderSteps = 10 + Math.floor(Math.random() * 6);
+    // Meander: a persistent gentle curl makes the path arc in loose circles,
+    // with small wobble on top so it still reads as an ant searching around.
+    let curlDir = Math.random() < 0.5 ? 1 : -1;
+    const curlStrength = 0.18 + Math.random() * 0.16;   // base turn per step (radians)
+    const wanderSteps = 20 + Math.floor(Math.random() * 10);
     for (let i = 0; i < wanderSteps; i++) {
-        const wobble = (Math.random() - 0.5) * 0.6;
+        const wobble = (Math.random() - 0.5) * 0.5;
         const len = 12 + Math.random() * 18;
-        angle += wobble * 0.3;
+        // occasionally reverse the curl so it doesn't trace a perfect circle
+        if (Math.random() < 0.12) curlDir *= -1;
+        angle += curlDir * curlStrength + wobble * 0.25;
         x += Math.cos(angle) * len;
         y += Math.sin(angle) * len;
         points.push({ x, y });
     }
 
-    const convergeSteps = 5;
+    const convergeSteps = 7;
     const angleDiff = normalizeAngle(exitAngle - angle);
     for (let i = 1; i <= convergeSteps; i++) {
         const t = i / convergeSteps;
-        angle += angleDiff * t * 0.35;
+        angle += angleDiff * t * 0.3;
         const len = 14 + Math.random() * 16;
         x += Math.cos(angle) * len;
         y += Math.sin(angle) * len;

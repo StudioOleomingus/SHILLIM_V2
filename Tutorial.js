@@ -31,12 +31,6 @@ const TUTORIAL_MESSAGES = [
         text: 'Excellent! You\'ve created your first enclosed space. Try creating more to reveal projects from the archive.',
         advance: 'click',
         gif: null
-    },
-    {
-        id: 'direction',
-        text: 'Each category produces a different texture. Switch categories to explore more of the archive.',
-        advance: 'click',
-        gif: 'assets/UI-ELEMENTS/tutorial/switch-category.gif'
     }
 ];
 

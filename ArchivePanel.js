@@ -1,5 +1,6 @@
 // ArchivePanel.js
 import { initBeeAnimator, spawnBee } from './BeeAnimator.js';
+import { preloadProjectImages, pickThumb } from './ProjectThumbs.js';
 
 let panelEl = null;
 let backdropEl = null;
@@ -97,6 +98,9 @@ async function loadData() {
         const res = await fetch('data/projects.json');
         const data = await res.json();
         projectsData = data.projects || [];
+        // Preload each project's accompanying images so thumbnails can be
+        // picked at random (see ProjectThumbs.js).
+        await preloadProjectImages(projectsData);
         dataLoaded = true;
         populateYearFilter();
     } catch (err) {
@@ -178,11 +182,17 @@ function refreshGrid() {
             ? `${project.startdate} to ${project.enddate}`
             : (project.date || '');
 
+        const cardThumbSrc = pickThumb(project);
+        const cardThumb = cardThumbSrc
+            ? `<div class="archive-card-thumb"><img src="${escapeHtml(cardThumbSrc)}" alt="${escapeHtml(project.title)}" onerror="this.parentElement.style.display='none'"></div>`
+            : '';
+
         card.innerHTML = `
             <h3>${escapeHtml(project.title)}</h3>
             <p class="archive-card-meta">${escapeHtml(project.author)}</p>
             <p class="archive-card-meta">${escapeHtml(dateDisplay)}</p>
             <p class="archive-card-desc">${escapeHtml(displayText)}</p>
+            ${cardThumb}
         `;
         grid.appendChild(card);
     });
@@ -205,12 +215,13 @@ function selectProject(index) {
         ? `${project.startdate} to ${project.enddate}`
         : (project.date || '');
 
-    const thumb = project.thumbnail
-        ? `<img src="${escapeHtml(project.thumbnail)}" alt="${escapeHtml(project.title)}" class="archive-detail-thumb" onerror="this.style.display='none'">`
+    const thumbSrc = pickThumb(project);
+    const thumb = thumbSrc
+        ? `<img src="${escapeHtml(thumbSrc)}" alt="${escapeHtml(project.title)}" class="archive-detail-thumb" onerror="this.style.display='none'">`
         : '';
 
     const shortDesc = project.shortdescription
-        ? `<div class="archive-detail-section"><h3>Summary</h3><p>${escapeHtml(project.shortdescription)}</p></div>`
+        ? `<div class="archive-detail-section archive-detail-summary"><h3>Summary</h3><p>${escapeHtml(project.shortdescription)}</p></div>`
         : '';
 
     const secondaryTags = (project.secondarycategory || '')
@@ -220,24 +231,37 @@ function selectProject(index) {
         .map((c) => `<span class="tag">${escapeHtml(c)}</span>`)
         .join('');
 
+    const gotoBtn = project.link
+        ? `<div class="archive-goto-wrap"><a class="archive-goto-btn" href="${escapeHtml(project.link)}" target="_blank" rel="noopener" aria-label="Open Project-Page"><span class="archive-goto-label">Open Project-Page</span><span class="archive-goto-circle"><img src="assets/UI-ELEMENTS/PLUS.png" alt=""></span></a></div>`
+        : '';
+
     right.innerHTML = `
         <button class="archive-detail-close" id="archiveDetailClose" title="Close details">&times;</button>
         <h2>${escapeHtml(project.title)}</h2>
         ${thumb}
-        <div class="archive-detail-section"><h3>Author</h3><p>${escapeHtml(project.author)}</p></div>
-        <div class="archive-detail-section"><h3>Duration</h3><p>${escapeHtml(dateDisplay)}</p></div>
-        <div class="archive-detail-section">
-            <h3>Categories</h3>
-            <p><span class="tag">${escapeHtml(project.primarycategory)}</span>${secondaryTags}</p>
+        <button class="archive-meta-toggle" id="archiveMetaToggle" type="button" aria-expanded="false" aria-controls="archiveMetaRow">Details<span class="archive-meta-chevron">&#9662;</span></button>
+        <div class="archive-detail-meta-row" id="archiveMetaRow" hidden>
+            <div class="archive-meta-item"><h3>Author</h3><p>${escapeHtml(project.author)}</p></div>
+            <div class="archive-meta-item"><h3>Duration</h3><p>${escapeHtml(dateDisplay)}</p></div>
+            <div class="archive-meta-item"><h3>Categories</h3><p><span class="tag">${escapeHtml(project.primarycategory)}</span>${secondaryTags}</p></div>
         </div>
         ${shortDesc}
         <div class="archive-detail-section"><h3>Description</h3><p>${escapeHtml(project.details)}</p></div>
-        <div class="archive-detail-section">
-            <h3>Project Page</h3>
-            <p><a href="${escapeHtml(project.link)}" target="_blank" rel="noopener">Open project page &rarr;</a></p>
-        </div>
+        ${gotoBtn}
     `;
     right.querySelector('#archiveDetailClose').addEventListener('click', closeDetails);
+
+    const metaToggle = right.querySelector('#archiveMetaToggle');
+    const metaRow = right.querySelector('#archiveMetaRow');
+    if (metaToggle && metaRow) {
+        metaToggle.addEventListener('click', () => {
+            const willOpen = metaRow.hidden;
+            metaRow.hidden = !willOpen;
+            metaToggle.classList.toggle('open', willOpen);
+            metaToggle.setAttribute('aria-expanded', String(willOpen));
+        });
+    }
+
     right.scrollTop = 0;
 }
 

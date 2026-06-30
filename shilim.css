@@ -673,6 +673,67 @@ body.page-index {
     font-size: 24px;
     color: #333;
 }
+.pindex-detail-thumb {
+    width: 100%;
+    border-radius: 12px;
+    margin-bottom: 18px;
+    display: block;
+    object-fit: cover;
+}
+
+/* Collapsible meta (Author / Duration / Categories) — hidden by default */
+.pindex-meta-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+    border: none;
+    border-radius: 40px;
+    background: #f2f2f2;
+    color: #555;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+.pindex-meta-toggle:hover {
+    background: #e3f2fd;
+}
+.pindex-meta-chevron {
+    font-size: 18px;
+    line-height: 1;
+    transition: transform 0.2s ease;
+}
+.pindex-meta-toggle.open .pindex-meta-chevron {
+    transform: rotate(90deg);
+}
+.pindex-meta[hidden] {
+    display: none;
+}
+
+/* Button to the project page */
+.pindex-project-btn {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 13px 28px;
+    background-color: #2196F3;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 40px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+.pindex-project-btn:hover {
+    background-color: #1976D2;
+}
+
 .pindex-detail-section {
     margin-bottom: 16px;
 }
@@ -1555,6 +1616,7 @@ body.page-admin-projectpage {
     grid-template-columns: repeat(2, 1fr);
     gap: 18px;
     padding: 4px;
+    align-items: start;
 }
 .archive-left.full-width .archive-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -1566,7 +1628,7 @@ body.page-admin-projectpage {
     border-radius: 20px;
     padding: 16px;
     cursor: pointer;
-    transition: background 0.25s ease;
+    transition: background 0.25s ease, height 0.3s ease;
     height: 210px;
     display: flex;
     flex-direction: column;
@@ -1574,6 +1636,28 @@ body.page-admin-projectpage {
 }
 .archive-card:hover {
     background: #e3f2fd;
+    height: 400px;
+}
+/* Thumbnail revealed only on hover (expands the card) */
+.archive-card-thumb {
+    flex-shrink: 0;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    border-radius: 12px;
+    transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+}
+.archive-card:hover .archive-card-thumb {
+    max-height: 260px;
+    opacity: 1;
+    margin-top: 12px;
+}
+.archive-card-thumb img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 5 / 4;
+    object-fit: cover;
+    border-radius: 12px;
 }
 .archive-card.selected {
     background: #d6ebfb;
@@ -1626,8 +1710,11 @@ body.page-admin-projectpage {
 }
 .archive-right h2 {
     margin: 0 30px 18px 0;
-    color: #2196F3;
-    font-size: 22px;
+    font-family: 'Gelasio', Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: normal;
+    color: #000;
+    font-size: 26px;
 }
 .archive-detail-thumb {
     width: 100%;
@@ -1639,14 +1726,137 @@ body.page-admin-projectpage {
 }
 .archive-detail-section h3 {
     margin: 0 0 6px;
+    font-family: 'Hind Madurai', sans-serif;
     font-size: 14px;
     color: #333;
 }
 .archive-detail-section p {
     margin: 0;
+    font-family: 'Hind Madurai', sans-serif;
     line-height: 1.45;
     color: #888;
     font-size: 14px;
+}
+/* Author / Duration / Categories condensed into a single row */
+.archive-detail-meta-row {
+    display: flex;
+    gap: 18px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+.archive-detail-meta-row[hidden] {
+    display: none;
+}
+.archive-meta-item {
+    flex: 1;
+    min-width: 0;
+}
+.archive-meta-item h3 {
+    margin: 0 0 6px;
+    font-family: 'Hind Madurai', sans-serif;
+    font-size: 14px;
+    color: #333;
+}
+.archive-meta-item p {
+    margin: 0;
+    font-family: 'Hind Madurai', sans-serif;
+    line-height: 1.45;
+    color: #888;
+    font-size: 14px;
+}
+/* Summary one count larger than the rest of the body text */
+.archive-detail-summary p {
+    font-size: 15px;
+}
+/* Collapsible Author / Duration / Categories — tab sits below the thumbnail */
+.archive-meta-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 16px;
+    padding: 5px 12px;
+    font-family: 'Hind Madurai', sans-serif;
+    font-size: 13px;
+    color: #555;
+    background: #f0f0f0;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+.archive-meta-toggle:hover {
+    background: #e3f2fd;
+}
+.archive-meta-chevron {
+    font-size: 11px;
+    line-height: 1;
+    transition: transform 0.25s ease;
+}
+.archive-meta-toggle.open .archive-meta-chevron {
+    transform: rotate(180deg);
+}
+
+/* "Open Project-Page" button — grey circle with white +, capsule on hover */
+.archive-goto-wrap {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    justify-content: flex-end;
+    pointer-events: none;
+    margin-top: 8px;
+    padding: 8px 0;
+}
+.archive-goto-btn {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    padding: 6px;
+    border: 1.5px solid transparent;
+    border-radius: 40px;
+    background: transparent;
+    text-decoration: none;
+    transition: gap 0.25s ease, padding 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.archive-goto-btn:hover {
+    gap: 14px;
+    padding: 6px 16px 6px 20px;
+    border-color: #b0b0b0;
+    background: #fff;
+    text-decoration: none;
+}
+.archive-goto-label {
+    white-space: nowrap;
+    font-family: 'Hind Madurai', sans-serif;
+    font-size: 14px;
+    color: #555;
+    max-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-width 0.25s ease, opacity 0.2s ease;
+}
+.archive-goto-btn:hover .archive-goto-label {
+    max-width: 220px;
+    opacity: 1;
+}
+.archive-goto-circle {
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #d2d2d2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+}
+.archive-goto-btn:hover .archive-goto-circle {
+    background: #b0b0b0;
+}
+.archive-goto-circle img {
+    width: 26px;
+    height: 26px;
+    filter: brightness(0) invert(1);
 }
 .archive-detail-section a {
     color: #2196F3;
