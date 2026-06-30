@@ -22,9 +22,9 @@ const CREATURES = [
     {
         name: 'beetle',
         folder: 'assets/ANIMATION-SPRITES/beetle/',
-        frameCount: 11,
+        frameCount: 8,
         maxCells: 40,
-        scale: 0.45,
+        scale: 0.3,
         animSpeed: 0.2,
         spawnCount: [1, 1],
         speed: 1.2,

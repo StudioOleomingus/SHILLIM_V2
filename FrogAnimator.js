@@ -3,12 +3,12 @@ import { app } from './Config.js';
 
 const FRAME_COUNT = 7;
 const FROG_SCALE = 0.6;
-const BURST_SPEED = 8.0;
-const ANIM_SPEED = 0.18;
-const PAUSE_MS = 1500;
-const ROTATION_LERP = 0.04;
+const BURST_SPEED = 1.2;
+const ANIM_SPEED = 0.14;
 const HOP_DISTANCE_MIN = 80;
 const HOP_DISTANCE_MAX = 160;
+// How much the body leans into the curve (0 = always upright, 1 = full heading).
+const LEAN_FACTOR = 0.3;
 
 let frames = null;
 let loaded = false;
@@ -45,31 +45,18 @@ export function spawnFrog(spawnX, spawnY) {
     sprite.gotoAndStop(0); // frozen — waiting under card
     app.stage.addChild(sprite);
 
-    // State: 'waiting' → 'hopping' → 'paused' → 'exiting'
+    // State: 'waiting' → 'moving'
     let state = 'waiting';
 
-    // Build path on drop: hop1 → pause → exit off screen
+    // Build path on drop: hop1 → exit off screen (no pause)
     let waypoints = [];
     let wpIndex = 0;
     let prevX = spawnX;
     let prevY = spawnY;
     let progress = 0;
-    let targetRotation = 0;
-
-    function smoothRotate() {
-        let diff = targetRotation - sprite.rotation;
-        while (diff > Math.PI) diff -= Math.PI * 2;
-        while (diff < -Math.PI) diff += Math.PI * 2;
-        sprite.rotation += diff * ROTATION_LERP;
-    }
 
     const onTick = () => {
-        if (state === 'waiting' || state === 'paused') {
-            if (state === 'paused') smoothRotate();
-            return;
-        }
-
-        smoothRotate();
+        if (state === 'waiting') return;
 
         const target = waypoints[wpIndex];
         if (!target) {
@@ -93,20 +80,11 @@ export function spawnFrog(spawnX, spawnY) {
             progress = 0;
             wpIndex++;
 
-            const isLastHop = wpIndex >= waypoints.length;
-
-            if (!isLastHop && state === 'hopping') {
-                // First hop done — pause, turn toward exit
-                state = 'paused';
-                sprite.stop();
-
-                const next = waypoints[wpIndex];
-                targetRotation = angleTo(prevX, prevY, next.x, next.y) + Math.PI / 2;
-
-                setTimeout(() => {
-                    state = 'exiting';
-                    sprite.play();
-                }, PAUSE_MS);
+            // Face the next segment instantly — no pause, no easing.
+            // Damp the lean so the body only tilts gently into the curve.
+            const next = waypoints[wpIndex];
+            if (next) {
+                sprite.rotation = (angleTo(prevX, prevY, next.x, next.y) + Math.PI / 2) * LEAN_FACTOR;
             }
         } else {
             sprite.x = prevX + dx * progress;
@@ -129,30 +107,33 @@ export function spawnFrog(spawnX, spawnY) {
         drop() {
             if (state !== 'waiting') return;
 
-            // Build path: hop to nearby spot, then exit off screen
-            let angle = Math.random() * Math.PI * 2;
-            const hopDist = HOP_DISTANCE_MIN + Math.random() * (HOP_DISTANCE_MAX - HOP_DISTANCE_MIN);
-            const hop1X = spawnX + Math.cos(angle) * hopDist;
-            const hop1Y = spawnY + Math.sin(angle) * hopDist;
+            // Always start with a straight hop upward...
+            const upHop = HOP_DISTANCE_MIN + Math.random() * (HOP_DISTANCE_MAX - HOP_DISTANCE_MIN);
+            const startY = spawnY - upHop;
+            waypoints = [{ x: spawnX, y: startY }];
 
-            // Exit: continue in a slightly different direction
-            angle += (Math.random() - 0.5) * 0.1;
-            const exitX = hop1X + Math.cos(angle) * 700;
-            const exitY = hop1Y + Math.sin(angle) * 700;
+            // ...then a wide, gentle S as it travels up and off the top.
+            // x sways one way then the other (one full sine = an "S"); the tall
+            // vertical travel keeps the slope — and so the turning — very gentle.
+            const amplitude = 140 + Math.random() * 80;  // width of the S
+            const sway = Math.random() < 0.5 ? 1 : -1;   // which way the S leans
+            const endY = -700;                           // far above the top → long, gentle climb
+            const steps = 40;
+            for (let i = 1; i <= steps; i++) {
+                const t = i / steps;
+                const x = spawnX + sway * amplitude * Math.sin(t * Math.PI * 2);
+                const y = startY + (endY - startY) * t;
+                waypoints.push({ x, y });
+            }
 
-            waypoints = [
-                { x: hop1X, y: hop1Y },
-                { x: exitX, y: exitY }
-            ];
             wpIndex = 0;
             prevX = sprite.x;
             prevY = sprite.y;
             progress = 0;
 
-            targetRotation = angleTo(prevX, prevY, hop1X, hop1Y) + Math.PI / 2;
-            sprite.rotation = targetRotation;
+            sprite.rotation = (angleTo(prevX, prevY, spawnX, startY) + Math.PI / 2) * LEAN_FACTOR;
             sprite.play();
-            state = 'hopping';
+            state = 'moving';
         }
     };
 }
