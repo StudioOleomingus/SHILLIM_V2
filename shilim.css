@@ -1536,9 +1536,6 @@ body.page-admin-projectpage {
     border-radius: 50%;
     background: #f2f2f2;
     border: 1px solid #e2e2e2;
-    color: #666;
-    font-size: 22px;
-    line-height: 1;
     padding: 0;
     display: flex;
     align-items: center;
@@ -1546,10 +1543,17 @@ body.page-admin-projectpage {
     cursor: pointer;
     transition: all 0.2s ease;
 }
+.archive-close img {
+    width: 14px;
+    height: 14px;
+    transition: filter 0.2s ease;
+}
 .archive-close:hover {
     background: #2196F3;
-    color: #fff;
     border-color: #2196F3;
+}
+.archive-close:hover img {
+    filter: brightness(0) invert(1);
 }
 
 .archive-search {
@@ -1874,9 +1878,6 @@ body.page-admin-projectpage {
     border-radius: 50%;
     background: #fff;
     border: 1px solid #ddd;
-    color: #666;
-    font-size: 18px;
-    line-height: 1;
     padding: 0;
     cursor: pointer;
     display: flex;
@@ -1885,10 +1886,17 @@ body.page-admin-projectpage {
     transition: all 0.2s ease;
     z-index: 5;
 }
+.archive-detail-close img {
+    width: 12px;
+    height: 12px;
+    transition: filter 0.2s ease;
+}
 .archive-detail-close:hover {
     background: #2196F3;
-    color: #fff;
     border-color: #2196F3;
+}
+.archive-detail-close:hover img {
+    filter: brightness(0) invert(1);
 }
 
 .archive-no-selection {

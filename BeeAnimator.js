@@ -2,7 +2,7 @@
 // Spawns at close button, crawls left, stays behind when panel closes
 
 const ASSET_PATH = 'assets/ANIMATION-SPRITES/bee/';
-const BEE_SCALE = 0.25;
+const BEE_SCALE = 0.4;
 const CRAWL_SPEED = 0.8;
 const EMERGE_SPEED = 0.9;
 const CRAWL_ANIM_SPEED = 0.15;
@@ -193,9 +193,6 @@ export function spawnBee(spawnX, spawnY) {
         smoothRotate();
 
         if (state === 'idle') {
-            // Barely perceptible sway
-            x += Math.sin(frameCount * 0.01) * 0.03;
-            y += Math.cos(frameCount * 0.008) * 0.02;
             drawBee();
             return;
         }

@@ -58,7 +58,7 @@ export function spawnLadybug(parent, targetX) {
 
     const container = new PIXI.Container();
     container.addChild(sprite);
-    container.scale.set(0.25);
+    container.scale.set(0.4);
     container.rotation = Math.PI / 2;
 
     // Random entry point along the left edge

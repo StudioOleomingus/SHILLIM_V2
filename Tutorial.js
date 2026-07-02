@@ -37,6 +37,7 @@ const TUTORIAL_MESSAGES = [
 let currentStep = 0;
 let tutorialActive = false;
 let tutorialSkipped = false;
+let tutorialPaused = false;
 let overlayEl = null;
 let boxEl = null;
 let gifEl = null;
@@ -202,9 +203,29 @@ function endTutorial() {
 }
 
 function handleEsc(e) {
+    if (tutorialPaused) return;
     if (e.key === 'Escape') {
         endTutorial();
     }
+}
+
+// ── Pause / resume ──────────────────────────────────────────────────
+// Called when an overlay panel (e.g. the Archive Index) opens on top of
+// the tutorial. While paused, the tutorial overlay is hidden and its
+// click/drag/surround/Esc handlers are inert so it can't advance underneath.
+
+function pauseTutorial() {
+    if (!tutorialActive || tutorialSkipped || tutorialPaused) return;
+    tutorialPaused = true;
+    document.removeEventListener('pointerdown', handleClickAdvance);
+    if (overlayEl) overlayEl.style.display = 'none';
+}
+
+function resumeTutorial() {
+    if (!tutorialActive || tutorialSkipped || !tutorialPaused) return;
+    tutorialPaused = false;
+    // Re-render the current step (restores overlay + advance handlers).
+    showStep(currentStep);
 }
 
 // ── Public API ──────────────────────────────────────────────────────
@@ -225,14 +246,14 @@ function startTutorial() {
 }
 
 function tutorialDragDone() {
-    if (!tutorialActive || tutorialSkipped) return;
+    if (!tutorialActive || tutorialSkipped || tutorialPaused) return;
     if (currentStep === 2 && TUTORIAL_MESSAGES[2].advance === 'drag') {
         advanceToNext();
     }
 }
 
 function tutorialSurroundDone() {
-    if (!tutorialActive || tutorialSkipped) return;
+    if (!tutorialActive || tutorialSkipped || tutorialPaused) return;
     if (currentStep === 3 && TUTORIAL_MESSAGES[3].advance === 'surround') {
         advanceToNext();
     }
@@ -242,4 +263,4 @@ function isTutorialBlocking() {
     return tutorialActive && !tutorialSkipped && currentStep === 0;
 }
 
-export { startTutorial, tutorialDragDone, tutorialSurroundDone, isTutorialBlocking };
+export { startTutorial, tutorialDragDone, tutorialSurroundDone, isTutorialBlocking, pauseTutorial, resumeTutorial };

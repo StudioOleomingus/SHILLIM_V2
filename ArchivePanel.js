@@ -1,6 +1,7 @@
 // ArchivePanel.js
 import { initBeeAnimator, spawnBee } from './BeeAnimator.js';
 import { preloadProjectImages, pickThumb } from './ProjectThumbs.js';
+import { pauseTutorial, resumeTutorial } from './Tutorial.js';
 
 let panelEl = null;
 let backdropEl = null;
@@ -58,7 +59,7 @@ function buildPanel() {
                         ${categoryOptions}
                     </select>
                 </div>
-                <button class="archive-close" id="archiveCloseBtn" title="Close">&times;</button>
+                <button class="archive-close" id="archiveCloseBtn" title="Close"><img src="assets/UI-ELEMENTS/CLOSE.png" alt="Close"></button>
             </div>
         </div>
         <div class="archive-content">
@@ -66,7 +67,7 @@ function buildPanel() {
                 <div class="archive-grid" id="archiveGrid"></div>
             </div>
             <div class="archive-right" id="archiveDetails">
-                <button class="archive-detail-close" id="archiveDetailClose" title="Close details">&times;</button>
+                <button class="archive-detail-close" id="archiveDetailClose" title="Close details"><img src="assets/UI-ELEMENTS/CLOSE.png" alt="Close"></button>
                 <div class="archive-no-selection"><h3>Select a project to view details</h3></div>
             </div>
         </div>
@@ -236,7 +237,7 @@ function selectProject(index) {
         : '';
 
     right.innerHTML = `
-        <button class="archive-detail-close" id="archiveDetailClose" title="Close details">&times;</button>
+        <button class="archive-detail-close" id="archiveDetailClose" title="Close details"><img src="assets/UI-ELEMENTS/CLOSE.png" alt="Close"></button>
         <h2>${escapeHtml(project.title)}</h2>
         ${thumb}
         <button class="archive-meta-toggle" id="archiveMetaToggle" type="button" aria-expanded="false" aria-controls="archiveMetaRow">Details<span class="archive-meta-chevron">&#9662;</span></button>
@@ -286,6 +287,8 @@ function closeDetails() {
 }
 
 async function openArchivePanel() {
+    // Suspend the tutorial (if running) while the Archive Index is open.
+    pauseTutorial();
     buildPanel();
     await loadData();
     refreshGrid();
@@ -315,6 +318,9 @@ function closeArchivePanel() {
         bee.drop();
         bee = null;
     }
+
+    // Resume the tutorial where it left off (no-op if it wasn't running).
+    resumeTutorial();
 }
 
 window.openArchivePanel = openArchivePanel;
