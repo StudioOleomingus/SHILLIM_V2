@@ -363,14 +363,15 @@ export function createProjectCard(title, author, date, link, details, artistDeta
             background.tint = TINT_OPEN;
             slideInFromLeft(detailWindow, { offset: DETAIL_SLIDE_OFFSET });
 
-            // Spawn ladybug after 1 second delay
-            await ensureLadybug();
-            const targetX = 200;
-            if (spawnTimeout) clearTimeout(spawnTimeout);
-            spawnTimeout = setTimeout(() => {
-                spawnTimeout = null;
-                currentLadybug = spawnLadybug(detailWindow, targetX);
-            }, 1000);
+            // Ladybug spawn temporarily disabled — nothing shows on open for now.
+            // To restore: uncomment the block below.
+            // await ensureLadybug();
+            // const targetX = 200;
+            // if (spawnTimeout) clearTimeout(spawnTimeout);
+            // spawnTimeout = setTimeout(() => {
+            //     spawnTimeout = null;
+            //     currentLadybug = spawnLadybug(detailWindow, targetX);
+            // }, 1000);
         } else {
             // Cancel pending spawn and reparent ladybug before the card slides away
             if (spawnTimeout) { clearTimeout(spawnTimeout); spawnTimeout = null; }
