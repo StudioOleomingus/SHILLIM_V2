@@ -6,3 +6,49 @@
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
+
+# ──────────────────────────────────────────────────────────────
+# Caching. Image/media assets are content-addressed by folder and
+# rarely change, so cache them hard at the browser + CDN edge. This
+# makes repeat visits (and re-entering views) effectively instant.
+# ──────────────────────────────────────────────────────────────
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.jpeg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.JPG"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.zip"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Long-lived caching for the large vendored libraries.
+[[headers]]
+  for = "*.min.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

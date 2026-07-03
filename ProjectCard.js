@@ -1,6 +1,7 @@
 import { app, interactiveRect } from './Config.js';
 import { slideInFromLeft, slideOutToLeft } from './Transitions.js';
 import { initLadybugAnimator, spawnLadybug } from './LadybugAnimator.js';
+import { thumbPath } from './ProjectThumbs.js';
 
 // Offset used for the detail-window cascade
 const DETAIL_SLIDE_OFFSET = 450;
@@ -167,8 +168,11 @@ function createDetailWindow(artistDetails, details, link, cardBackground, x, y, 
         sprite.mask = mask;
         box.addChild(sprite);
 
-        // PIXI v8: load the texture via Assets, then cover-fit it
-        PIXI.Assets.load(src).then((tex) => {
+        // PIXI v8: load the small WebP thumbnail (falling back to the full
+        // image if it hasn't been generated), then cover-fit it.
+        PIXI.Assets.load(thumbPath(src))
+            .catch(() => PIXI.Assets.load(src))
+            .then((tex) => {
             const tw = tex.width, th = tex.height;
             if (!tw || !th) return;
             sprite.texture = tex;

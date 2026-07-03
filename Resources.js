@@ -401,19 +401,37 @@ async function LoadTextures() {
         // Random preview image (left gap between container and white card)
         // ──────────────────────────────────────────────────────────────
         (async function loadPreviewImage() {
-            // Try loading 0-4 in parallel, keep whichever succeed
-            const attempts = [];
-            for (let i = 0; i < 5; i++) {
-                attempts.push(
-                    PIXI.Assets.load(`assets/PREVIEW-ASSETS/previewimages/${i}.png`).catch(() => null)
-                );
+            let tex = null;
+
+            // Prefer the small WebP the page already started streaming via the
+            // <head> preload hint — it's likely in cache already, so this
+            // resolves almost instantly and avoids extra downloads.
+            const preferred = (typeof window !== 'undefined') ? window.__PREVIEW_SRC : null;
+            if (preferred) {
+                tex = await PIXI.Assets.load(preferred).catch(() => null);
             }
-            const results = await Promise.all(attempts);
-            const previewTextures = results.filter(Boolean);
 
-            if (previewTextures.length === 0) return;
+            // If the thumbnail is missing, fall back to the full-size original.
+            const preferredFull = (typeof window !== 'undefined') ? window.__PREVIEW_SRC_FULL : null;
+            if (!tex && preferredFull) {
+                tex = await PIXI.Assets.load(preferredFull).catch(() => null);
+            }
 
-            const tex = previewTextures[Math.floor(Math.random() * previewTextures.length)];
+            // Last resort: probe the known indices. (Previously this always
+            // downloaded every available preview and then used just one.)
+            if (!tex) {
+                const attempts = [];
+                for (let i = 0; i < 5; i++) {
+                    attempts.push(
+                        PIXI.Assets.load(`assets/PREVIEW-ASSETS/previewimages/${i}.png`).catch(() => null)
+                    );
+                }
+                const results = await Promise.all(attempts);
+                const previewTextures = results.filter(Boolean);
+                if (previewTextures.length === 0) return;
+                tex = previewTextures[Math.floor(Math.random() * previewTextures.length)];
+            }
+
             const previewSprite = new PIXI.Sprite(tex);
 
             // Scale to fit the left gap width, maintain aspect ratio
@@ -431,6 +449,82 @@ async function LoadTextures() {
             // Bottom of the intro stack so the lizard can sit above the image
             // but still below the white card.
             intro.addChildAt(previewSprite, 0);
+
+            // ──────────────────────────────────────────────────────────────
+            // Block-by-block reveal (20px squares)
+            // A purely cosmetic overlay: the real sprite starts invisible while
+            // a grid of 20px tiles — each a sub-texture of the same image —
+            // fades in over a smooth randomised wave. When it finishes we show
+            // the real sprite and discard the overlay, so all the existing
+            // interaction (hover-to-spawn lizard, z-ordering) is unaffected.
+            (function revealInBlocks() {
+                const BLOCK = 20; // display-space square size
+
+                const dispW = nativeW * scale;
+                const dispH = nativeH * scale;
+                const left = cardX - dispW;
+                const top = stageHeight / 2 - dispH / 2;
+
+                // No GSAP (or a degenerate size) → just show it immediately.
+                if (typeof gsap === 'undefined' || dispW <= 0 || dispH <= 0) {
+                    previewSprite.alpha = 1;
+                    return;
+                }
+
+                const source = tex.source;
+                const fx = (tex.frame && tex.frame.x) || 0;
+                const fy = (tex.frame && tex.frame.y) || 0;
+
+                const cols = Math.ceil(dispW / BLOCK);
+                const rows = Math.ceil(dispH / BLOCK);
+
+                const revealContainer = new PIXI.Container();
+                revealContainer.x = left;
+                revealContainer.y = top;
+                // Sit directly above the (now hidden) preview sprite, still
+                // below the white card.
+                intro.addChildAt(revealContainer, intro.getChildIndex(previewSprite) + 1);
+
+                previewSprite.alpha = 0;
+
+                const blocks = [];
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const bx = c * BLOCK;
+                        const by = r * BLOCK;
+                        const bw = Math.min(BLOCK, dispW - bx);
+                        const bh = Math.min(BLOCK, dispH - by);
+                        if (bw <= 0 || bh <= 0) continue;
+
+                        // Matching slice of the source image for this tile.
+                        const frame = new PIXI.Rectangle(
+                            fx + bx / scale,
+                            fy + by / scale,
+                            bw / scale,
+                            bh / scale
+                        );
+                        const blockSprite = new PIXI.Sprite(new PIXI.Texture({ source, frame }));
+                        blockSprite.x = bx;
+                        blockSprite.y = by;
+                        blockSprite.width = bw;
+                        blockSprite.height = bh;
+                        blockSprite.alpha = 0;
+                        revealContainer.addChild(blockSprite);
+                        blocks.push(blockSprite);
+                    }
+                }
+
+                gsap.to(blocks, {
+                    alpha: 1,
+                    duration: 0.35,
+                    ease: 'power2.out',
+                    stagger: { amount: 1.2, grid: [rows, cols], from: 'random' },
+                    onComplete: () => {
+                        previewSprite.alpha = 1;
+                        revealContainer.destroy({ children: true });
+                    }
+                });
+            })();
 
             // Load lizard frames for click-to-spawn
             const lizardFrames = [];

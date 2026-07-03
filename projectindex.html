@@ -114,8 +114,14 @@
                 ? `${project.startdate} to ${project.enddate}`
                 : (project.date || '');
 
-            const thumbHtml = project.thumbnail
-                ? `<img class="pindex-detail-thumb" src="${escapeHtml(project.thumbnail)}" alt="${escapeHtml(project.title)}" onerror="this.style.display='none'">`
+            // Prefer the small WebP thumbnail; on error fall back to the
+            // full-size original, and only hide if that fails too.
+            const fullThumb = project.thumbnail;
+            const smallThumb = fullThumb
+                ? fullThumb.replace(/^(.*)\/([^/]+)\.[^./]+$/, '$1/thumbs/$2.webp')
+                : '';
+            const thumbHtml = fullThumb
+                ? `<img class="pindex-detail-thumb" src="${escapeHtml(smallThumb)}" data-full="${escapeHtml(fullThumb)}" alt="${escapeHtml(project.title)}" loading="lazy" decoding="async" onerror="if(this.dataset.full){this.src=this.dataset.full;this.removeAttribute('data-full');}else{this.style.display='none';}">`
                 : '';
 
             const shortDescHtml = project.shortdescription

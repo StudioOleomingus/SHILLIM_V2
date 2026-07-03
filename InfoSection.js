@@ -60,6 +60,11 @@ function hideHelpDialog() {
 async function initInfoSection() {
     try {
 
+        // Prewarm the frog frames in the background as soon as the archive
+        // opens, so the frog appears instantly when the help dialog is opened
+        // instead of waiting on a first-time load at that moment.
+        initFrogAnimator();
+
         const LIST_TOP = 100;
         const LIST_BOTTOM_MARGIN = 100;
 

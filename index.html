@@ -5,9 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shillim Institute</title>
     <link rel="stylesheet" href="shilim.css">
-    <script src="jszip.min.js"></script>
-    <script src="gsap.min.js"></script>
-    <script src="pixi.min.js"></script>
+
+    <!-- Start streaming the decorative landing image immediately, in parallel
+         with the (parser-blocking-free) libraries and fonts below, so it is
+         already in the browser cache by the time PixiJS asks for it. We pick
+         the image here and expose the choice so Resources.js loads the same
+         one (no wasted requests). -->
+    <script>
+        (function () {
+            var candidates = [0, 1, 2, 3, 4];
+            var pick = candidates[Math.floor(Math.random() * candidates.length)];
+            var base = 'assets/PREVIEW-ASSETS/previewimages/';
+            var thumb = base + 'thumbs/' + pick + '.webp';
+            var full = base + pick + '.png';
+            // Load the small WebP; keep the full image as a fallback.
+            window.__PREVIEW_SRC = thumb;
+            window.__PREVIEW_SRC_FULL = full;
+            var link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'image';
+            link.href = thumb;
+            link.setAttribute('fetchpriority', 'high');
+            document.head.appendChild(link);
+        })();
+    </script>
+
+    <!-- defer keeps these from blocking the parser; they still execute in
+         order before the deferred module script that depends on them. -->
+    <script src="jszip.min.js" defer></script>
+    <script src="gsap.min.js" defer></script>
+    <script src="pixi.min.js" defer></script>
 </head>
 <body class="page-index">
     <!-- Mobile redirect overlay -->

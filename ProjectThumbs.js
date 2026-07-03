@@ -13,6 +13,18 @@
 const imageCache = new Map(); // folder -> array<string> of image paths
 const inflight = new Map();   // folder -> Promise<array<string>>
 
+// Map a full-resolution image path to its small WebP thumbnail, following the
+// convention used by scripts/generate-thumbnails.js:
+//   <dir>/<name>.<ext>  ->  <dir>/thumbs/<name>.webp
+// Callers should attempt this path first and fall back to the original if the
+// thumbnail hasn't been generated yet.
+export function thumbPath(src) {
+    if (!src) return src;
+    const m = String(src).match(/^(.*)\/([^/]+)\.[^./]+$/);
+    if (!m) return src;
+    return `${m[1]}/thumbs/${m[2]}.webp`;
+}
+
 // Derive a project's asset folder from its `link`
 // e.g. "assets/PROJECT-PAGES/Elvira/projectpage.html" -> "assets/PROJECT-PAGES/Elvira"
 function projectFolder(project) {

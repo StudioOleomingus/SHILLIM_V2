@@ -12,21 +12,32 @@ const LEAN_FACTOR = 0.3;
 
 let frames = null;
 let loaded = false;
+let loadingPromise = null;
 
 export async function initFrogAnimator() {
     if (loaded) return;
-    try {
-        const textures = [];
-        for (let i = 0; i < FRAME_COUNT; i++) {
-            const pad = String(i).padStart(2, '0');
-            const tex = await PIXI.Assets.load(`assets/ANIMATION-SPRITES/Frog/Frogcycle_${pad}.png`);
-            textures.push(tex);
+    // De-dupe concurrent callers (e.g. an early prewarm + opening the help
+    // dialog) so the frames are only fetched once.
+    if (loadingPromise) return loadingPromise;
+
+    loadingPromise = (async () => {
+        try {
+            // Load every frame in parallel instead of one-at-a-time, so the
+            // frog is ready in roughly the time of a single request rather
+            // than seven sequential round-trips.
+            const paths = [];
+            for (let i = 0; i < FRAME_COUNT; i++) {
+                paths.push(`assets/ANIMATION-SPRITES/Frog/Frogcycle_${String(i).padStart(2, '0')}.png`);
+            }
+            frames = await Promise.all(paths.map((p) => PIXI.Assets.load(p)));
+            loaded = true;
+        } catch (err) {
+            console.warn('FrogAnimator: could not load frames –', err);
+            loadingPromise = null; // allow a later retry
         }
-        frames = textures;
-        loaded = true;
-    } catch (err) {
-        console.warn('FrogAnimator: could not load frames –', err);
-    }
+    })();
+
+    return loadingPromise;
 }
 
 function angleTo(x1, y1, x2, y2) {
