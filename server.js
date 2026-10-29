@@ -321,6 +321,36 @@ app.post('/api/upload-asset', assetUpload.single('asset'), async (req, res) => {
     }
 });
 
+// ---------------------------------------------------------------------------
+// Landing page copy (data/landing.json) — read by Resources.js
+// ---------------------------------------------------------------------------
+const landingFile = './data/landing.json';
+const LANDING_KEYS = ['title', 'description', 'aboutHeading', 'aboutSubtitle', 'aboutBody',
+    'aboutButton', 'archiveButton', 'returnButton'];
+
+app.get('/api/landing', async (req, res) => {
+    try {
+        res.json(JSON.parse(await fs.readFile(landingFile, 'utf8')));
+    } catch (error) {
+        if (error.code === 'ENOENT') return res.json({});
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/landing', async (req, res) => {
+    const body = req.body || {};
+    const data = {};
+    for (const k of LANDING_KEYS) {
+        if (typeof body[k] === 'string') data[k] = body[k];
+    }
+    try {
+        await fs.writeFile(landingFile, JSON.stringify(data, null, 2) + '\n');
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });

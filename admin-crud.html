@@ -108,6 +108,7 @@
             <h1>Archive Admin &mdash; Projects &amp; Pages</h1>
             <div class="crud-actions">
                 <span id="serverStatus" class="server-status">checking server…</span>
+                <button class="crud-btn" onclick="openLandingEditor()">Edit Landing Page</button>
                 <button class="crud-btn" onclick="exportIndex()">Export Index JSON</button>
                 <button class="crud-btn crud-btn--primary" onclick="openEditor(-1)">+ Add New Project</button>
             </div>
@@ -161,7 +162,7 @@
                     <select id="f_primary">
                         <option value="">-- Select --</option>
                         <option>ART</option><option>COMMUNITY</option><option>ECOLOGY</option>
-                        <option>RESEARCH</option><option>HEALTH</option><option>EDUCATION</option>
+                        <option>RESEARCH</option><option hidden>HEALTH</option><option>EDUCATION</option>
                     </select>
                 </div>
                 <div class="fg">
@@ -171,7 +172,8 @@
                         <label><input type="checkbox" value="COMMUNITY">COMMUNITY</label>
                         <label><input type="checkbox" value="ECOLOGY">ECOLOGY</label>
                         <label><input type="checkbox" value="RESEARCH">RESEARCH</label>
-                        <label><input type="checkbox" value="HEALTH">HEALTH</label>
+                        <!-- HEALTH hidden for now; kept so existing values survive a save -->
+                        <label style="display:none"><input type="checkbox" value="HEALTH">HEALTH</label>
                         <label><input type="checkbox" value="EDUCATION">EDUCATION</label>
                     </div>
                 </div>
@@ -226,6 +228,64 @@
         </div>
     </div>
 
+    <!-- ============ LANDING PAGE EDITOR ============ -->
+    <div class="overlay" id="landingOverlay">
+        <div class="editor">
+            <div class="editor-head">
+                <h2>Edit Landing Page Text</h2>
+                <button class="editor-close" onclick="closeLandingEditor()" title="Close">&times;</button>
+            </div>
+            <div class="tab-panel active">
+                <div class="path-banner">Reads &amp; writes: <strong>data/landing.json</strong>. Blank fields fall back to the built-in default text.</div>
+                <h4 style="margin:0 0 10px;">Landing view</h4>
+                <div class="fg">
+                    <label for="l_title">Title</label>
+                    <input type="text" id="l_title">
+                </div>
+                <div class="fg">
+                    <label for="l_description">Description</label>
+                    <textarea id="l_description" rows="7"></textarea>
+                    <div class="hint">A blank line starts a new paragraph.</div>
+                </div>
+                <h4 style="margin:18px 0 10px;">About view</h4>
+                <div class="fg">
+                    <label for="l_aboutHeading">Heading</label>
+                    <input type="text" id="l_aboutHeading">
+                </div>
+                <div class="fg">
+                    <label for="l_aboutSubtitle">Subtitle</label>
+                    <textarea id="l_aboutSubtitle" rows="2"></textarea>
+                </div>
+                <div class="fg">
+                    <label for="l_aboutBody">Body</label>
+                    <textarea id="l_aboutBody" rows="9"></textarea>
+                </div>
+                <h4 style="margin:18px 0 10px;">Buttons</h4>
+                <div class="fg-row">
+                    <div class="fg">
+                        <label for="l_aboutButton">About button</label>
+                        <input type="text" id="l_aboutButton">
+                    </div>
+                    <div class="fg">
+                        <label for="l_archiveButton">Archive button</label>
+                        <input type="text" id="l_archiveButton">
+                    </div>
+                    <div class="fg">
+                        <label for="l_returnButton">Return button</label>
+                        <input type="text" id="l_returnButton">
+                    </div>
+                </div>
+            </div>
+            <div class="editor-foot">
+                <span class="save-status" id="landingStatus"></span>
+                <div style="display:flex; gap:8px;">
+                    <button class="crud-btn" onclick="closeLandingEditor()">Close</button>
+                    <button class="crud-btn crud-btn--primary" onclick="saveLanding()">Save Landing Page</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
     // ============================================================
     //  State
@@ -237,6 +297,8 @@
     let currentTab = 'index';
     let sortKey = null, sortDir = 1;
     window.ckEditors = {};
+    // Categories hidden from the site for now (mirrors HIDDEN_CATEGORIES in Config.js).
+    const HIDDEN_CATEGORIES = ['HEALTH'];
 
     // ============================================================
     //  Boot
@@ -330,7 +392,8 @@
                 ? `<img class="crud-thumb" src="${escapeHtml(p.thumbnail)}" alt="" onerror="this.outerHTML='<div class=\\'crud-thumb--empty\\'>missing</div>'">`
                 : `<div class="crud-thumb--empty">none</div>`;
 
-            const secs = (p.secondarycategory || '').split(',').map(s => s.trim()).filter(Boolean)
+            const secs = (p.secondarycategory || '').split(',').map(s => s.trim())
+                .filter(s => s && !HIDDEN_CATEGORIES.includes(s))
                 .map(s => `<span class="pill">${escapeHtml(s)}</span>`).join('');
             const cats = `<span class="pill pill--cat">${escapeHtml(p.primarycategory || '—')}</span>${secs}`;
 
@@ -792,6 +855,50 @@
     }
 
     function setSaveStatus(t) { document.getElementById('saveStatus').textContent = t; }
+
+    // ============================================================
+    //  Landing page text (data/landing.json)
+    // ============================================================
+    const LANDING_FIELDS = ['title', 'description', 'aboutHeading', 'aboutSubtitle', 'aboutBody',
+        'aboutButton', 'archiveButton', 'returnButton'];
+
+    async function openLandingEditor() {
+        document.getElementById('landingStatus').textContent = '';
+        let data = {};
+        try {
+            const r = await fetch(`${API}/api/landing`);
+            if (!r.ok) throw new Error();
+            data = await r.json();
+        } catch (e) {
+            // Server offline: fall back to the static file.
+            try { data = await (await fetch('data/landing.json', { cache: 'no-cache' })).json(); } catch (e2) {}
+        }
+        LANDING_FIELDS.forEach(k => { document.getElementById('l_' + k).value = data[k] || ''; });
+        document.getElementById('landingOverlay').classList.add('open');
+    }
+
+    function closeLandingEditor() {
+        document.getElementById('landingOverlay').classList.remove('open');
+    }
+
+    async function saveLanding() {
+        const status = document.getElementById('landingStatus');
+        const data = {};
+        LANDING_FIELDS.forEach(k => { data[k] = document.getElementById('l_' + k).value; });
+        status.textContent = 'Saving…';
+        try {
+            const r = await fetch(`${API}/api/landing`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const j = await r.json();
+            if (!j.success) throw new Error(j.error || 'save failed');
+            status.textContent = '✓ Landing page saved';
+        } catch (e) {
+            alert('Save failed: ' + e.message + '\nIs the server running on ' + API + '?');
+            status.textContent = '';
+        }
+    }
 
     // ============================================================
     //  Export

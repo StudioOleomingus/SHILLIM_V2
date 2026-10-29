@@ -84,6 +84,10 @@ const projectType = [
     'EDUCATION'   // TopLeft
 ];
 
+// Categories hidden from the site for now (picker, filters, tags, editors).
+// Project data keeps them; remove an entry here to bring a category back.
+const HIDDEN_CATEGORIES = ['HEALTH'];
+
 const projectDescriptionTexts = [
     'Description 1',  // ART
     'Description 2',  // COMMUNITY
@@ -163,4 +167,4 @@ async function loadProjects() {
     projects = await loadProjects();
 })();
 
-export { app, folderPaths, stageWidth, stageHeight, GRID_OFFSET_X, stageSize, cellSize, numberOfRows, numberOfColumns, COLORS, DIRECTION_COLORS, PLAIN_COLORS, DragDirection, TileImageDirection, TextureArray, GridCell, gridCells, projects, interactiveRect, projectType, projectDescriptionTexts };
+export { app, folderPaths, stageWidth, stageHeight, GRID_OFFSET_X, stageSize, cellSize, numberOfRows, numberOfColumns, COLORS, DIRECTION_COLORS, PLAIN_COLORS, DragDirection, TileImageDirection, TextureArray, GridCell, gridCells, projects, interactiveRect, projectType, projectDescriptionTexts, HIDDEN_CATEGORIES };

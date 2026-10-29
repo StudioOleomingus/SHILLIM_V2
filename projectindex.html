@@ -28,6 +28,8 @@
     </div>
 
     <script>
+        // Categories hidden from the site for now (mirrors HIDDEN_CATEGORIES in Config.js).
+        const HIDDEN_CATEGORIES = ['HEALTH'];
         let currentProjects = [];
         let selectedProjectTitle = null;
 
@@ -131,7 +133,7 @@
             const secondaryTags = (project.secondarycategory || '')
                 .split(',')
                 .map(c => c.trim())
-                .filter(Boolean)
+                .filter(c => c && !HIDDEN_CATEGORIES.includes(c))
                 .map(c => `<span class="tag">${escapeHtml(c)}</span>`)
                 .join('');
 

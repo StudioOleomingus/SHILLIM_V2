@@ -4,6 +4,7 @@ import { pickThumb } from './ProjectThumbs.js';
 import { indexBg, whiteCircleBg } from './Resources.js';
 import { openArchivePanel } from './ArchivePanel.js';
 import { initFrogAnimator, spawnFrog } from './FrogAnimator.js';
+import { restartTutorial } from './Tutorial.js';
 
 const container = document.getElementById('app-container');
 
@@ -25,6 +26,8 @@ function buildHelpDialog() {
         <button class="help-close" title="Close">&times;</button>
         <h2>About the Shillim Archive</h2>
         <p>The Shillim Archive is an interactive repository of projects by the Shillim Institute. This digital ecosystem encompasses work ranging from art residencies and mapping workshops to ecological surveys and reforestation programs, as well as educational initiatives and community medical outreach. By providing a browser-based interactive site, the archive invites visitors to draw new associations between these varied works, situating each project within the specific landscape of the Northern Western Ghats from which it emerges.</p>
+
+        <button class="help-tutorial-btn" type="button">Relaunch tutorial</button>
     `;
     helpBackdropEl.appendChild(dialog);
     container.appendChild(helpBackdropEl);
@@ -32,6 +35,10 @@ function buildHelpDialog() {
     helpBackdropEl.addEventListener('click', hideHelpDialog);
     dialog.addEventListener('click', (e) => e.stopPropagation());
     dialog.querySelector('.help-close').addEventListener('click', hideHelpDialog);
+    dialog.querySelector('.help-tutorial-btn').addEventListener('click', () => {
+        hideHelpDialog();
+        restartTutorial();
+    });
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') hideHelpDialog();
     });

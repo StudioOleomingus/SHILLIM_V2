@@ -56,7 +56,7 @@
                             <option value="COMMUNITY">COMMUNITY</option>
                             <option value="ECOLOGY">ECOLOGY</option>
                             <option value="RESEARCH">RESEARCH</option>
-                            <option value="HEALTH">HEALTH</option>
+                            <option value="HEALTH" hidden>HEALTH</option>
                             <option value="EDUCATION">EDUCATION</option>
                         </select>
                     </div>
@@ -79,7 +79,8 @@
                                 <input type="checkbox" id="secondary-research" name="secondarycategory" value="RESEARCH">
                                 <label for="secondary-research">RESEARCH</label>
                             </div>
-                            <div class="checkbox-item" style="margin-bottom: 8px;">
+                            <!-- HEALTH hidden for now; kept so existing values survive a save -->
+                            <div class="checkbox-item" style="display: none;">
                                 <input type="checkbox" id="secondary-health" name="secondarycategory" value="HEALTH">
                                 <label for="secondary-health">HEALTH</label>
                             </div>

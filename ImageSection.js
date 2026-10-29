@@ -1,4 +1,4 @@
-import { app, TextureArray, numberOfRows, numberOfColumns, cellSize, interactiveRect, stageSize, stageHeight, GridCell, gridCells, DragDirection, DIRECTION_COLORS, PLAIN_COLORS, projectType } from './Config.js';
+import { app, TextureArray, numberOfRows, numberOfColumns, cellSize, interactiveRect, stageSize, stageHeight, GridCell, gridCells, DragDirection, DIRECTION_COLORS, PLAIN_COLORS, projectType, HIDDEN_CATEGORIES } from './Config.js';
 import { getRandomSelectionRect } from './Utils.js';
 import { archiveIndexValueLabelText } from './InfoSection.js';
 import { updateSectionSizes, updateTextBox } from './BottomLayout.js';
@@ -1176,7 +1176,7 @@ gridContainer.removeChild(gridContainer.surroundedGroupsContainer);
             { dir: DragDirection.Bottom,      label: projectType[3], color: 0x445768 },  // RESEARCH
             { dir: DragDirection.BottomLeft,  label: projectType[4], color: 0x9b6b9e },  // HEALTH
             { dir: DragDirection.TopLeft,     label: projectType[5], color: 0xd4915d },  // EDUCATION
-        ];
+        ].filter(opt => !HIDDEN_CATEGORIES.includes(opt.label));
 
         const pickerRadius = 15;
         const pickerSpacing = 48;

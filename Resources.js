@@ -109,13 +109,33 @@ async function LoadTextures() {
         // ──────────────────────────────────────────────────────────────
         // Copy / content
         // ──────────────────────────────────────────────────────────────
-        const ARCHIVE_DESC =
-            'This website is an interactive repository of projects by the Shillim Institute and other associated organisations. It encompasses work ranging from art residencies and mapping workshops to ecological surveys and reforestation programs, as well as educational and craft initiatives, and other such community outreach.\n\nThe archive invites visitors to draw new associations between these varied works, situating each project within the landscape of the Sahyadris from which they emerge';
-
-        const ABOUT_HEADING = 'The Shillim Institute.';
-        const ABOUT_SUBTITLE = 'Inspiring Commitment to Action through Sustainable art practices\nin the Sahyadri Western Ghats India.';
-        const ABOUT_BODY =
-            'Located in the Western Ghats, The Shillim Institute safeguards approximately 2000 acres of land in the Northern region of this mountain range, which has been declared a UNESCO World Heritage Site and a biodiversity conservation hotspot. The Institute has enlisted local communities as forest guards and introduced thousands of native plant species, resulting in the flourishing of over a million trees comprising 64 diverse species.\n\nThe Pavna Collective is a consortium of conservation, ecology, and art organizations, convened by the Shillim Institute. Among its initiatives, the Pavna Collective sponsors 3-6 art residencies a year, fellowships, Mapping Workshop, Cultural documentation and Skill development programs in the Sayadri ranges.';
+        // Defaults; overridden by data/landing.json (editable in admin-crud.html).
+        const LANDING_DEFAULTS = {
+            title: 'THE SHILLIM ARCHIVE',
+            description:
+                'This website is an interactive repository of projects by the Shillim Institute and other associated organisations. It encompasses work ranging from art residencies and mapping workshops to ecological surveys and reforestation programs, as well as educational and craft initiatives, and other such community outreach.\n\nThe archive invites visitors to draw new associations between these varied works, situating each project within the landscape of the Sahyadris from which they emerge',
+            aboutHeading: 'The Shillim Institute.',
+            aboutSubtitle: 'Inspiring Commitment to Action through Sustainable art practices\nin the Sahyadri Western Ghats India.',
+            aboutBody:
+                'Located in the Western Ghats, The Shillim Institute safeguards approximately 2000 acres of land in the Northern region of this mountain range, which has been declared a UNESCO World Heritage Site and a biodiversity conservation hotspot. The Institute has enlisted local communities as forest guards and introduced thousands of native plant species, resulting in the flourishing of over a million trees comprising 64 diverse species.\n\nThe Pavna Collective is a consortium of conservation, ecology, and art organizations, convened by the Shillim Institute. Among its initiatives, the Pavna Collective sponsors 3-6 art residencies a year, fellowships, Mapping Workshop, Cultural documentation and Skill development programs in the Sayadri ranges.',
+            aboutButton: 'ABOUT',
+            archiveButton: 'GO TO THE ARCHIVE',
+            returnButton: 'Return'
+        };
+        let landing = { ...LANDING_DEFAULTS };
+        try {
+            const r = await fetch('data/landing.json', { cache: 'no-cache' });
+            if (r.ok) {
+                const data = await r.json();
+                for (const k of Object.keys(LANDING_DEFAULTS)) {
+                    if (typeof data[k] === 'string' && data[k].trim()) landing[k] = data[k];
+                }
+            }
+        } catch (e) { /* keep defaults */ }
+        const ARCHIVE_DESC = landing.description;
+        const ABOUT_HEADING = landing.aboutHeading;
+        const ABOUT_SUBTITLE = landing.aboutSubtitle;
+        const ABOUT_BODY = landing.aboutBody;
 
         // ──────────────────────────────────────────────────────────────
         // Geometry
@@ -178,7 +198,7 @@ async function LoadTextures() {
         });
         archiveContent.addChild(descText);
 
-        const bigTitle = new PIXI.Text('THE SHILLIM ARCHIVE', {
+        const bigTitle = new PIXI.Text(landing.title, {
             fontFamily: 'Hind Madurai', fontWeight: '630', fontSize: 82, fill: GREEN, letterSpacing: 1
         });
         if (bigTitle.width > WRAP) bigTitle.scale.set(WRAP / bigTitle.width);
@@ -287,9 +307,9 @@ async function LoadTextures() {
             return { container: c, draw, intrinsicWidth, label, bg };
         }
 
-        const aboutBtn = makeButton({ text: 'ABOUT', fill: BTN_DARK, align: 'left' });
-        const goBtn = makeButton({ text: 'GO TO THE ARCHIVE', fill: BTN_LIGHT, icon: 'arrow' });
-        const closeBtn = makeButton({ text: 'Return', fill: BTN_DARK, icon: 'back' });
+        const aboutBtn = makeButton({ text: landing.aboutButton, fill: BTN_DARK, align: 'left' });
+        const goBtn = makeButton({ text: landing.archiveButton, fill: BTN_LIGHT, icon: 'arrow' });
+        const closeBtn = makeButton({ text: landing.returnButton, fill: BTN_DARK, icon: 'back' });
 
         intro.addChild(aboutBtn.container);
         intro.addChild(goBtn.container);

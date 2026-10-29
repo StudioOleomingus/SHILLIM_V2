@@ -43,6 +43,11 @@ let boxEl = null;
 let gifEl = null;
 let textEl = null;
 let hintEl = null;
+let stepEl = null;
+
+// Offset (px) the user has dragged the tutorial box away from its default
+// position. Kept across steps so the box stays where it was put.
+let dragOffset = { x: 0, y: 0 };
 
 function createOverlay() {
     overlayEl = document.createElement('div');
@@ -70,8 +75,41 @@ function createOverlay() {
         boxShadow: '0 4px 24px rgba(0,0,0,0.15)',
         transition: 'opacity 0.3s, transform 0.3s',
         cursor: 'default',
-        textAlign: 'center'
+        textAlign: 'center',
+        position: 'relative'
     });
+
+    // Header row: step label + grip. Doubles as the drag handle.
+    const headerEl = document.createElement('div');
+    headerEl.id = 'tutorial-header';
+    headerEl.title = 'Drag to move';
+    Object.assign(headerEl.style, {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        margin: '-8px -14px 10px',
+        padding: '4px 14px',
+        cursor: 'grab',
+        userSelect: 'none',
+        touchAction: 'none'
+    });
+
+    stepEl = document.createElement('span');
+    stepEl.id = 'tutorial-step';
+    Object.assign(stepEl.style, {
+        fontFamily: 'IBM Plex Mono, monospace',
+        fontSize: '13px',
+        letterSpacing: '0.06em',
+        color: '#999'
+    });
+
+    const gripEl = document.createElement('span');
+    gripEl.textContent = '⠿';
+    Object.assign(gripEl.style, { fontSize: '18px', color: '#bbb', lineHeight: '1' });
+
+    headerEl.appendChild(stepEl);
+    headerEl.appendChild(gripEl);
+    makeDraggable(headerEl);
 
     gifEl = document.createElement('img');
     gifEl.id = 'tutorial-gif';
@@ -84,6 +122,7 @@ function createOverlay() {
         marginBottom: '12px',
         background: '#f5f5f5'
     });
+    gifEl.draggable = false;
 
     textEl = document.createElement('p');
     textEl.id = 'tutorial-text';
@@ -106,11 +145,56 @@ function createOverlay() {
         display: 'none'
     });
 
+    boxEl.appendChild(headerEl);
     boxEl.appendChild(gifEl);
     boxEl.appendChild(textEl);
     boxEl.appendChild(hintEl);
     overlayEl.appendChild(boxEl);
     document.body.appendChild(overlayEl);
+}
+
+// Drag the tutorial box around by its header. The pointerdown is stopped
+// here so it never reaches the document-level click-to-advance listener.
+function makeDraggable(handleEl) {
+    let start = null;
+
+    handleEl.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        start = { x: e.clientX - dragOffset.x, y: e.clientY - dragOffset.y };
+        handleEl.setPointerCapture(e.pointerId);
+        handleEl.style.cursor = 'grabbing';
+        boxEl.style.transition = 'opacity 0.3s';
+    });
+
+    handleEl.addEventListener('pointermove', (e) => {
+        if (!start) return;
+        // Keep at least part of the box on screen.
+        const rect = boxEl.getBoundingClientRect();
+        const nx = e.clientX - start.x;
+        const ny = e.clientY - start.y;
+        const dx = nx - dragOffset.x;
+        const dy = ny - dragOffset.y;
+        if (rect.left + dx < -rect.width + 60 || rect.right + dx > window.innerWidth + rect.width - 60) return;
+        if (rect.top + dy < 0 || rect.top + dy > window.innerHeight - 40) return;
+        dragOffset = { x: nx, y: ny };
+        applyDragOffset();
+    });
+
+    const endDrag = (e) => {
+        if (!start) return;
+        start = null;
+        handleEl.style.cursor = 'grab';
+        boxEl.style.transition = 'opacity 0.3s, transform 0.3s';
+        if (handleEl.hasPointerCapture(e.pointerId)) handleEl.releasePointerCapture(e.pointerId);
+    };
+    handleEl.addEventListener('pointerup', endDrag);
+    handleEl.addEventListener('pointercancel', endDrag);
+}
+
+function applyDragOffset() {
+    boxEl.style.left = dragOffset.x + 'px';
+    boxEl.style.top = dragOffset.y + 'px';
 }
 
 function showStep(index) {
@@ -121,6 +205,8 @@ function showStep(index) {
 
     currentStep = index;
     const msg = TUTORIAL_MESSAGES[index];
+
+    stepEl.textContent = 'Step ' + String(index + 1).padStart(2, '0');
 
     // GIF
     if (msg.gif) {
@@ -196,7 +282,7 @@ function endTutorial() {
         boxEl.style.opacity = '0';
         boxEl.style.transform = 'translateY(8px)';
         setTimeout(() => {
-            overlayEl.style.display = 'none';
+            if (!tutorialActive) overlayEl.style.display = 'none';
         }, 300);
     }
     window.removeEventListener('keydown', handleEsc);
@@ -235,14 +321,26 @@ function startTutorial() {
         tutorialSkipped = true;
         return;
     }
+    runTutorial();
+}
 
+function runTutorial() {
     tutorialActive = true;
     tutorialSkipped = false;
+    tutorialPaused = false;
     currentStep = 0;
 
-    createOverlay();
+    if (!overlayEl) createOverlay();
+    window.removeEventListener('keydown', handleEsc);
     window.addEventListener('keydown', handleEsc);
     showStep(0);
+}
+
+// Relaunch the tutorial from the first step, even if it was finished or
+// skipped earlier (used by the Help dialog).
+function restartTutorial() {
+    try { sessionStorage.removeItem('shillim-tutorial-done'); } catch(e) {}
+    runTutorial();
 }
 
 function tutorialDragDone() {
@@ -263,4 +361,4 @@ function isTutorialBlocking() {
     return tutorialActive && !tutorialSkipped && currentStep === 0;
 }
 
-export { startTutorial, tutorialDragDone, tutorialSurroundDone, isTutorialBlocking, pauseTutorial, resumeTutorial };
+export { startTutorial, restartTutorial, tutorialDragDone, tutorialSurroundDone, isTutorialBlocking, pauseTutorial, resumeTutorial };

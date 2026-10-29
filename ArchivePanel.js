@@ -2,6 +2,7 @@
 import { initBeeAnimator, spawnBee } from './BeeAnimator.js';
 import { preloadProjectImages, pickThumb } from './ProjectThumbs.js';
 import { pauseTutorial, resumeTutorial } from './Tutorial.js';
+import { HIDDEN_CATEGORIES } from './Config.js';
 
 let panelEl = null;
 let backdropEl = null;
@@ -11,7 +12,8 @@ let selectedIndex = -1;
 let built = false;
 let bee = null;
 
-const CATEGORIES = ['ART', 'COMMUNITY', 'ECOLOGY', 'RESEARCH', 'HEALTH', 'EDUCATION'];
+const CATEGORIES = ['ART', 'COMMUNITY', 'ECOLOGY', 'RESEARCH', 'HEALTH', 'EDUCATION']
+    .filter((c) => !HIDDEN_CATEGORIES.includes(c));
 
 function escapeHtml(str) {
     return String(str == null ? '' : str)
@@ -228,7 +230,7 @@ function selectProject(index) {
     const secondaryTags = (project.secondarycategory || '')
         .split(',')
         .map((c) => c.trim())
-        .filter(Boolean)
+        .filter((c) => c && !HIDDEN_CATEGORIES.includes(c))
         .map((c) => `<span class="tag">${escapeHtml(c)}</span>`)
         .join('');
 

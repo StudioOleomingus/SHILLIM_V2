@@ -1,0 +1,32 @@
+{
+  "author": "Full Name",
+  "artistdescription": "<p>Bio</p>",
+  "projects": [
+    {
+      "title": "Title",
+      "startdate": "2026-10-06",
+      "enddate": "2026-10-12",
+      "sections": [
+        {
+          "sectiontype": "text",
+          "value": "<p>Text</p>"
+        },
+        {
+          "sectiontype": "image",
+          "value": [
+            {
+              "filename": "Screenshot_2026-10-10_at_4_36_50___AM.png"
+            },
+            {
+              "filename": "Screenshot_2026-10-10_at_4_36_13___AM.png"
+            }
+          ]
+        },
+        {
+          "sectiontype": "text",
+          "value": ""
+        }
+      ]
+    }
+  ]
+}

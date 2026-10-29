@@ -309,9 +309,50 @@ async function initBottomLayout() {
         // Lay out once at design size; CSS scaling handles window resizing.
         layout();
 
+        initCategoryBarTip();
+
     } catch (error) {
         console.error('Error in initBottomLayout:', error);
     }
+}
+
+const CATEGORY_BAR_TIP =
+    'This is the distribution of categories that is picking projects from the archive - ' +
+    'the most numerous swatches on the screen is the primary category, the rest are secondary categories';
+
+// Hover description for the category bar. The bar sits behind the play card
+// (only its lower half shows) and the card's hit area swallows PIXI events, so
+// hit-testing is done on raw canvas pointer moves in design coordinates.
+function initCategoryBarTip() {
+    const tipEl = document.createElement('div');
+    tipEl.className = 'category-bar-tip';
+    tipEl.textContent = CATEGORY_BAR_TIP;
+    document.body.appendChild(tipEl);
+
+    const canvas = app.canvas || app.view;
+    const hide = () => tipEl.classList.remove('visible');
+
+    canvas.addEventListener('pointermove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) * (app.screen.width / rect.width);
+        const y = (e.clientY - rect.top) * (app.screen.height / rect.height);
+
+        // Only the visible (lower) half of the bar, below the play card.
+        const left = layoutContainer.x;
+        const top = layoutContainer.y + 25;
+        const over = layoutContainer.visible &&
+            x >= left && x <= left + totalWidth &&
+            y >= top && y <= layoutContainer.y + 50;
+
+        if (!over) { hide(); return; }
+
+        tipEl.classList.add('visible');
+        const tipRect = tipEl.getBoundingClientRect();
+        const tx = Math.min(e.clientX - tipRect.width / 2, window.innerWidth - tipRect.width - 12);
+        tipEl.style.left = Math.max(12, tx) + 'px';
+        tipEl.style.top = (e.clientY - tipRect.height - 16) + 'px';
+    });
+    canvas.addEventListener('pointerleave', hide);
 }
 
 export { initBottomLayout, updateSectionSizes, updateTextBox };
