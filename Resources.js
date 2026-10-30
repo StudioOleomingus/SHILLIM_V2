@@ -471,14 +471,17 @@ async function LoadTextures() {
             intro.addChildAt(previewSprite, 0);
 
             // ──────────────────────────────────────────────────────────────
-            // Block-by-block reveal (20px squares)
+            // Block-by-block reveal (variable-sized rectangles)
             // A purely cosmetic overlay: the real sprite starts invisible while
-            // a grid of 20px tiles — each a sub-texture of the same image —
-            // fades in over a smooth randomised wave. When it finishes we show
-            // the real sprite and discard the overlay, so all the existing
+            // a patchwork of rectangles — each a sub-texture of the same image —
+            // fades in over a randomised wave. The patchwork comes from
+            // recursively splitting the image at random points, so pieces vary
+            // between MIN_BLOCK and MAX_BLOCK on each side. When it finishes we
+            // show the real sprite and discard the overlay, so all the existing
             // interaction (hover-to-spawn lizard, z-ordering) is unaffected.
             (function revealInBlocks() {
-                const BLOCK = 20; // display-space square size
+                const MIN_BLOCK = 60;   // display px — 3x the old 20px squares
+                const MAX_BLOCK = 180;
 
                 const dispW = nativeW * scale;
                 const dispH = nativeH * scale;
@@ -495,8 +498,28 @@ async function LoadTextures() {
                 const fx = (tex.frame && tex.frame.x) || 0;
                 const fy = (tex.frame && tex.frame.y) || 0;
 
-                const cols = Math.ceil(dispW / BLOCK);
-                const rows = Math.ceil(dispH / BLOCK);
+                // Guillotine split into random rectangles.
+                const rects = [];
+                (function split(x, y, w, h) {
+                    const canSplitW = w >= MIN_BLOCK * 2;
+                    const canSplitH = h >= MIN_BLOCK * 2;
+                    const fits = w <= MAX_BLOCK && h <= MAX_BLOCK;
+                    if ((!canSplitW && !canSplitH) || (fits && Math.random() < 0.35)) {
+                        rects.push({ x, y, w, h });
+                        return;
+                    }
+                    // Prefer cutting across the longer side.
+                    const cutW = canSplitW && (!canSplitH || w > h || (w === h && Math.random() < 0.5));
+                    const span = cutW ? w : h;
+                    const at = Math.round(MIN_BLOCK + Math.random() * (span - MIN_BLOCK * 2));
+                    if (cutW) {
+                        split(x, y, at, h);
+                        split(x + at, y, w - at, h);
+                    } else {
+                        split(x, y, w, at);
+                        split(x, y + at, w, h - at);
+                    }
+                })(0, 0, dispW, dispH);
 
                 const revealContainer = new PIXI.Container();
                 revealContainer.x = left;
@@ -507,38 +530,24 @@ async function LoadTextures() {
 
                 previewSprite.alpha = 0;
 
-                const blocks = [];
-                for (let r = 0; r < rows; r++) {
-                    for (let c = 0; c < cols; c++) {
-                        const bx = c * BLOCK;
-                        const by = r * BLOCK;
-                        const bw = Math.min(BLOCK, dispW - bx);
-                        const bh = Math.min(BLOCK, dispH - by);
-                        if (bw <= 0 || bh <= 0) continue;
-
-                        // Matching slice of the source image for this tile.
-                        const frame = new PIXI.Rectangle(
-                            fx + bx / scale,
-                            fy + by / scale,
-                            bw / scale,
-                            bh / scale
-                        );
-                        const blockSprite = new PIXI.Sprite(new PIXI.Texture({ source, frame }));
-                        blockSprite.x = bx;
-                        blockSprite.y = by;
-                        blockSprite.width = bw;
-                        blockSprite.height = bh;
-                        blockSprite.alpha = 0;
-                        revealContainer.addChild(blockSprite);
-                        blocks.push(blockSprite);
-                    }
-                }
+                const blocks = rects.map(({ x, y, w, h }) => {
+                    // Matching slice of the source image for this piece.
+                    const frame = new PIXI.Rectangle(fx + x / scale, fy + y / scale, w / scale, h / scale);
+                    const blockSprite = new PIXI.Sprite(new PIXI.Texture({ source, frame }));
+                    blockSprite.x = x;
+                    blockSprite.y = y;
+                    blockSprite.width = w;
+                    blockSprite.height = h;
+                    blockSprite.alpha = 0;
+                    revealContainer.addChild(blockSprite);
+                    return blockSprite;
+                });
 
                 gsap.to(blocks, {
                     alpha: 1,
-                    duration: 0.35,
+                    duration: 0.45,
                     ease: 'power2.out',
-                    stagger: { amount: 1.2, grid: [rows, cols], from: 'random' },
+                    stagger: { amount: 1.4, from: 'random' },
                     onComplete: () => {
                         previewSprite.alpha = 1;
                         revealContainer.destroy({ children: true });
