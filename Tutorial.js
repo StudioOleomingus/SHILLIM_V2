@@ -4,13 +4,13 @@
 const TUTORIAL_MESSAGES = [
     {
         id: 'welcome',
-        text: 'Welcome to the Interactive Archive for Shillim.\nYou can skip this interactive page and go straight to the index by clicking on the + button in the top left.\nClick to continue or press Esc to skip the tutorial.',
+        text: 'Welcome to this Interactive Archive for Shillim.\nClick anywhere to continue or press Esc. on your keyboard to skip the tutorial.',
         advance: 'click',
         gif: null
     },
     {
         id: 'category',
-        text: 'Start by choosing a category from the palette below. Each colour represents a different type of project in the archive.',
+        text: 'Start by choosing a category from the palette below. Each colour represents a different type of project in the archive. You are going to layer these catagories to sort and search through the archive',
         advance: 'click',
         gif: 'assets/UI-ELEMENTS/tutorial/pick-category.gif'
     },
@@ -98,9 +98,9 @@ function createOverlay() {
     stepEl.id = 'tutorial-step';
     Object.assign(stepEl.style, {
         fontFamily: 'IBM Plex Mono, monospace',
-        fontSize: '13px',
+        fontSize: '15px',
         letterSpacing: '0.06em',
-        color: '#999'
+        color: '#1364a2'
     });
 
     const gripEl = document.createElement('span');
