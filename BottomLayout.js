@@ -317,8 +317,9 @@ async function initBottomLayout() {
 }
 
 const CATEGORY_BAR_TIP =
-    'This is the distribution of categories that is picking projects from the archive - ' +
-    'the most numerous swatches on the screen is the primary category, the rest are secondary categories';
+    'This bar shows how projects from the archive are selected. The texture occupying the largest ' +
+    'screen space is the primary category by which projects are picked. Followed by secondary ' +
+    'categories for the other textures.';
 
 // Hover description for the category bar. The bar sits behind the play card
 // (only its lower half shows) and the card's hit area swallows PIXI events, so

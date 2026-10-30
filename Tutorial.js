@@ -4,7 +4,7 @@
 const TUTORIAL_MESSAGES = [
     {
         id: 'welcome',
-        text: 'Welcome to the Interactive Archive for Shillim.\nClick to continue or press Esc to skip the tutorial.',
+        text: 'Welcome to the Interactive Archive for Shillim.\nYou can skip this interactive page and go straight to the index by clicking on the + button in the top left.\nClick to continue or press Esc to skip the tutorial.',
         advance: 'click',
         gif: null
     },
